@@ -1,6 +1,7 @@
 #!/bin/bash
 
 git fetch --unshallow
+COUNT=$(git rev-list --count HEAD)
 
 #INFO
 echo "*** Trigger build ***"
@@ -17,13 +18,8 @@ echo -e "Set compiler env ..."
 chmod +x addons/sourcemod/scripting/spcomp
 
 
-#拷贝文件到编译器文件夹
-echo -e "Copy scripts to compiler folder ..."
-cp -rf ./* addons/sourcemod/scripting
-
-
 #编译...
-echo "Building core.sp ..."
+echo "Building core.sp commit $COUNT ..."
 addons/sourcemod/scripting/spcomp -E -v0 addons/sourcemod/scripting/core.sp
-echo "Building user.sp ..."
+echo "Building user.sp commit $COUNT..."
 addons/sourcemod/scripting/spcomp -E -v0 addons/sourcemod/scripting/user.sp
