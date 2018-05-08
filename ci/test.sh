@@ -23,5 +23,7 @@ cp -rf ./* addons/sourcemod/scripting
 
 
 #编译...
+echo "Building core.sp ..."
 addons/sourcemod/scripting/spcomp -E -v0 addons/sourcemod/scripting/core.sp
+echo "Building user.sp ..."
 addons/sourcemod/scripting/spcomp -E -v0 addons/sourcemod/scripting/user.sp
