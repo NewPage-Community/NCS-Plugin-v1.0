@@ -5,7 +5,7 @@ addons:
     - p7zip-full
     - lftp
 
-language: c
+language: sourcepawn
 
 env:
   - SOURCEMOD=1.8

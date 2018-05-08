@@ -17,6 +17,10 @@ tar -xzf sourcemod.tar.gz
 echo -e "Set compiler env ..."
 chmod +x addons/sourcemod/scripting/spcomp
 
+#拷贝文件到编译器文件夹
+echo -e "Copy scripts to compiler folder ..."
+cp -rf * addons/sourcemod/scripting
+
 
 #编译...
 echo "Building core.sp commit $COUNT ..."
