@@ -85,11 +85,8 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
     char[] input = new char[inLen+1];
     if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
         return;
-    
-    DataPack data = new DataPack();
-    data.WriteString(input);
 
-    g_hSQL.Query(NativeSave_Callback, input, data);
+    SQL_FastQuery(g_hSQL, input);
     return;
 }
 
@@ -228,8 +225,7 @@ void CheckingServer()
     
     if(!_result.FetchRow())
     {
-        NP_Core_LogError("MySQL", "CheckingServer", "Not Found this server in database");
-        SetFailState("Not Found this server in database");
+        AddNewServer();
         return;
     }
     
@@ -330,4 +326,18 @@ void ChangeHostname(char[] hostname)
     }
 
     SetConVarString(FindConVar("hostname"), hostname, false, false);
+}
+
+void AddNewServer()
+{
+    char m_szQuery[128];
+    FormatEx(m_szQuery, 128, "INSERT INTO `%s_server` VALUES (DEFAULT, DEFAULT, DEFAULT, '%s', '%d', DEFAULT);", P_SQLPRE, g_szServerIp, g_iServerPort);
+    if(!SQL_FastQuery(g_hSQL, m_szQuery, 128))
+    {
+        char error[256];
+        SQL_GetError(g_hSQL, error, 256);
+        NP_Core_LogError("MySQL", "AddNewServer", "AddNewServer Info: %s", error); 
+    }
+
+    CheckingServer();
 }

@@ -38,6 +38,9 @@ native bool NP_Users_IsAuthorized(int client, Authentication auth);
 native void NP_Users_BanClient(int admin,  int target, int banType, int banLength, const char[] banReason);
 //native void NP_Users_BanIdentity(int admin, const char[] steamIdentity, int banType, int banLength, const char[] banReason);
 
+native int NP_Group_GetUserGId(int client);
+native bool NP_Group_IsGIdValid(int gid);
+
 native int NP_Stats_TodayOnlineTime(int client);
 native int NP_Stats_TotalOnlineTime(int client);
 native int NP_Stats_ObserveOnlineTime(int client);

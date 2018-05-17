@@ -1,4 +1,5 @@
 # SourceMod
+scripting/compile.sh
 scripting/spcomp
 scripting/compiled/*
 scripting/include/admin.inc

@@ -119,3 +119,18 @@ public void BanClientCallback(Database db, DBResultSet results, const char[] err
     FormatEx(kickReason, 256, "%t", "Blocking information", g_banType, reason, timeExpired, NP_BANURL);
     BanClient(target, 5, BANFLAG_AUTHID, kickReason, kickReason);
 }
+
+public int Native_BanClient(Handle plugin, int numParams)
+{
+    char reason[128];
+    GetNativeString(5, reason, 128);
+    User_BanClient(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), GetNativeCell(4), reason);
+}
+
+/* public int Native_BanIdentity(Handle plugin, int numParams)
+{
+    char steamIdentity[32], reason[128];
+    GetNativeString(2, steamIdentity, 32);
+    GetNativeString(5, reason, 128);
+    User_BanIdentity(GetNativeCell(1), steamIdentity, GetNativeCell(3), GetNativeCell(4), reason);
+} */

@@ -44,3 +44,28 @@ void AddVipPoint(int client, int point)
     FormatEx(m_szQuery, 256, "UPDATE %s_users SET vippoint = vippoint + '%d' WHERE uid = '%d'", P_SQLPRE, point, NP_Users_UserIdentity(client));
     NP_MySQL_SaveDatabase(m_szQuery);
 }
+
+public int Native_IsVIP(Handle plugin, int numParams)
+{
+    return g_authClient[GetNativeCell(1)][Vip];
+}
+
+public int Native_VIPLevel(Handle plugin, int numParams)
+{
+    return g_ivipLevel[GetNativeCell(1)];
+}
+
+public int Native_GrantVip(Handle plugin, int numParams)
+{
+    GrantVip(GetNativeCell(1), GetNativeCell(2));
+}
+
+public int Native_DeleteVip(Handle plugin, int numParams)
+{
+    DeleteVip(GetNativeCell(1));
+}
+
+public int Native_AddVipPoint(Handle plugin, int numParams)
+{
+    AddVipPoint(GetNativeCell(1), GetNativeCell(2));
+}
