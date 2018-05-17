@@ -29,8 +29,8 @@ native void NP_MySQL_SaveDatabase(const char[] QueryString);
 
 public SharedPlugin __pl_core =
 {
-	name = "core",
-	file = "core.smx",
+	name = "np-core",
+	file = "np-core.smx",
 	required = 1 // force requires
 };
 

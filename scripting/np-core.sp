@@ -51,7 +51,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("NP_Core_LogMessage", Native_LogMessage);
 
     // lib
-    RegPluginLibrary("NewPage");
+    RegPluginLibrary("np-core");
 
     /* Init plugin */
     SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
@@ -331,12 +331,13 @@ void ChangeHostname(char[] hostname)
 void AddNewServer()
 {
     char m_szQuery[128];
-    FormatEx(m_szQuery, 128, "INSERT INTO `%s_server` VALUES (DEFAULT, DEFAULT, DEFAULT, '%s', '%d', DEFAULT);", P_SQLPRE, g_szServerIp, g_iServerPort);
+    FormatEx(m_szQuery, 128, "INSERT INTO `%s_servers` VALUES (DEFAULT, DEFAULT, DEFAULT, '%s', '%d', DEFAULT);", P_SQLPRE, g_szServerIp, g_iServerPort);
     if(!SQL_FastQuery(g_hSQL, m_szQuery, 128))
     {
         char error[256];
         SQL_GetError(g_hSQL, error, 256);
         NP_Core_LogError("MySQL", "AddNewServer", "AddNewServer Info: %s", error); 
+        return;
     }
 
     CheckingServer();

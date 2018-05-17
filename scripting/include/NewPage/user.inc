@@ -55,8 +55,8 @@ native void NP_Vip_AddVipPoint(int client, int point);
 
 public SharedPlugin __pl_user =
 {
-	name = "user",
-	file = "user.smx",
+	name = "np-user",
+	file = "np-user.smx",
 #if !defined REQUIRE_PLUGIN
     required = 0
 #else
