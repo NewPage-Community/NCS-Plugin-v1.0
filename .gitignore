@@ -1,6 +1,9 @@
 # SourceMod
 scripting/compile.sh
 scripting/spcomp
+scripting/spcomp.exe
+scripting/compile.exe
+scripting/compile.dat
 scripting/compiled/*
 scripting/include/admin.inc
 scripting/include/adminmenu.inc

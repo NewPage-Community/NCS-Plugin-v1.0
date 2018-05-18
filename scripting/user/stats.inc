@@ -30,7 +30,7 @@ void EndStats(int client)
 
     NP_MySQL_GetDatabase().Escape(m_szUsername, m_szEscape, 64);
 
-    FormatEx(m_szQuery, 256, "CALL user_stats (%d, %d, %d, %d, %d, %d, '%s')", NP_Users_UserIdentity(client), g_iTrackingId[client], g_StatsClient[client][STATS_SESSION][iTodayOnlineTime], g_StatsClient[client][STATS_SESSION][iTotalOnlineTime], g_StatsClient[client][STATS_SESSION][iObserveOnlineTime], g_StatsClient[client][STATS_SESSION][iPlayOnlineTime], m_szEscape);
+    FormatEx(m_szQuery, 256, "CALL user_stats(%d, %d, %d, %d, %d, %d, '%s')", NP_Users_UserIdentity(client), g_iTrackingId[client], g_StatsClient[client][STATS_SESSION][iTodayOnlineTime], g_StatsClient[client][STATS_SESSION][iTotalOnlineTime], g_StatsClient[client][STATS_SESSION][iObserveOnlineTime], g_StatsClient[client][STATS_SESSION][iPlayOnlineTime], m_szEscape);
     NP_MySQL_SaveDatabase(m_szQuery);
 }
 

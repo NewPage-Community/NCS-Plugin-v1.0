@@ -241,7 +241,7 @@ void CheckClient(int client, const char[] steamid)
 	GetCurrentMap(map, 128);
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "CALL user_join (%s, %d, %s, %s, %d, %d)", steamid, NP_Core_GetServerId(), ip, map, GetTime(), g_iToday);
+	FormatEx(m_szQuery, 256, "CALL user_join('%s', %d, %d, '%s', '%s', %d, %d)", steamid, NP_Core_GetServerId(), NP_Core_GetServerModId(), ip, map, GetTime(), g_iToday);
 	db.Query(CheckClientCallback, m_szQuery, GetClientUserId(client));
 }
 
@@ -255,6 +255,12 @@ public void CheckClientCallback(Database db, DBResultSet results, const char[] e
 	{
 		NP_Core_LogError("User", "LoadClientCallback", "SQL Error:  %s -> \"%L\"", error, client);
 		CreateTimer(5.0, Timer_ReAuthorize, client, TIMER_FLAG_NO_MAPCHANGE);
+		return;
+	}
+
+	if(results.RowCount <= 0 || !results.FetchRow())
+	{
+		NP_Core_LogError("User", "LoadClientCallback", "SQL no fetched rows:  %s -> \"%L\"", error, client);
 		return;
 	}
 	

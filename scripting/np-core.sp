@@ -181,7 +181,7 @@ public void OnConnected(Database db, const char[] error, int retry)
     }
 
     g_hSQL = db;
-    g_hSQL.SetCharset("utf8mb4"); //Support special UTF8 characters
+    g_hSQL.SetCharset("utf8");
     g_bConnected = true;
 
     // Initialize

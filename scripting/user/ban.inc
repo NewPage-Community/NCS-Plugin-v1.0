@@ -29,7 +29,7 @@ void User_BanClient(int admin, int target, int btype, int length, const char[] r
     }
 
     char m_szQuery[1024];
-    FormatEx(m_szQuery, 1024, "CALL user_ban('%s', '%s', '%s', %d, %d, %d, %d, %d, '%s', '%s');", steamid, ip, nickname, GetTime()+length*60, btype, NP_Core_GetServerId(), NP_Core_GetServerModId(), g_iUserId[admin], g_szUsername[admin], bReason);
+    FormatEx(m_szQuery, 1024, "CALL user_ban('%s', '%s', '%s', %d, %d, %d, %d, %d, '%s', '%s')", steamid, ip, nickname, GetTime()+length*60, btype, NP_Core_GetServerId(), NP_Core_GetServerModId(), g_iUserId[admin], g_szUsername[admin], bReason);
     
     DataPack pack = new DataPack();
     pack.WriteCell(admin);
@@ -81,6 +81,12 @@ public void BanClientCallback(Database db, DBResultSet results, const char[] err
     if(results == null || error[0])
     {
         NP_Core_LogError("User", "BanClientCallback", "SQL Error:  %s -> \n%s", error, query);
+        return;
+    }
+
+    if(results.RowCount <= 0 || !results.FetchRow())
+    {
+        NP_Core_LogError("User", "BanClientCallback", "SQL no fetched rows:  %s -> \n%s", error, query);
         return;
     }
 
