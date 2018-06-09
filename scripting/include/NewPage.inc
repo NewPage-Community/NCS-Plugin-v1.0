@@ -1,5 +1,5 @@
-#define P_AUTHOR "NewPage Dev-Team Original: kyle"
-#define P_VERSION "Alpha-v1.1-<commit-count>"
+#define P_AUTHOR "NewPage Dev-Team"
+#define P_VERSION "Alpha-v2.0-<commit-count>"
 #define P_URLS "https://new-page.cc"
 #define P_PRE "NewPage"
 #define P_SQLPRE "np"
@@ -26,6 +26,11 @@ native int  NP_Core_GetServerModId();
 native bool NP_MySQL_IsConnected();
 native Database NP_MySQL_GetDatabase();
 native void NP_MySQL_SaveDatabase(const char[] QueryString);
+
+// socket
+native bool NP_Socket_IsReady();
+native bool NP_Socket_Write(const char[] sendString);
+forward void NP_Socket_OnReceived(const char[] event, const char[] data, const int size);
 
 public SharedPlugin __pl_core =
 {

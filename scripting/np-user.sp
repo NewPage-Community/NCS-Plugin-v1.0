@@ -1,8 +1,8 @@
 #pragma semicolon 1
-#pragma newdecls required
 
 #include <NewPage>
 #include <NewPage/user>
+#include <smjansson>
 
 #define P_NAME P_PRE ... " - User Manager"
 #define P_DESC "User Manager"
@@ -123,6 +123,8 @@ public void OnPluginStart()
 	
 	// global timer
 	CreateTimer(1.0, Timer_Global, _, TIMER_REPEAT);
+
+	LoadTranslations("np-user.phrases");
 }
 
 // ------------command------------
@@ -225,14 +227,12 @@ void CheckClient(int client, const char[] steamid)
 	if(g_bAuthLoaded[client])
 		return; 
 
-	if(!NP_MySQL_IsConnected())
+	if(!NP_Socket_IsReady())
 	{
-		NP_Core_LogError("User", "LoadClientAuth", "Error: SQL is unavailable -> \"%L\"", client);
+		NP_Core_LogError("User", "LoadClientAuth", "Error: Socket is unavailable -> \"%L\"", client);
 		CreateTimer(5.0, Timer_ReAuthorize, client, TIMER_FLAG_NO_MAPCHANGE);
 		return;
 	}
-
-	Database db = NP_MySQL_GetDatabase();
 
 	char ip[32];
 	GetClientIP(client, ip, 32);
@@ -241,86 +241,70 @@ void CheckClient(int client, const char[] steamid)
 	GetCurrentMap(map, 128);
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "CALL user_join('%s', %d, %d, '%s', '%s', %d, %d)", steamid, NP_Core_GetServerId(), NP_Core_GetServerModId(), ip, map, GetTime(), g_iToday);
-	db.Query(CheckClientCallback, m_szQuery, GetClientUserId(client));
+	FormatEx(m_szQuery, 256, "{\"Event\":\"PlayerConnection\",\"PlayerConnection\":{\"PlayerName\":\"%N\",\"SteamID\":\"%s\",\"CIndex\":%d,\"IP\":\"%s\",\"JoinTime\":%d,\"TodayDate\":%i,\"Map\":\"%s\",\"ServerID\":%d,\"ServerModID\":%d}}", client, steamid, client, ip, GetTime(), g_iToday, map, NP_Core_GetServerId(), NP_Core_GetServerModId());
+	NP_Socket_Write(m_szQuery);
 }
 
-public void CheckClientCallback(Database db, DBResultSet results, const char[] error, int userid)
+
+void CheckClientCallback(const char[] data)
 {
-	int client = GetClientOfUserId(userid);
+	Handle json = json_load(data);
+	Handle playerinfo = json_object_get(json, "PlayerInfo");
+
+	int client = json_object_get_int(json, "CIndex");
+
 	if(!client)
 		return;
 
-	if(results == null || error[0])
-	{
-		NP_Core_LogError("User", "LoadClientCallback", "SQL Error:  %s -> \"%L\"", error, client);
-		CreateTimer(5.0, Timer_ReAuthorize, client, TIMER_FLAG_NO_MAPCHANGE);
-		return;
-	}
+	//Verification is whether player information matches
+	char d_steamid[32], t_steamid[32];
+	json_object_get_string(json, "SteamID", d_steamid, 32);
+	GetClientAuthId(client, AuthId_SteamID64, t_steamid, 32, true);
 
-	if(results.RowCount <= 0 || !results.FetchRow())
-	{
-		NP_Core_LogError("User", "LoadClientCallback", "SQL no fetched rows:  %s -> \"%L\"", error, client);
+	//Drop the data
+	if(strcmp(d_steamid, t_steamid) != 0)
 		return;
-	}
 	
 	g_bAuthLoaded[client] = true;
 
-	/* 0uid, 1name, 2imm, 3spt, 4vip, 5ctb, 6opt, 7adm, 8own, 9viplevel, 10gid
-	11onlineTotal, 12onlineToday, 13onlineOB, 14onlinePlay, 15connectTimes, 16vitality, 17insertId,
-	18isBan, 19bType, 20bExpired, 21bReason
-	*/
+	g_iUserId[client] = json_object_get_int(playerinfo, "UID");
+	json_object_get_string(playerinfo, "Username", g_szUsername[client], 32);
+	g_authClient[client][Spt] = json_object_get_bool(playerinfo, "Spt");
+	g_authClient[client][Vip] = json_object_get_bool(playerinfo, "Vip");
+	g_authClient[client][Ctb] = json_object_get_bool(playerinfo, "Ctb");
+	g_authClient[client][Opt] = json_object_get_bool(playerinfo, "Opt");
+	g_authClient[client][Adm] = json_object_get_bool(playerinfo, "Adm");
+	g_authClient[client][Own] = json_object_get_bool(playerinfo, "Own");
+	g_ivipLevel[client] = json_object_get_int(playerinfo, "Tviplevel");
+	g_iUserGroupId[client] = json_object_get_int(playerinfo, "Grp");
 
-	g_iUserId[client] = results.FetchInt(0);
-	results.FetchString(1, g_szUsername[client], 32);
-	g_authClient[client][Spt] = (results.FetchInt(3) == 1);
-	g_authClient[client][Vip] = (results.FetchInt(4) == 1);
-	g_authClient[client][Ctb] = (results.FetchInt(5) == 1);
-	g_authClient[client][Opt] = (results.FetchInt(6) == 1);
-	g_authClient[client][Adm] = (results.FetchInt(7) == 1);
-	g_authClient[client][Own] = (results.FetchInt(8) == 1);
-	g_ivipLevel[client] = results.FetchInt(9);
-	g_iUserGroupId[client] = results.FetchInt(10);
+	g_StatsClient[client][STATS_TOTAL][iTotalOnlineTime]   = json_object_get_int(playerinfo, "OnlineTotal");
+	g_StatsClient[client][STATS_TOTAL][iTodayOnlineTime]   = json_object_get_int(playerinfo, "OnlineToday");
+	g_StatsClient[client][STATS_TOTAL][iObserveOnlineTime] = json_object_get_int(playerinfo, "OnlineOB");
+	g_StatsClient[client][STATS_TOTAL][iPlayOnlineTime]    = json_object_get_int(playerinfo, "OnlinePlay");
 
-	g_StatsClient[client][STATS_TOTAL][iTotalOnlineTime]   = results.FetchInt(11);
-	g_StatsClient[client][STATS_TOTAL][iTodayOnlineTime]   = results.FetchInt(12);
-	g_StatsClient[client][STATS_TOTAL][iObserveOnlineTime] = results.FetchInt(13);
-	g_StatsClient[client][STATS_TOTAL][iPlayOnlineTime]    = results.FetchInt(14);
+	g_iConnectTimes[client]   = json_object_get_int(playerinfo, "ConnectTimes")+1;
+	g_iClientVitality[client] = json_object_get_int(playerinfo, "Vitality");
 
-	g_iConnectTimes[client]   = results.FetchInt(15)+1;
-	g_iClientVitality[client] = results.FetchInt(16);
-
-	g_iTrackingId[client] = results.FetchInt(17);
+	g_iTrackingId[client] = json_object_get_int(playerinfo, "TrackingID");
 	
 	//check ban
-	if(results.FetchInt(18) == 1)
+	if(json_object_get_bool(playerinfo, "IsBan"))
 	{
 		char t_bReason[32];
-		results.FetchString(21, t_bReason, 32);
-		KickBannedClient(client, results.FetchInt(19), results.FetchInt(20), t_bReason);
+		json_object_get_string(playerinfo, "BanR", t_bReason, 32);
+		KickBannedClient(client, json_object_get_int(playerinfo, "BanT"), json_object_get_int(playerinfo, "BExpired"), t_bReason, t_steamid);
 		return;
 	}
 	
-	SetAdmin(client, results);
+	SetAdmin(client, json_object_get_int(playerinfo, "Imm"));
 	CallAuthForward(client);
+
+	CloseHandle(json);
+	CloseHandle(playerinfo);
 }
 
-void KickBannedClient(int client, int bType, int bExpired, char[] bReason)
-{
-	char timeExpired[64];
-	if(bExpired != 0)
-		FormatTime(timeExpired, 64, "%Y.%m.%d %H:%M:%S", bExpired);
-	else
-		FormatEx(timeExpired, 64, "%t", "Permanent ban");
-
-	char kickReason[256];
-	char g_banType[32];
-	Bantype(bType, g_banType, 32);
-	FormatEx(kickReason, 256, "%t", "Blocking information", g_banType, bReason, timeExpired, NP_BANURL);
-	BanClient(client, 5, BANFLAG_AUTHID, kickReason, kickReason);
-}
-
-void SetAdmin(int client, DBResultSet results)
+void SetAdmin(int client, int imm)
 {
 	if(g_authClient[client][Ctb] || g_authClient[client][Opt] || g_authClient[client][Adm] || g_authClient[client][Own])
 	{
@@ -333,7 +317,7 @@ void SetAdmin(int client, DBResultSet results)
 
 		_admin = CreateAdmin(g_szUsername[client]);
 		SetUserAdmin(client, _admin, true);
-		SetAdminImmunityLevel(_admin, results.FetchInt(2));
+		SetAdminImmunityLevel(_admin, imm);
 
 		_admin.SetFlag(Admin_Reservation, true);
 		_admin.SetFlag(Admin_Generic, true);
@@ -496,3 +480,13 @@ public Action Timer_Global(Handle timer)
 }
 
 // ---------- timer ------------ end
+
+// ---------- socket ------------ start
+
+public void NP_Socket_OnReceived(const char[] event, const char[] data, const int size)
+{
+	if(!strcmp(event, "PlayerInfo"))
+		CheckClientCallback(data);
+}
+
+// ---------- socket ------------ end

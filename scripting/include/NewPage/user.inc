@@ -1,4 +1,4 @@
-#define NP_BANURL "https://new-page.cc/ban"
+#define NP_BANURL "https://new-page.cc/bans"
 
 #if defined _NewPage_User_Manager_Include_
     #endinput
@@ -71,15 +71,15 @@ stock void Bantype(const int btype, char[] buffer, int maxlength)
     {
         case 0:
         {
-            FormatEx(buffer, maxlength, "Ban type 0");
+            FormatEx(buffer, maxlength, "%t", "Ban type 0");
         }
         case 1:
         {
-            FormatEx(buffer, maxlength, "Ban type 1");
+            FormatEx(buffer, maxlength, "%t", "Ban type 1");
         }
         case 2:
         {
-            FormatEx(buffer, maxlength, "Ban type 2");
+            FormatEx(buffer, maxlength, "%t", "Ban type 2");
         }
     }
 }
