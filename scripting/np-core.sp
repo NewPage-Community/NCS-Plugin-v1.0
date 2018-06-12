@@ -429,6 +429,10 @@ public Action Timer_SocketReconnect(Handle timer)
 public void OnSocketReceived(AsyncSocket socket, const char[] data, const int size)
 {
 	Handle json = json_load(data);
+
+	if(json == INVALID_HANDLE)
+		return;
+
 	char event[16];
 	json_object_get_string(json, "Event", event, 16);
 	CloseHandle(json);

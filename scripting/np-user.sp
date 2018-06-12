@@ -24,7 +24,7 @@ bool g_bAuthLoaded[MAXPLAYERS+1];
 bool g_bBanChecked[MAXPLAYERS+1];
 char g_szUsername[MAXPLAYERS+1][32];
 
-Handle g_hOnUMAuthChecked;
+//Handle g_hOnUMAuthChecked;
 Handle g_hOnUMDataChecked;
 
 // Stats
@@ -110,7 +110,7 @@ public void OnPluginStart()
 	AddCommandListener(Command_Who, "sm_who");
 
 	// global forwards
-	g_hOnUMAuthChecked = CreateGlobalForward("OnClientAuthChecked", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
+	//g_hOnUMAuthChecked = CreateGlobalForward("OnClientAuthChecked", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_hOnUMDataChecked = CreateGlobalForward("OnClientDataChecked", ET_Ignore, Param_Cell, Param_Cell);
 
 	// init console
@@ -202,7 +202,7 @@ public void OnClientAuthorized(int client, const char[] auth)
 {
 	if(strcmp(auth, "BOT") == 0 || IsFakeClient(client) || IsClientSourceTV(client))
 	{
-		CallAuthForward(client);
+		//CallAuthForward(client);
 		return;
 	}
 
@@ -214,8 +214,6 @@ public void OnClientAuthorized(int client, const char[] auth)
 		return;
 	}
 
-	//LoadClientAuth(client, steamid);
-	//CheckClientBanStats(client, steamid);
 	CheckClient(client, steamid);
 }
 
@@ -241,20 +239,24 @@ void CheckClient(int client, const char[] steamid)
 	GetCurrentMap(map, 128);
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "{\"Event\":\"PlayerConnection\",\"PlayerConnection\":{\"PlayerName\":\"%N\",\"SteamID\":\"%s\",\"CIndex\":%d,\"IP\":\"%s\",\"JoinTime\":%d,\"TodayDate\":%i,\"Map\":\"%s\",\"ServerID\":%d,\"ServerModID\":%d}}", client, steamid, client, ip, GetTime(), g_iToday, map, NP_Core_GetServerId(), NP_Core_GetServerModId());
+	FormatEx(m_szQuery, 256, "{\"Event\":\"PlayerConnection\",\"PlayerConnection\":{\"SteamID\":\"%s\",\"CIndex\":%d,\"IP\":\"%s\",\"JoinTime\":%d,\"TodayDate\":%i,\"Map\":\"%s\",\"ServerID\":%d,\"ServerModID\":%d}}", steamid, client, ip, GetTime(), g_iToday, map, NP_Core_GetServerId(), NP_Core_GetServerModId());
 	NP_Socket_Write(m_szQuery);
+	//防止因为网络波动而无法加载用户数据
+	CreateTimer(5.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 
 void CheckClientCallback(const char[] data)
 {
 	Handle json = json_load(data);
-	Handle playerinfo = json_object_get(json, "PlayerInfo");
 
 	int client = json_object_get_int(json, "CIndex");
 
 	if(!client)
+	{
+		CloseHandle(json);
 		return;
+	}
 
 	//Verification is whether player information matches
 	char d_steamid[32], t_steamid[32];
@@ -263,7 +265,19 @@ void CheckClientCallback(const char[] data)
 
 	//Drop the data
 	if(strcmp(d_steamid, t_steamid) != 0)
+	{
+		CloseHandle(json);
 		return;
+	}
+
+	Handle playerinfo = json_object_get(json, "PlayerInfo");
+
+	if(playerinfo == INVALID_HANDLE)
+	{
+		CloseHandle(json);
+		CloseHandle(playerinfo);
+		return;
+	}
 	
 	g_bAuthLoaded[client] = true;
 
@@ -298,7 +312,7 @@ void CheckClientCallback(const char[] data)
 	}
 	
 	SetAdmin(client, json_object_get_int(playerinfo, "Imm"));
-	CallAuthForward(client);
+	//CallAuthForward(client);
 
 	CloseHandle(json);
 	CloseHandle(playerinfo);
@@ -371,6 +385,7 @@ void SetAdmin(int client, int imm)
 	}
 }
 
+/*
 void CallAuthForward(int client)
 {
 	Call_StartForward(g_hOnUMAuthChecked);
@@ -379,6 +394,7 @@ void CallAuthForward(int client)
 		Call_PushCell(g_authClient[client][i]);
 	Call_Finish();
 }
+*/
 
 void CallDataForward(int client)
 {
@@ -392,6 +408,17 @@ void CallDataForward(int client)
 
 
 // ---------- timer ------------
+
+public Action Timer_CheckClient(Handle timer, int client)
+{
+	if(!IsClientInGame(client))
+		return Plugin_Stop;
+
+	if(!g_bAuthLoaded[client] || g_iUserId[client] <= 0)
+		OnClientAuthorized(client, "");
+
+	return Plugin_Stop;
+}
 
 public Action Timer_Waiting(Handle timer, int client)
 {
@@ -454,8 +481,6 @@ public Action Timer_ReAuthorize(Handle timer, int client)
 		return Plugin_Continue;
 	}
 
-	//LoadClientAuth(client, steamid);
-	//CheckClientBanStats(client, steamid);
 	CheckClient(client, steamid);
 	
 	return Plugin_Stop;

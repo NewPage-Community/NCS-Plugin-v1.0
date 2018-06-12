@@ -55,7 +55,7 @@ public Action Command_AllChat(int client, int argc)
 	}
 
 	char buff[512];
-	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"PlayerName\":\"%N\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), client, szChat);
+	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"ServerModID\":%d,\"PlayerName\":\"%N\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), NP_Core_GetServerModId(), client, szChat);
 
 	if(!NP_Socket_Write(buff))
 		NP_Core_LogError("AllChat", "Command_AllChat", "Socket write failed -> %s", buff);
@@ -78,17 +78,27 @@ void AllChatProcess(const char[] data)
 	if((msgdata = json_object_get(json, "AllServersChat")) == INVALID_HANDLE)
 	{
 		NP_Core_LogError("AllChat", "NP_Socket_OnReceived", "Can't find AllServersChat object -> %s", data);
+		CloseHandle(json);
 		return;
 	}
 		
-	int serID = json_object_get_int(msgdata, "ServerID");
+	//int serID = json_object_get_int(msgdata, "ServerID");
+	int serModID = json_object_get_int(msgdata, "ServerModID");
+
+	//不需要不同游戏聊天
+	if(serModID != NP_Core_GetServerModId())
+	{
+		CloseHandle(json);
+		return;
+	}
+
 	json_object_get_string(msgdata, "PlayerName", playername, 32);
 	json_object_get_string(msgdata, "Msg", msg, 256);
 
 	if(!strcmp(playername, "###MSG###"))
 		PrintToChatAll("\x04[公告] \x01%s", msg);
 	else
-		PrintToChatAll("\x04[全服] \x05%s :  \x01%s", playername, msg);
+		PrintToChatAll("\x04[全服聊天] \x05%s :  \x01%s", playername, msg);
 
 	CloseHandle(json);
 }

@@ -31,7 +31,7 @@ enum Stats
     iTodayOnlineTime,
 }
 
-forward void OnClientAuthChecked(int client, bool Spt, bool Vip, bool Ctb, bool Opt, bool Adm, bool Own);
+//forward void OnClientAuthChecked(int client, bool Spt, bool Vip, bool Ctb, bool Opt, bool Adm, bool Own);
 forward void OnClientDataChecked(int client, int UserIdentity);
 native int NP_Users_UserIdentity(int client);
 native bool NP_Users_IsAuthorized(int client, Authentication auth);
