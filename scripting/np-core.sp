@@ -122,9 +122,7 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 		return 0;
 
 	char buff [1024];
-	Format(buff, 1024, "{\"Event\":\"SQLSave\",\"SQLSave\":\"%s\"}", input);
-	Handle json = json_load(buff);
-	json_dump(json, buff, 1024);
+	FormatEx(buff, 1024, "{\"Event\":\"SQLSave\",\"SQLSave\":\"%s\"}", input);
 	g_hSocket.Write(buff);
 	return 1;
 }

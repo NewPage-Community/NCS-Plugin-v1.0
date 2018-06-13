@@ -238,14 +238,11 @@ void CheckClient(int client, const char[] steamid)
 	char map[128];
 	GetCurrentMap(map, 128);
 
-	//处理特殊字符
-	char m_szQuery[512];
-	Format(m_szQuery, 512, "{\"Event\":\"PlayerConnection\",\"PlayerConnection\":{\"SteamID\":\"%s\",\"CIndex\":%d,\"IP\":\"%s\",\"JoinTime\":%d,\"TodayDate\":%i,\"Map\":\"%s\",\"ServerID\":%d,\"ServerModID\":%d}}", steamid, client, ip, GetTime(), g_iToday, map, NP_Core_GetServerId(), NP_Core_GetServerModId());
-	Handle json = json_load(m_szQuery);
-	json_dump(json, m_szQuery, 512);
+	char m_szQuery[256];
+	FormatEx(m_szQuery, 256, "{\"Event\":\"PlayerConnection\",\"PlayerConnection\":{\"SteamID\":\"%s\",\"CIndex\":%d,\"IP\":\"%s\",\"JoinTime\":%d,\"TodayDate\":%i,\"Map\":\"%s\",\"ServerID\":%d,\"ServerModID\":%d}}", steamid, client, ip, GetTime(), g_iToday, map, NP_Core_GetServerId(), NP_Core_GetServerModId());
 	NP_Socket_Write(m_szQuery);
 	//防止因为网络波动而无法加载用户数据
-	CreateTimer(15.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(5.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 
@@ -255,7 +252,7 @@ void CheckClientCallback(const char[] data)
 
 	int client = json_object_get_int(json, "CIndex");
 
-	if(!IsValidClient(client))
+	if(!client)
 	{
 		CloseHandle(json);
 		return;
