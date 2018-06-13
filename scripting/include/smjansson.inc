@@ -815,7 +815,7 @@ native bool:json_dump_file(Handle:hObject, const String:sFilePath[], iIndentWidt
  */
 stock Handle:json_string_format(const String:sFormat[], any:...) {
 	new String:sTmp[4096];
-	VFormat(sTmp, sizeof(sTmp), sFormat, 2);
+	VFormat(sTmp, 4096, sFormat, 2);
 
 	return json_string(sTmp);
 }
@@ -835,7 +835,7 @@ stock Handle:json_string_format(const String:sFormat[], any:...) {
  */
 stock Handle:json_string_format_ex(tmpBufferLength, const String:sFormat[], any:...) {
 	new String:sTmp[tmpBufferLength];
-	VFormat(sTmp, sizeof(sTmp), sFormat, 3);
+	VFormat(sTmp, tmpBufferLength, sFormat, 3);
 
 	return json_string(sTmp);
 }

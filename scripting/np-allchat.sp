@@ -33,7 +33,7 @@ public int Native_SendMsg(Handle plugin, int numParams)
 
 	char buff[512];
 	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"PlayerName\":\"###MSG###\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), input);
-	
+
 	return (NP_Socket_Write(buff)) ? 1 : 0;
 }
 
@@ -54,8 +54,11 @@ public Action Command_AllChat(int client, int argc)
 		return Plugin_Handled;
 	}
 
-	char buff[512];
-	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"ServerModID\":%d,\"PlayerName\":\"%N\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), NP_Core_GetServerModId(), client, szChat);
+	char buff[512], m_szUsername[32];
+	GetClientName(client, m_szUsername, 32);
+	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"ServerModID\":%d,\"PlayerName\":\"%s\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), NP_Core_GetServerModId(), m_szUsername, szChat);
+	Handle json = json_load(buff);
+	json_dump(json, buff, 512);
 
 	if(!NP_Socket_Write(buff))
 		NP_Core_LogError("AllChat", "Command_AllChat", "Socket write failed -> %s", buff);
