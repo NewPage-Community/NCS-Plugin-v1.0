@@ -3,6 +3,7 @@
 #include <NewPage>
 #include <NewPage/user>
 #include <smjansson>
+#include <sdktools_functions>
 
 #define P_NAME P_PRE ... " - User Manager"
 #define P_DESC "User Manager"
@@ -24,8 +25,9 @@ bool g_bAuthLoaded[MAXPLAYERS+1];
 bool g_bBanChecked[MAXPLAYERS+1];
 char g_szUsername[MAXPLAYERS+1][32];
 
-//Handle g_hOnUMAuthChecked;
 Handle g_hOnUMDataChecked;
+
+ArrayList g_aGroupName;
 
 // Stats
 
@@ -38,7 +40,6 @@ int g_iClientVitality[MAXPLAYERS+1];
 Handle g_TimerClient[MAXPLAYERS+1];
 
 // Modules
-#include "user/ban"
 #include "user/vip"
 #include "user/stats"
 
@@ -54,10 +55,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	
 	// Identity
 	CreateNative("NP_Users_UserIdentity", Native_UserIdentity);
-	
-	// Banning
-	CreateNative("NP_Users_BanClient",    Native_BanClient);
-	//CreateNative("NP_Users_BanIdentity",  Native_BanIdentity);
 
 	// Vip
 	CreateNative("NP_Vip_IsVIP", Native_IsVIP);
@@ -110,7 +107,6 @@ public void OnPluginStart()
 	AddCommandListener(Command_Who, "sm_who");
 
 	// global forwards
-	//g_hOnUMAuthChecked = CreateGlobalForward("OnClientAuthChecked", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_hOnUMDataChecked = CreateGlobalForward("OnClientDataChecked", ET_Ignore, Param_Cell, Param_Cell);
 
 	// init console
@@ -125,6 +121,38 @@ public void OnPluginStart()
 	CreateTimer(1.0, Timer_Global, _, TIMER_REPEAT);
 
 	LoadTranslations("np-user.phrases");
+
+	g_aGroupName = CreateArray(32, 50);
+}
+
+// get group name
+public void NP_Core_OnInitialized(int serverId, int modId)
+{
+	if(!NP_MySQL_IsConnected())
+	{
+		NP_Core_LogError("User", "CheckGroupName", "Mysql is not ready!");
+		CreateTimer(5.0, Timer_CheckGroupName, 0, TIMER_FLAG_NO_MAPCHANGE);
+		return;
+	}
+
+	char m_szQuery[128];
+	Format(m_szQuery, 256, "SELECT gid, gname FROM `%s_groups`", P_SQLPRE);
+	DBResultSet _result = SQL_Query(NP_MySQL_GetDatabase(), m_szQuery);
+	if(_result == null)
+	{
+		char error[256];
+		SQL_GetError(NP_MySQL_GetDatabase(), error, 256);
+		NP_Core_LogError("Mysql", "CheckGroupName", "Query Server Info: %s", error);
+		CreateTimer(5.0, Timer_CheckGroupName, 0, TIMER_FLAG_NO_MAPCHANGE);
+		return;
+	}
+
+	while(_result.FetchRow())
+	{
+		char groupName[32];
+		_result.FetchString(1, groupName, 32);
+		g_aGroupName.SetString(_result.FetchInt(0), groupName);
+	}
 }
 
 // ------------command------------
@@ -215,6 +243,19 @@ public void OnClientAuthorized(int client, const char[] auth)
 	}
 
 	CheckClient(client, steamid);
+
+	GetClientName(client, g_szUsername[client], 32);
+	ChangePlayerPreName(client);
+}
+
+//change the name of player when he changed it
+public void OnClientSettingsChanged(int client)
+{
+	if(!IsValidClient(client))
+		return;
+
+	GetClientName(client, g_szUsername[client], 32);
+	ChangePlayerPreName(client);
 }
 
 // ------------ native forward ------------ end
@@ -282,7 +323,6 @@ void CheckClientCallback(const char[] data)
 	g_bAuthLoaded[client] = true;
 
 	g_iUserId[client] = json_object_get_int(playerinfo, "UID");
-	json_object_get_string(playerinfo, "Username", g_szUsername[client], 32);
 	g_authClient[client][Spt] = json_object_get_bool(playerinfo, "Spt");
 	g_authClient[client][Vip] = json_object_get_bool(playerinfo, "Vip");
 	g_authClient[client][Ctb] = json_object_get_bool(playerinfo, "Ctb");
@@ -311,14 +351,14 @@ void CheckClientCallback(const char[] data)
 		return;
 	}
 	
-	SetAdmin(client, json_object_get_int(playerinfo, "Imm"));
+	//SetAdmin(client, json_object_get_int(playerinfo, "Imm"));
 	//CallAuthForward(client);
 
 	CloseHandle(json);
 	CloseHandle(playerinfo);
 }
 
-void SetAdmin(int client, int imm)
+/*void SetAdmin(int client, int imm)
 {
 	if(g_authClient[client][Ctb] || g_authClient[client][Opt] || g_authClient[client][Adm] || g_authClient[client][Own])
 	{
@@ -383,18 +423,7 @@ void SetAdmin(int client, int imm)
 		if(IsClientInGame(client))
 			RunAdminCacheChecks(client);
 	}
-}
-
-/*
-void CallAuthForward(int client)
-{
-	Call_StartForward(g_hOnUMAuthChecked);
-	Call_PushCell(client);
-	for(int i = 0; i < view_as<int>(Authentication); ++i)
-		Call_PushCell(g_authClient[client][i]);
-	Call_Finish();
-}
-*/
+}*/
 
 void CallDataForward(int client)
 {
@@ -404,10 +433,71 @@ void CallDataForward(int client)
 	Call_Finish();
 }
 
+void ChangePlayerPreName(int client)
+{
+	char newName[32];
+
+	if(g_iUserGroupId[client] != -1)
+	{
+		char groupName[32];
+		g_aGroupName.GetString(g_iUserGroupId[client], groupName, 32);
+		Format(newName, 32, "[%s] %s", groupName, g_szUsername[client]);
+	}
+	else if(g_authClient[client][Own])
+	{
+		Format(newName, 32, "[服主] %s", g_szUsername[client]);
+	}
+	else if(g_authClient[client][Adm])
+	{
+		Format(newName, 32, "[ADMIN] %s",g_szUsername[client]);
+	}
+	else if(g_authClient[client][Opt])
+	{
+		Format(newName, 32, "[管理] %s",g_szUsername[client]);
+	}
+	else if(g_authClient[client][Ctb])
+	{
+		Format(newName, 32, "[员工] %s",g_szUsername[client]);
+	}
+	else if(g_authClient[client][Vip])
+	{
+		Format(newName, 32, "[会员] %s",g_szUsername[client]);
+	}
+	else if(g_authClient[client][Spt])
+	{
+		Format(newName, 32, "[捐助] %s",g_szUsername[client]);
+	}
+
+	if (!StrEqual(g_szUsername[client], newName))
+		SetClientName(client, newName);
+}
+
+void KickBannedClient(int client, int bType, int bExpired, char[] bReason, char[] clientAuth)
+{
+	char timeExpired[64];
+	if(bExpired != 0)
+		FormatTime(timeExpired, 64, "%Y.%m.%d %H:%M:%S", bExpired);
+	else
+		FormatEx(timeExpired, 64, "%t", "Permanent ban");
+
+	char kickReason[256], g_banType[32], buffer[64];
+	Bantype(bType, g_banType, 32);
+	FormatEx(kickReason, 256, "%t", "Blocking information", g_banType, bReason, timeExpired, NP_BANURL);
+	FormatEx(buffer, sizeof(buffer), "banid 5 %s", clientAuth);
+	ServerCommand(buffer);
+	KickClient(client, kickReason);
+}
+
 // ---------- functions ------------ end
 
 
 // ---------- timer ------------
+
+public Action Timer_CheckGroupName(Handle timer)
+{
+	NP_Core_OnInitialized(0, 0);
+	return Plugin_Stop;
+}
 
 public Action Timer_CheckClient(Handle timer, int client)
 {

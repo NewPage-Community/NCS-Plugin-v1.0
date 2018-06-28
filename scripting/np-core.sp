@@ -27,6 +27,7 @@ public Plugin myinfo =
 int g_iServerId = -1;
 int g_iServerPort = 27015;
 int g_iServerModId = -1;
+int g_iSocketRetry = 0;
 
 bool g_bConnected = false;
 bool g_bSocketReady = false;
@@ -193,6 +194,12 @@ public void OnPluginEnd()
 
 void ConnectToSocketServer()
 {
+	if(++g_iSocketRetry > 10)
+	{
+		NP_Core_LogError("Socket", "ConnectToSocketServer", "Connect to socket server failed!");
+		return;
+	}
+
 	g_hSocket = new AsyncSocket();
 	g_hSocket.Connect(g_sSSIP, g_iSSPort);
 	if(g_hSocket != null)
@@ -405,6 +412,7 @@ void AddNewServer()
 public void OnSocketConnected(AsyncSocket socket)
 {
 	g_bSocketReady = true;
+	g_iSocketRetry = 0;
 	PrintToServer("Newpage Core - Socket server connected!");
 }
 
