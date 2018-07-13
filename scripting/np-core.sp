@@ -123,7 +123,7 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 		return 0;
 
 	Handle SJson = json_string(input);
-	json_string_value(SJson, input, 32);
+	json_string_value(SJson, input, inLen+1);
 	CloseHandle(SJson);
 
 	char buff [1024];
