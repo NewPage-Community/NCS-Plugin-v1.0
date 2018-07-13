@@ -120,8 +120,6 @@ public void OnPluginStart()
 	// global timer
 	CreateTimer(1.0, Timer_Global, _, TIMER_REPEAT);
 
-	LoadTranslations("np-user.phrases");
-
 	g_aGroupName = CreateArray(32, 50);
 }
 
@@ -229,10 +227,7 @@ public void OnRebuildAdminCache(AdminCachePart part)
 public void OnClientAuthorized(int client, const char[] auth)
 {
 	if(strcmp(auth, "BOT") == 0 || IsFakeClient(client) || IsClientSourceTV(client))
-	{
-		//CallAuthForward(client);
 		return;
-	}
 
 	char steamid[32];
 	if(!GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true))
@@ -341,89 +336,10 @@ void CheckClientCallback(const char[] data)
 	g_iClientVitality[client] = json_object_get_int(playerinfo, "Vitality");
 
 	g_iTrackingId[client] = json_object_get_int(playerinfo, "TrackingID");
-	
-	//check ban
-	if(json_object_get_bool(playerinfo, "IsBan"))
-	{
-		char t_bReason[32];
-		json_object_get_string(playerinfo, "BanR", t_bReason, 32);
-		KickBannedClient(client, json_object_get_int(playerinfo, "BanT"), json_object_get_int(playerinfo, "BExpired"), t_bReason, t_steamid);
-		return;
-	}
-	
-	//SetAdmin(client, json_object_get_int(playerinfo, "Imm"));
-	//CallAuthForward(client);
 
 	CloseHandle(json);
 	CloseHandle(playerinfo);
 }
-
-/*void SetAdmin(int client, int imm)
-{
-	if(g_authClient[client][Ctb] || g_authClient[client][Opt] || g_authClient[client][Adm] || g_authClient[client][Own])
-	{
-		AdminId _admin = GetUserAdmin(client);
-		if(_admin != INVALID_ADMIN_ID)
-		{
-			RemoveAdmin(_admin);
-			SetUserAdmin(client, INVALID_ADMIN_ID);
-		}
-
-		_admin = CreateAdmin(g_szUsername[client]);
-		SetUserAdmin(client, _admin, true);
-		SetAdminImmunityLevel(_admin, imm);
-
-		_admin.SetFlag(Admin_Reservation, true);
-		_admin.SetFlag(Admin_Generic, true);
-		_admin.SetFlag(Admin_Kick, true);
-		_admin.SetFlag(Admin_Slay, true);
-		_admin.SetFlag(Admin_Chat, true);
-		_admin.SetFlag(Admin_Vote, true);
-		_admin.SetFlag(Admin_Changemap, true);
-
-		if(g_authClient[client][Opt] || g_authClient[client][Adm] || g_authClient[client][Own])
-		{
-			_admin.SetFlag(Admin_Ban, true);
-			_admin.SetFlag(Admin_Unban, true);
-
-			if(g_authClient[client][Adm] || g_authClient[client][Own])
-			{
-				_admin.SetFlag(Admin_Convars, true);
-				_admin.SetFlag(Admin_Config, true);
-
-				if(g_authClient[client][Own])
-				{
-					_admin.SetFlag(Admin_Password, true);
-					_admin.SetFlag(Admin_Cheats, true);
-					_admin.SetFlag(Admin_RCON, true);
-					_admin.SetFlag(Admin_Root, true);
-				}
-			}
-		}
-
-		// we give admin perm before client admin check
-		if(IsClientInGame(client))
-			RunAdminCacheChecks(client);
-	}
-	else if(g_authClient[client][Vip])
-	{
-		AdminId _admin = GetUserAdmin(client);
-		if(_admin != INVALID_ADMIN_ID)
-		{
-			RemoveAdmin(_admin);
-			SetUserAdmin(client, INVALID_ADMIN_ID);
-		}
-
-		_admin = CreateAdmin(g_szUsername[client]);
-		SetUserAdmin(client, _admin, true);
-
-		_admin.SetFlag(Admin_Reservation, true);
-
-		// we give admin perm before client admin check
-		if(IsClientInGame(client))
-			RunAdminCacheChecks(client);
-	}
-}*/
 
 void CallDataForward(int client)
 {
@@ -470,22 +386,6 @@ void ChangePlayerPreName(int client)
 
 	if (!StrEqual(g_szUsername[client], newName))
 		SetClientName(client, newName);
-}
-
-void KickBannedClient(int client, int bType, int bExpired, char[] bReason, char[] clientAuth)
-{
-	char timeExpired[64];
-	if(bExpired != 0)
-		FormatTime(timeExpired, 64, "%Y.%m.%d %H:%M:%S", bExpired);
-	else
-		FormatEx(timeExpired, 64, "%t", "Permanent ban");
-
-	char kickReason[256], g_banType[32], buffer[64];
-	Bantype(bType, g_banType, 32);
-	FormatEx(kickReason, 256, "%t", "Blocking information", g_banType, bReason, timeExpired, NP_BANURL);
-	FormatEx(buffer, sizeof(buffer), "banid 5 %s", clientAuth);
-	ServerCommand(buffer);
-	KickClient(client, kickReason);
 }
 
 // ---------- functions ------------ end

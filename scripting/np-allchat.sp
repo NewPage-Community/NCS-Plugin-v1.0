@@ -54,8 +54,14 @@ public Action Command_AllChat(int client, int argc)
 		return Plugin_Handled;
 	}
 
+	char playerName[32];
+	GetClientName(client, playerName, 32);
+	Handle SJson = json_string(playerName);
+	json_string_value(SJson, playerName, 32);
+	CloseHandle(SJson);
+
 	char buff[512];
-	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"ServerModID\":%d,\"PlayerName\":\"%N\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), NP_Core_GetServerModId(), client, szChat);
+	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"ServerModID\":%d,\"PlayerName\":\"%s\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), NP_Core_GetServerModId(), playerName, szChat);
 
 	if(!NP_Socket_Write(buff))
 		NP_Core_LogError("AllChat", "Command_AllChat", "Socket write failed -> %s", buff);

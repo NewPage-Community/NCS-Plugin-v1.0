@@ -1,8 +1,8 @@
 void GrantVip(int client, int duration)
 {
-    if(!NP_MySQL_IsConnected())
+    if(!NP_Socket_IsReady())
     {
-        NP_Core_LogError("Vip", "GrantVip", "Error: SQL is unavailable -> \"%L\"", client);
+        NP_Core_LogError("Vip", "GrantVip", "Error: Socket is unavailable -> \"%L\"", client);
         return;
     }
 
@@ -17,9 +17,9 @@ void DeleteVip(int client)
     if(!g_authClient[client][Vip])
         return;
 
-    if(!NP_MySQL_IsConnected())
+    if(!NP_Socket_IsReady())
     {
-        NP_Core_LogError("Vip", "GrantVip", "Error: SQL is unavailable -> \"%L\"", client);
+        NP_Core_LogError("Vip", "GrantVip", "Error: Socket is unavailable -> \"%L\"", client);
         return;
     }
 
@@ -34,9 +34,9 @@ void AddVipPoint(int client, int point)
     if(!g_authClient[client][Vip])
         return;
 
-    if(!NP_MySQL_IsConnected())
+    if(!NP_Socket_IsReady())
     {
-        NP_Core_LogError("Vip", "GrantVip", "Error: SQL is unavailable -> \"%L\"", client);
+        NP_Core_LogError("Vip", "GrantVip", "Error: Socket is unavailable -> \"%L\"", client);
         return;
     }
 

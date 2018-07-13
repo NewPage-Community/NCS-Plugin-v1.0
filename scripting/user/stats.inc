@@ -25,10 +25,9 @@ void EndStats(int client)
     if(g_iTrackingId[client] <= 0)
         return;
 
-    char m_szQuery[256], m_szUsername[32], m_szEscape[64];
-    GetClientName(client, m_szUsername, 32);
+    char m_szQuery[256], m_szEscape[64];
 
-    NP_MySQL_GetDatabase().Escape(m_szUsername, m_szEscape, 64);
+    NP_MySQL_GetDatabase().Escape(g_szUsername[client], m_szEscape, 64);
 
     FormatEx(m_szQuery, 256, "CALL user_stats(%d, %d, %d, %d, %d, %d, '%s')", NP_Users_UserIdentity(client), g_iTrackingId[client], g_StatsClient[client][STATS_SESSION][iTodayOnlineTime], g_StatsClient[client][STATS_SESSION][iTotalOnlineTime], g_StatsClient[client][STATS_SESSION][iObserveOnlineTime], g_StatsClient[client][STATS_SESSION][iPlayOnlineTime], m_szEscape);
     NP_MySQL_SaveDatabase(m_szQuery);
