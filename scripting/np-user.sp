@@ -24,6 +24,7 @@ bool g_authClient[MAXPLAYERS+1][Authentication];
 bool g_bAuthLoaded[MAXPLAYERS+1];
 bool g_bBanChecked[MAXPLAYERS+1];
 char g_szUsername[MAXPLAYERS+1][32];
+char g_szUserTag[MAXPLAYERS+1][16];
 
 Handle g_hOnUMDataChecked;
 
@@ -69,11 +70,21 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("NP_Stats_ObserveOnlineTime", Native_ObserveOnlineTime);
 	CreateNative("NP_Stats_PlayOnlineTime",    Native_PlayOnlineTime);
 	CreateNative("NP_Stats_Vitality",          Native_Vitality);
+
+	// Tag
+	CreateNative("NP_Users_SetTag", Native_SetTag);
 	
 	// lib
 	RegPluginLibrary("np-user");
 
 	return APLRes_Success;
+}
+
+public int Native_SetTag(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	GetNativeString(2, g_szUserTag[client], 16);
+	ChangePlayerPreName(client);
 }
 
 // Group
@@ -195,6 +206,8 @@ public void OnClientDisconnect(int client)
 {
 	// Stats
 	EndStats(client);
+	// Tag
+	g_szUserTag[client] = "";
 }
 
 // we call this forward after client is fully in-game.
@@ -240,17 +253,6 @@ public void OnClientAuthorized(int client, const char[] auth)
 	CheckClient(client, steamid);
 
 	GetClientName(client, g_szUsername[client], 32);
-	ChangePlayerPreName(client);
-}
-
-//change the name of player when he changed it
-public void OnClientSettingsChanged(int client)
-{
-	if(!IsValidClient(client))
-		return;
-
-	GetClientName(client, g_szUsername[client], 32);
-	ChangePlayerPreName(client);
 }
 
 // ------------ native forward ------------ end
@@ -339,6 +341,8 @@ void CheckClientCallback(const char[] data)
 
 	CloseHandle(json);
 	CloseHandle(playerinfo);
+
+	ChangePlayerPreName(client);
 }
 
 void CallDataForward(int client)
@@ -351,37 +355,43 @@ void CallDataForward(int client)
 
 void ChangePlayerPreName(int client)
 {
-	char newName[32];
+	char newName[64];
+
+	strcopy(newName, 64, g_szUsername[client]);
+
+	// Tag
+	if(strlen(g_szUserTag[client]) > 1)
+		Format(newName, 64, "[%s] %s", g_szUserTag[client], newName);
 
 	if(g_iUserGroupId[client] != -1)
 	{
 		char groupName[32];
 		g_aGroupName.GetString(g_iUserGroupId[client], groupName, 32);
-		Format(newName, 32, "[%s] %s", groupName, g_szUsername[client]);
+		Format(newName, 64, "[%s] %s", groupName, newName);
 	}
 	else if(g_authClient[client][Own])
 	{
-		Format(newName, 32, "[服主] %s", g_szUsername[client]);
+		Format(newName, 64, "[服主] %s", newName);
 	}
 	else if(g_authClient[client][Adm])
 	{
-		Format(newName, 32, "[ADMIN] %s",g_szUsername[client]);
+		Format(newName, 64, "[ADMIN] %s", newName);
 	}
 	else if(g_authClient[client][Opt])
 	{
-		Format(newName, 32, "[管理] %s",g_szUsername[client]);
+		Format(newName, 64, "[管理] %s", newName);
 	}
 	else if(g_authClient[client][Ctb])
 	{
-		Format(newName, 32, "[员工] %s",g_szUsername[client]);
+		Format(newName, 64, "[员工] %s", newName);
 	}
 	else if(g_authClient[client][Vip])
 	{
-		Format(newName, 32, "[会员] %s",g_szUsername[client]);
+		Format(newName, 64, "[会员] %s", newName);
 	}
 	else if(g_authClient[client][Spt])
 	{
-		Format(newName, 32, "[捐助] %s",g_szUsername[client]);
+		Format(newName, 64, "[捐助] %s", newName);
 	}
 
 	if (!StrEqual(g_szUsername[client], newName))

@@ -50,6 +50,8 @@ native void NP_Vip_GrantVip(int client, int duration);
 native void NP_Vip_DeleteVip(int client);
 native void NP_Vip_AddVipPoint(int client, int point);
 
+native void NP_Users_SetTag(int client, char[] TagName);
+
 public SharedPlugin __pl_user =
 {
 	name = "np-user",
