@@ -27,9 +27,8 @@ void EndStats(int client)
 
 	char buff[256], playerName[32];
 
-	Handle SJson = json_string(g_szUsername[client]);
-	json_string_value(SJson, playerName, 32);
-	CloseHandle(SJson);
+	strcopy(playerName, 32, g_szUsername[client]);
+	ReplaceString(playerName, 32, "\"", "");
 
 	FormatEx(buff, 256, "{\"Event\":\"UserStats\",\"UserStats\":{\"UID\":%d,\"SessionID\":%d,\"TodayOnline\":%d,\"TotalOnline\":%d,\"SpecOnline\":%d,\"PlayOnline\":%d,\"UserName\":\"%s\"}}", NP_Users_UserIdentity(client), g_iTrackingId[client], g_StatsClient[client][STATS_SESSION][iTodayOnlineTime], g_StatsClient[client][STATS_SESSION][iTotalOnlineTime], g_StatsClient[client][STATS_SESSION][iObserveOnlineTime], g_StatsClient[client][STATS_SESSION][iPlayOnlineTime], playerName);
 	NP_Socket_Write(buff);
