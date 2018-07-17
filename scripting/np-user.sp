@@ -252,6 +252,8 @@ public void OnClientAuthorized(int client, const char[] auth)
 		return;
 	}
 
+	GetClientName(client, g_szUsername[client], 32);
+
 	CheckClient(client, steamid);
 }
 
@@ -342,7 +344,6 @@ void CheckClientCallback(const char[] data)
 	CloseHandle(json);
 	CloseHandle(playerinfo);
 
-	GetClientName(client, g_szUsername[client], 32);
 	ChangePlayerPreName(client);
 }
 
@@ -358,6 +359,9 @@ void ChangePlayerPreName(int client)
 {
 	char newName[64];
 
+	if(g_szUsername[client][0] == '\0')
+		GetClientName(client, g_szUsername[client], 32);
+		
 	strcopy(newName, 64, g_szUsername[client]);
 
 	// Tag
