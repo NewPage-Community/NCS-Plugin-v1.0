@@ -195,6 +195,7 @@ public void OnClientConnected(int client)
 	g_bAuthLoaded[client] = false;
 	g_bBanChecked[client] = false;
 	g_szUsername[client][0] = '\0';
+	g_iUserGroupId[client] = -1;
 
 	// Tag
 	g_szUserTag[client][0] = '\0';
@@ -360,7 +361,7 @@ void ChangePlayerPreName(int client)
 	strcopy(newName, 64, g_szUsername[client]);
 
 	// Tag
-	if(g_szUserTag[client][0] == '\0')
+	if(g_szUserTag[client][0] != '\0')
 		Format(newName, 64, "[%s] %s", g_szUserTag[client], newName);
 
 	if(g_iUserGroupId[client] != -1)
