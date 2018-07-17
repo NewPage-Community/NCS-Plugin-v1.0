@@ -195,6 +195,9 @@ public void OnClientConnected(int client)
 	g_bAuthLoaded[client] = false;
 	g_bBanChecked[client] = false;
 	g_szUsername[client][0] = '\0';
+
+	// Tag
+	g_szUserTag[client][0] = '\0';
 	
 	g_iUserId[client] = 0;
 
@@ -206,8 +209,6 @@ public void OnClientDisconnect(int client)
 {
 	// Stats
 	EndStats(client);
-	// Tag
-	g_szUserTag[client] = "";
 }
 
 // we call this forward after client is fully in-game.
@@ -251,8 +252,6 @@ public void OnClientAuthorized(int client, const char[] auth)
 	}
 
 	CheckClient(client, steamid);
-
-	GetClientName(client, g_szUsername[client], 32);
 }
 
 // ------------ native forward ------------ end
@@ -342,6 +341,7 @@ void CheckClientCallback(const char[] data)
 	CloseHandle(json);
 	CloseHandle(playerinfo);
 
+	GetClientName(client, g_szUsername[client], 32);
 	ChangePlayerPreName(client);
 }
 
@@ -360,7 +360,7 @@ void ChangePlayerPreName(int client)
 	strcopy(newName, 64, g_szUsername[client]);
 
 	// Tag
-	if(strlen(g_szUserTag[client]) > 1)
+	if(g_szUserTag[client][0] == '\0')
 		Format(newName, 64, "[%s] %s", g_szUserTag[client], newName);
 
 	if(g_iUserGroupId[client] != -1)
@@ -460,10 +460,7 @@ public Action Timer_PrintConsole(Handle timer, int client)
 		char strSlot[8], strUser[8];
 		StringPad(index, 4, ' ', strSlot, 8);
 		StringPad(GetClientUserId(index), 6, ' ', strUser, 8);
-		char strFlag[5][4];
-		for(int x = 0; x < 5; ++x)
-			TickOrCross(g_authClient[index][x], strFlag[x]);
-		PrintToConsole(client, "#%s    %s    %N    %s    %s    %s    %s    %s", strSlot, strUser, index, strFlag[0], strFlag[1], strFlag[2], strFlag[3], strFlag[4]);
+		PrintToConsole(client, "#%s    %s    %N    %s    %s    %s    %s    %s    %s", strSlot, strUser, index, g_authClient[index][0], g_authClient[index][1], g_authClient[index][2], g_authClient[index][3], g_authClient[index][4], g_authClient[index][5]);
 	}
 
 	return Plugin_Continue;
