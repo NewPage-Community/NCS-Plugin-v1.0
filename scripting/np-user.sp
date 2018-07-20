@@ -252,8 +252,6 @@ public void OnClientAuthorized(int client, const char[] auth)
 		return;
 	}
 
-	GetClientName(client, g_szUsername[client], 32);
-
 	CheckClient(client, steamid);
 }
 
@@ -343,8 +341,6 @@ void CheckClientCallback(const char[] data)
 
 	CloseHandle(json);
 	CloseHandle(playerinfo);
-
-	ChangePlayerPreName(client);
 }
 
 void CallDataForward(int client)
@@ -353,12 +349,19 @@ void CallDataForward(int client)
 	Call_PushCell(client);
 	Call_PushCell(g_iUserId[client]);
 	Call_Finish();
+
+	GetClientName(client, g_szUsername[client], 32);
+
+	ChangePlayerPreName(client);
 }
 
 void ChangePlayerPreName(int client)
 {
-	char newName[64];
+	char newName[64], oldName[64];
 
+	GetClientName(client, oldName, 64);
+
+	// get player name if it invalid
 	if(g_szUsername[client][0] == '\0')
 		GetClientName(client, g_szUsername[client], 32);
 		
@@ -399,7 +402,7 @@ void ChangePlayerPreName(int client)
 		Format(newName, 64, "[捐助] %s", newName);
 	}
 
-	if (!StrEqual(g_szUsername[client], newName))
+	if (!StrEqual(oldName, newName))
 		SetClientName(client, newName);
 }
 
