@@ -360,10 +360,6 @@ void ChangePlayerPreName(int client)
 	char newName[64], oldName[64];
 
 	GetClientName(client, oldName, 64);
-
-	// get player name if it invalid
-	if(g_szUsername[client][0] == '\0')
-		GetClientName(client, g_szUsername[client], 32);
 		
 	strcopy(newName, 64, g_szUsername[client]);
 
