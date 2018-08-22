@@ -24,25 +24,25 @@ public Plugin myinfo =
 };
 
 
-int g_iServerId = -1;
-int g_iServerPort = 27015;
-int g_iServerModId = -1;
-int g_iSocketRetry = 0;
+int g_iServerId = -1,
+	g_iServerPort = 27015,
+	g_iServerModId = -1,
+	g_iSocketRetry = 0,
+	g_iSSPort = 23000;
 
-bool g_bConnected = false;
-bool g_bSocketReady = false;
+bool g_bConnected = false,
+	g_bSocketReady = false;
 
-char g_szServerIp[24]  = "127.0.0.1";
-char g_szRconPswd[24]  = "RCONPASSWORD";
-char g_szHostName[128] = "NewPage Server";
-
-char g_sSSIP[24] = "127.0.0.1";
-int g_iSSPort = 23000;
+static char g_szServerIp[24]  = "127.0.0.1";
+static char g_szRconPswd[24]  = "RCONPASSWORD";
+static char g_szHostName[128] = "NewPage Server";
+static char g_sSSIP[24] = "127.0.0.1";
 
 Handle g_hOnInitialized = INVALID_HANDLE;
 Handle g_hOnSocketReceived = INVALID_HANDLE;
 
-Database      g_hSQL = null;
+Database g_hSQL = null;
+
 EngineVersion g_Engine = Engine_Unknown;
 
 AsyncSocket g_hSocket;

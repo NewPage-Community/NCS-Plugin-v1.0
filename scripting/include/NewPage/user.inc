@@ -31,6 +31,23 @@ enum Stats
     iTodayOnlineTime,
 }
 
+enum ban_f
+{
+    ban_Client,
+    ban_Identity
+}
+
+enum ban_t
+{
+    iTarget,
+    iLength,
+    iBanType,
+    ban_f:banProc,
+    bool:bListen,
+    String:szAuthId[32],
+    String:szReason[256]
+}
+
 forward void OnClientDataChecked(int client, int UserIdentity);
 native int NP_Users_UserIdentity(int client);
 native bool NP_Users_IsAuthorized(int client, Authentication auth);
@@ -52,6 +69,9 @@ native void NP_Vip_AddVipPoint(int client, int point);
 
 native void NP_Users_SetTag(int client, char[] TagName);
 
+native void NP_Users_BanClient(int client, int admin, int banLength, int banType, const char[] banReason);
+native void NP_Users_BanIdentity(const char[] steamIdentity, int admin, int banLength, int banType, const char[] banReason);
+
 public SharedPlugin __pl_user =
 {
 	name = "np-user",
@@ -62,23 +82,3 @@ public SharedPlugin __pl_user =
     required = 1
 #endif
 };
-
-/* Ban type translation */
-stock void Bantype(const int btype, char[] buffer, int maxlength)
-{
-    switch(btype)
-    {
-        case 0:
-        {
-            FormatEx(buffer, maxlength, "%t", "Ban type 0");
-        }
-        case 1:
-        {
-            FormatEx(buffer, maxlength, "%t", "Ban type 1");
-        }
-        case 2:
-        {
-            FormatEx(buffer, maxlength, "%t", "Ban type 2");
-        }
-    }
-}

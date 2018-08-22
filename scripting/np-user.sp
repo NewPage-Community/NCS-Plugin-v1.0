@@ -2,6 +2,7 @@
 
 #include <NewPage>
 #include <NewPage/user>
+#include <NewPage/allchat>
 #include <smjansson>
 #include <sdktools_functions>
 
@@ -17,32 +18,37 @@ public Plugin myinfo =
 	url         = P_URLS
 };
 
-int  g_iUserId[MAXPLAYERS+1];
-int g_ivipLevel[MAXPLAYERS+1];
-int g_iUserGroupId[MAXPLAYERS+1];
-bool g_authClient[MAXPLAYERS+1][Authentication];
-bool g_bAuthLoaded[MAXPLAYERS+1];
-bool g_bBanChecked[MAXPLAYERS+1];
-char g_szUsername[MAXPLAYERS+1][32];
-char g_szUserTag[MAXPLAYERS+1][16];
+int g_iUserId[MAXPLAYERS+1],
+	g_ivipLevel[MAXPLAYERS+1],
+	g_iUserGroupId[MAXPLAYERS+1],
+	// Stats
+	g_iToday,
+	g_iTrackingId[MAXPLAYERS+1],
+	g_StatsClient[MAXPLAYERS+1][2][Stats],
+	g_iConnectTimes[MAXPLAYERS+1],
+	g_iClientVitality[MAXPLAYERS+1];
 
-Handle g_hOnUMDataChecked;
+bool g_authClient[MAXPLAYERS+1][Authentication],
+	g_bAuthLoaded[MAXPLAYERS+1],
+	// Ban
+	g_bBanChecked[MAXPLAYERS+1];
+
+// Tag
+char g_szUsername[MAXPLAYERS+1][32],
+	g_szUserTag[MAXPLAYERS+1][16];
+
+Handle g_hOnUMDataChecked,
+	// Stats
+	g_TimerClient[MAXPLAYERS+1];
 
 ArrayList g_aGroupName;
-
-// Stats
-
-int g_iToday;
-int g_iTrackingId[MAXPLAYERS+1];
-int g_StatsClient[MAXPLAYERS+1][2][Stats];
-int g_iConnectTimes[MAXPLAYERS+1];
-int g_iClientVitality[MAXPLAYERS+1];
-
-Handle g_TimerClient[MAXPLAYERS+1];
 
 // Modules
 #include "user/vip"
 #include "user/stats"
+#include "user/admin"
+#include "user/ban"
+#include "user/tag"
 
 // ---------- API ------------
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -71,6 +77,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("NP_Stats_PlayOnlineTime",    Native_PlayOnlineTime);
 	CreateNative("NP_Stats_Vitality",          Native_Vitality);
 
+	// Banning
+	CreateNative("NP_Users_BanClient",    Native_BanClient);
+	CreateNative("NP_Users_BanIdentity",  Native_BanIdentity);
+
 	// Tag
 	CreateNative("NP_Users_SetTag", Native_SetTag);
 	
@@ -78,13 +88,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	RegPluginLibrary("np-user");
 
 	return APLRes_Success;
-}
-
-public int Native_SetTag(Handle plugin, int numParams)
-{
-	int client = GetNativeCell(1);
-	GetNativeString(2, g_szUserTag[client], 16);
-	ChangePlayerPreName(client);
 }
 
 // Group
@@ -116,13 +119,14 @@ public void OnPluginStart()
 {
 	// console command
 	AddCommandListener(Command_Who, "sm_who");
+	RegAdminCmd("sm_ban", Command_Ban, ADMFLAG_BAN);
 
 	// global forwards
 	g_hOnUMDataChecked = CreateGlobalForward("OnClientDataChecked", ET_Ignore, Param_Cell, Param_Cell);
 
 	// init console
 	g_iUserId[0] = 0;
-	g_szUsername[0] = "CONSOLE";
+	g_szUsername[0] = "SERVER";
 
 	// stats
 	// init
@@ -247,8 +251,8 @@ public void OnClientAuthorized(int client, const char[] auth)
 	char steamid[32];
 	if(!GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true))
 	{
-		NP_Core_LogMessage("User", "OnClientAuthorized", "Error: We can not verify client`s SteamId64 -> \"%L\"", client);
-		CreateTimer(0.1, Timer_ReAuthorize, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		NP_Core_LogMessage("User", "OnClientAuthorized", "Error: Can not verify client`s SteamId64 -> \"%L\"", client);
+		KickClient(client, "无效SteamID/Invalid Steam Id");
 		return;
 	}
 
@@ -341,6 +345,11 @@ void CheckClientCallback(const char[] data)
 
 	CloseHandle(json);
 	CloseHandle(playerinfo);
+
+	if(!CheckBan(client, playerinfo))
+		return;
+
+	LoadAdmin(client, t_steamid);
 }
 
 void CallDataForward(int client)
@@ -353,57 +362,6 @@ void CallDataForward(int client)
 	GetClientName(client, g_szUsername[client], 32);
 
 	ChangePlayerPreName(client);
-}
-
-void ChangePlayerPreName(int client)
-{
-	char newName[64], oldName[64];
-
-	GetClientName(client, oldName, 64);
-
-	// get player name if it invalid
-	if(g_szUsername[client][0] == '\0')
-		GetClientName(client, g_szUsername[client], 32);
-		
-	strcopy(newName, 64, g_szUsername[client]);
-
-	// Tag
-	if(g_szUserTag[client][0] != '\0')
-		Format(newName, 64, "[%s] %s", g_szUserTag[client], newName);
-
-	if(g_iUserGroupId[client] != -1)
-	{
-		char groupName[32];
-		g_aGroupName.GetString(g_iUserGroupId[client], groupName, 32);
-		Format(newName, 64, "[%s] %s", groupName, newName);
-	}
-	else if(g_authClient[client][Own])
-	{
-		Format(newName, 64, "[服主] %s", newName);
-	}
-	else if(g_authClient[client][Adm])
-	{
-		Format(newName, 64, "[ADMIN] %s", newName);
-	}
-	else if(g_authClient[client][Opt])
-	{
-		Format(newName, 64, "[管理] %s", newName);
-	}
-	else if(g_authClient[client][Ctb])
-	{
-		Format(newName, 64, "[员工] %s", newName);
-	}
-	else if(g_authClient[client][Vip])
-	{
-		Format(newName, 64, "[会员] %s", newName);
-	}
-	else if(g_authClient[client][Spt])
-	{
-		Format(newName, 64, "[捐助] %s", newName);
-	}
-
-	if (!StrEqual(oldName, newName))
-		SetClientName(client, newName);
 }
 
 // ---------- functions ------------ end
@@ -482,31 +440,13 @@ public Action Timer_ReAuthorize(Handle timer, int client)
 	char steamid[32];
 	if(!GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true))
 	{
-		NP_Core_LogMessage("User", "OnClientAuthorized", "Error: We can not verify client`s SteamId64 -> \"%L\"", client);
+		NP_Core_LogMessage("User", "OnClientAuthorized", "Error: Can not verify client`s SteamId64 -> \"%L\"", client);
 		return Plugin_Continue;
 	}
 
 	CheckClient(client, steamid);
 	
 	return Plugin_Stop;
-}
-
-public Action Timer_Global(Handle timer)
-{
-	int today = GetDay();
-
-	if(today != g_iToday)
-	{
-		g_iToday = today;
-		
-		for(int client = 1; client <= MaxClients; ++client)
-		{
-			g_StatsClient[client][STATS_SESSION][iTodayOnlineTime] = 0;
-			g_StatsClient[client][STATS_TOTAL][iTodayOnlineTime]   = 0;
-		}
-	}
-	
-	return Plugin_Continue;
 }
 
 // ---------- timer ------------ end
@@ -517,6 +457,8 @@ public void NP_Socket_OnReceived(const char[] event, const char[] data, const in
 {
 	if(!strcmp(event, "PlayerInfo"))
 		CheckClientCallback(data);
+	if(!strcmp(event, "BanClient"))
+		BanClientCallback(data);
 }
 
 // ---------- socket ------------ end

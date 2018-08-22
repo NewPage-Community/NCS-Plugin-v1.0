@@ -1,5 +1,5 @@
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v2.4"
+#define P_VERSION "Alpha-v2.5"
 #define P_URLS "https://new-page.cc"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"
@@ -167,4 +167,16 @@ stock void GenerateRandomString(char[] buffer, int maxLen)
     }
 
     buffer[maxLen] = '\0';
+}
+
+stock int FindClientBySteamId(AuthIdType authType, const char[] authId, bool validate = false)
+{
+    char steamId[32];
+    for(int client = 1; client <= MaxClients; client++)
+        if(IsValidClient(client))
+            if(GetClientAuthId(client, authType, steamId, 32, validate))
+                if(strcmp(steamId, authId) == 0)
+                    return client;
+
+    return -1;
 }

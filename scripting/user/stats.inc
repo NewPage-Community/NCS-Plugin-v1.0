@@ -80,3 +80,21 @@ public int Native_Vitality(Handle plugin, int numParams)
 	int client = GetNativeCell(1);
 	return g_iClientVitality[client];
 }
+
+public Action Timer_Global(Handle timer)
+{
+	int today = GetDay();
+
+	if(today != g_iToday)
+	{
+		g_iToday = today;
+		
+		for(int client = 1; client <= MaxClients; ++client)
+		{
+			g_StatsClient[client][STATS_SESSION][iTodayOnlineTime] = 0;
+			g_StatsClient[client][STATS_TOTAL][iTodayOnlineTime]   = 0;
+		}
+	}
+	
+	return Plugin_Continue;
+}
