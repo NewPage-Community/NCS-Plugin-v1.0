@@ -3,7 +3,7 @@ public Action Command_UserInfo(int client, const char[] command, int argc)
 	if (!IsValidClient(client))
 		return Plugin_Handled;
 
-	if (!NP_Users_UserIdentity(client))
+	if (!NP_Users_IsAuthLoaded(client))
 	{
 		PrintToChat(client, "你的账号信息仍未被加载！");
 		return Plugin_Handled;
@@ -48,7 +48,7 @@ void ShowUserInfo(int client)
 	else
 		g_aGroupName.GetString(NP_Group_GetUserGId(client), groupName, 32);
 
-	Format(buff, 128, "UID：%d\nSTEAMID：%s\n在线时间：%s\n用户组：%s", NP_Users_UserIdentity(client), steamid, onlineTime, groupName);
+	Format(buff, 128, "UID：%d\nSTEAMID：%s\n在线时间：%s\n用户组：%s\n签到次数：%d\n软妹币：%d元", NP_Users_UserIdentity(client), steamid, onlineTime, groupName, g_aClient[client][SignTimes], g_aClient[client][Money]);
 
 	Menu infoMenu = new Menu(MenuHandler_UserInfo);
 	infoMenu.SetTitle("账号信息", client);
@@ -116,11 +116,35 @@ public Action Command_Sign(int client, const char[] command, int argc)
 	if (!IsValidClient(client))
 		return Plugin_Handled;
 
-	if (!NP_Users_UserIdentity(client))
+	if (!NP_Users_IsAuthLoaded(client))
 	{
-		PrintToChat(client, "你的账号信息仍未被加载！");
+		PrintToChat(client, "\x04[提示]\x01 你的账号信息仍未被加载！");
 		return Plugin_Handled;
 	}
+
+	int today = GetDay();
+
+	if(g_aClient[client][SignDate] >= today)
+	{
+		PrintToChat(client, "\x04[提示]\x01 你已经签到过了！");
+		return Plugin_Handled;
+	}
+
+	char m_szQuery[256];
+	FormatEx(m_szQuery, 256, "UPDATE `%s_users` SET `signtimes` = `signtimes` + 1, `signdate` = %d WHERE uid = %d", P_SQLPRE, today, NP_Users_UserIdentity(client));
+	
+	if (!NP_MySQL_SaveDatabase(m_szQuery))
+	{
+		PrintToChat(client, "\x04[提示]\x01 签到失败，请重试！");
+		return Plugin_Handled;
+	}
+
+	PrintToChat(client, "\x04[提示]\x01 签到成功！");
+
+	Call_StartForward(g_hOnClientSigned);
+	Call_PushCell(client);
+	Call_PushCell(g_aClient[client][SignTimes]);
+	Call_Finish();
 
 	return Plugin_Handled;
 }

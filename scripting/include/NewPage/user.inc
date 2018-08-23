@@ -68,9 +68,10 @@ enum client_Info
     Handle:StatsTimer
 }
 
-forward void OnClientDataChecked(int client, int UserIdentity);
+forward void NP_OnClientDataChecked(int client, int UserIdentity);
 native int NP_Users_UserIdentity(int client);
 native bool NP_Users_IsAuthorized(int client, Authentication auth);
+native bool NP_Users_IsAuthLoaded(int client);
 
 native int NP_Group_GetUserGId(int client);
 native bool NP_Group_GetUserGName(int client, char[] buff, int size);
@@ -84,14 +85,16 @@ native int NP_Stats_Vitality(int client);
 
 native bool NP_Vip_IsVIP(int client);
 native int NP_Vip_VIPLevel(int client);
-native void NP_Vip_GrantVip(int client, int duration);
-native void NP_Vip_DeleteVip(int client);
-native void NP_Vip_AddVipPoint(int client, int point);
+native bool NP_Vip_GrantVip(int client, int duration);
+native bool NP_Vip_DeleteVip(int client);
+native bool NP_Vip_AddVipPoint(int client, int point);
 
 native void NP_Users_SetTag(int client, char[] TagName);
 
 native void NP_Users_BanClient(int client, int admin, int banLength, int banType, const char[] banReason);
 native void NP_Users_BanIdentity(const char[] steamIdentity, int admin, int banLength, int banType, const char[] banReason);
+
+forward void NP_OnClientSigned(int client, int signtimes);
 
 public SharedPlugin __pl_user =
 {

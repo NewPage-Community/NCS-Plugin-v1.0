@@ -20,7 +20,8 @@ public Plugin myinfo =
 
 int	g_iToday;
 
-Handle g_hOnUMDataChecked;
+Handle g_hOnUMDataChecked,
+	g_hOnClientSigned;
 
 ArrayList g_aGroupName;
 
@@ -45,6 +46,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	// Auth
 	CreateNative("NP_Users_IsAuthorized", Native_IsAuthorized);
+	CreateNative("NP_Users_IsAuthLoaded", Native_IsAuthLoaded);
 	
 	// Identity
 	CreateNative("NP_Users_UserIdentity", Native_UserIdentity);
@@ -82,6 +84,11 @@ public int Native_IsAuthorized(Handle plugin, int numParams)
 	return g_aClient[GetNativeCell(1)][Auth][GetNativeCell(2)];
 }
 
+public int Native_IsAuthLoaded(Handle plugin, int numParams)
+{
+	return g_aClient[GetNativeCell(1)][AuthLoaded];
+}
+
 // Identity
 public int Native_UserIdentity(Handle plugin, int numParams)
 {
@@ -99,7 +106,8 @@ public void OnPluginStart()
 	RegAdminCmd("sm_ban", Command_Ban, ADMFLAG_BAN);
 
 	// global forwards
-	g_hOnUMDataChecked = CreateGlobalForward("OnClientDataChecked", ET_Ignore, Param_Cell, Param_Cell);
+	g_hOnUMDataChecked = CreateGlobalForward("NP_OnClientDataChecked", ET_Ignore, Param_Cell, Param_Cell);
+	g_hOnClientSigned = CreateGlobalForward("NP_OnClientSigned",  ET_Ignore, Param_Cell, Param_Cell);
 
 	// init console
 	g_aClient[0][UID] = 0;
@@ -130,6 +138,7 @@ public void OnClientConnected(int client)
 	g_aClient[client][AuthLoaded] = false;
 	g_aClient[client][Name][0] = '\0';
 	g_aClient[client][GID] = -1;
+	g_aClient[client][Money] = 0;
 
 	// Tag
 	g_aClient[client][Tag][0] = '\0';
@@ -274,6 +283,11 @@ void CheckClientCallback(const char[] data)
 	g_aClient[client][Vitality] = json_object_get_int(playerinfo, "Vitality");
 
 	g_aClient[client][StatsTrackingId] = json_object_get_int(playerinfo, "TrackingID");
+
+	g_aClient[client][Money] = json_object_get_int(playerinfo, "Money");
+
+	g_aClient[client][SignTimes] = json_object_get_int(playerinfo, "SignTimes");
+	g_aClient[client][SignDate] = json_object_get_int(playerinfo, "SignDate");
 
 	CloseHandle(json);
 	CloseHandle(playerinfo);

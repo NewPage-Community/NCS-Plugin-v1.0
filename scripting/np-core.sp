@@ -96,8 +96,7 @@ public int Native_SocketWrite(Handle plugin, int numParams)
 	if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
 		return 0;
 
-	g_hSocket.Write(input);
-	return 1;
+	return g_hSocket.Write(input);
 }
 
 public int Native_IsConnected(Handle plugin, int numParams)
@@ -128,8 +127,7 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 
 	char buff [1024];
 	FormatEx(buff, 1024, "{\"Event\":\"SQLSave\",\"SQLSave\":\"%s\"}", input);
-	g_hSocket.Write(buff);
-	return 1;
+	return g_hSocket.Write(buff);
 }
 
 public int Native_GetServerId(Handle plugin, int numParams)
