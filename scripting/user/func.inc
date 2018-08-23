@@ -43,10 +43,10 @@ void ShowUserInfo(int client)
 
 	FormatTime(onlineTime, 16, "%T", NP_Stats_TotalOnlineTime(client));
 
-	if (g_iUserGroupId[client] < 0)
+	if (NP_Group_GetUserGId(client) < 0)
 		Format(groupName, 32, "无");
 	else
-		g_aGroupName.GetString(g_iUserGroupId[client], groupName, 32);
+		g_aGroupName.GetString(NP_Group_GetUserGId(client), groupName, 32);
 
 	Format(buff, 128, "UID：%d\nSTEAMID：%s\n在线时间：%s\n用户组：%s", NP_Users_UserIdentity(client), steamid, onlineTime, groupName);
 
@@ -109,4 +109,18 @@ void ShowVIPInfo(int client)
 	infoMenu.AddItem("", buff, ITEMDRAW_DISABLED);
 	infoMenu.ExitButton = true;
 	infoMenu.Display(client, 0);
+}
+
+public Action Command_Sign(int client, const char[] command, int argc)
+{
+	if (!IsValidClient(client))
+		return Plugin_Handled;
+
+	if (!NP_Users_UserIdentity(client))
+	{
+		PrintToChat(client, "你的账号信息仍未被加载！");
+		return Plugin_Handled;
+	}
+
+	return Plugin_Handled;
 }

@@ -1,6 +1,6 @@
 void LoadAdmin(int client, const char[] steamid)
 {
-	if (g_authClient[client][Vip] || g_authClient[client][Ctb] || g_authClient[client][Opt] || g_authClient[client][Adm] || g_authClient[client][Own])
+	if (g_aClient[client][Auth][Vip] || g_aClient[client][Auth][Ctb] || g_aClient[client][Auth][Opt] || g_aClient[client][Auth][Adm] || g_aClient[client][Auth][Own])
 	{
 		AdminId _adminId;
 		char auth[32];
@@ -13,18 +13,18 @@ void LoadAdmin(int client, const char[] steamid)
 			_adminId = INVALID_ADMIN_ID;
 		}
 
-		_adminId = CreateAdmin(g_szUsername[client]);
+		_adminId = CreateAdmin(g_aClient[client][Name]);
 		if (!_adminId.BindIdentity(AUTHMETHOD_STEAM, auth))
 		{
 			RemoveAdmin(_adminId);
-			NP_Core_LogError("User-admin", "LoadAdmin", "Failed to bind admin \"%s\" to identity \"%s\"", g_szUsername[client], auth);
+			NP_Core_LogError("User-admin", "LoadAdmin", "Failed to bind admin \"%s\" to identity \"%s\"", g_aClient[client][Name], auth);
 			return;
 		}
 
 		_adminId.SetFlag(Admin_Reservation, true);
 		_adminId.SetFlag(Admin_Custom1, true); // vip use "o" flag
 
-		if (g_authClient[client][Ctb] || g_authClient[client][Opt] || g_authClient[client][Adm] || g_authClient[client][Own])
+		if (g_aClient[client][Auth][Ctb] || g_aClient[client][Auth][Opt] || g_aClient[client][Auth][Adm] || g_aClient[client][Auth][Own])
 		{
 			_adminId.SetFlag(Admin_Generic, true);
 			_adminId.SetFlag(Admin_Kick, true);
@@ -33,17 +33,17 @@ void LoadAdmin(int client, const char[] steamid)
 			_adminId.SetFlag(Admin_Vote, true);
 			_adminId.SetFlag(Admin_Changemap, true);
 
-			if(g_authClient[client][Opt] || g_authClient[client][Adm] || g_authClient[client][Own])
+			if(g_aClient[client][Auth][Opt] || g_aClient[client][Auth][Adm] || g_aClient[client][Auth][Own])
 			{
 				_adminId.SetFlag(Admin_Ban, true);
 				_adminId.SetFlag(Admin_Unban, true);
 
-				if(g_authClient[client][Adm] || g_authClient[client][Own])
+				if(g_aClient[client][Auth][Adm] || g_aClient[client][Auth][Own])
 				{
 					_adminId.SetFlag(Admin_Convars, true);
 					_adminId.SetFlag(Admin_Config, true);
 
-					if(g_authClient[client][Own])
+					if(g_aClient[client][Auth][Own])
 					{
 						_adminId.SetFlag(Admin_Password, true);
 						_adminId.SetFlag(Admin_Cheats, true);

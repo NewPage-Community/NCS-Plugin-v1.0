@@ -1,6 +1,6 @@
 public int Native_GetUserGId(Handle plugin, int numParams)
 {
-	return g_iUserGroupId[GetNativeCell(1)];
+	return g_aClient[GetNativeCell(1)][GID];
 }
 
 public int Native_IsGIdValid(Handle plugin, int numParams)
@@ -15,12 +15,12 @@ public int Native_GetUserGName(Handle plugin, int numParams)
 	if (!IsValidClient(client))
 		ThrowNativeError(SP_ERROR_PARAM, "client index %d in invalid.", client);
 
-	if (g_iUserGroupId[client] <= 0)
+	if (g_aClient[client][GID] <= 0)
 		return false;
 
 	char groupName[32];
 
-	g_aGroupName.GetString(g_iUserGroupId[client], groupName, 32);
+	g_aGroupName.GetString(g_aClient[client][GID], groupName, 32);
 
 	SetNativeString(2, groupName, GetNativeCell(3), true);
 

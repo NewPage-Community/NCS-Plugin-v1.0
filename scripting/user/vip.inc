@@ -14,7 +14,7 @@ void GrantVip(int client, int duration)
 void DeleteVip(int client)
 {
 	//if player isn's vip
-	if(!g_authClient[client][Vip])
+	if(!g_aClient[client][Auth][Vip])
 		return;
 
 	if(!NP_Socket_IsReady())
@@ -31,7 +31,7 @@ void DeleteVip(int client)
 void AddVipPoint(int client, int point)
 {
 	//if player isn's vip
-	if(!g_authClient[client][Vip])
+	if(!g_aClient[client][Auth][Vip])
 		return;
 
 	if(!NP_Socket_IsReady())
@@ -47,12 +47,12 @@ void AddVipPoint(int client, int point)
 
 public int Native_IsVIP(Handle plugin, int numParams)
 {
-	return g_authClient[GetNativeCell(1)][Vip];
+	return g_aClient[GetNativeCell(1)][Auth][Vip];
 }
 
 public int Native_VIPLevel(Handle plugin, int numParams)
 {
-	return g_ivipLevel[GetNativeCell(1)];
+	return g_aClient[GetNativeCell(1)][VipLevel];
 }
 
 public int Native_GrantVip(Handle plugin, int numParams)
@@ -75,10 +75,10 @@ void VIPConnected(int client)
 	if (!NP_Vip_IsVIP(client))
 		return;
 
-	if (g_StatsClient[client][STATS_TOTAL][iTodayOnlineTime] == 0)
+	if (g_aClient[client][StatsTotal][iTodayOnlineTime] == 0)
 	{
 		char msg[512];
-		FormatEx(msg, 512, "会员 - \x07%s\x01：叛乱，启动！", g_szUsername[client]);
+		FormatEx(msg, 512, "会员 - \x07%s\x01：叛乱，启动！", g_aClient[client][Name]);
 		NP_AllChat_Msg(msg);
 	}
 

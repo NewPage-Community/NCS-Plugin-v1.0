@@ -48,6 +48,26 @@ enum ban_t
     String:szReason[256]
 }
 
+enum client_Info
+{
+    UID,
+    GID,
+    String:Name[32],
+    String:Tag[16],
+    bool:Auth[Authentication],
+    bool:AuthLoaded,
+    StatsSession[Stats],
+    StatsTotal[Stats],
+    ConnectTimes,
+    Vitality,
+    StatsTrackingId,
+    VipLevel,
+    Money,
+    SignTimes,
+    SignDate,
+    Handle:StatsTimer
+}
+
 forward void OnClientDataChecked(int client, int UserIdentity);
 native int NP_Users_UserIdentity(int client);
 native bool NP_Users_IsAuthorized(int client, Authentication auth);

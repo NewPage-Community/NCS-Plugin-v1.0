@@ -42,12 +42,12 @@ bool Util_BanClient(int client, int admin, int length, int bantype, const char[]
 
 	
 	if (admin > 0)
-		strcopy(adminname, 32, g_szUsername[admin]);
+		strcopy(adminname, 32, g_aClient[admin][Name]);
 	else
 		strcopy(adminname, 32, "SERVER");
 
 	char m_szQuery[512];
-	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", NP_Users_UserIdentity(client), steamid, ip, g_szUsername[client], length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
+	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", NP_Users_UserIdentity(client), steamid, ip, g_aClient[client][Name], length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
 	return NP_Socket_Write(m_szQuery);
 }
 
@@ -62,7 +62,7 @@ bool Util_BanIdentity(char[] steamid, int admin, int length, int bantype, const 
 	char adminname[32];
 	
 	if (admin > 0)
-		strcopy(adminname, 32, g_szUsername[admin]);
+		strcopy(adminname, 32, g_aClient[admin][Name]);
 	else
 		strcopy(adminname, 32, "SERVER");
 

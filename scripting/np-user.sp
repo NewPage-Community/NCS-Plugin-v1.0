@@ -18,30 +18,13 @@ public Plugin myinfo =
 	url         = P_URLS
 };
 
-int g_iUserId[MAXPLAYERS+1],
-	g_ivipLevel[MAXPLAYERS+1],
-	g_iUserGroupId[MAXPLAYERS+1],
-	// Stats
-	g_iToday,
-	g_iTrackingId[MAXPLAYERS+1],
-	g_StatsClient[MAXPLAYERS+1][2][Stats],
-	g_iConnectTimes[MAXPLAYERS+1],
-	g_iClientVitality[MAXPLAYERS+1];
+int	g_iToday;
 
-bool g_authClient[MAXPLAYERS+1][Authentication],
-	g_bAuthLoaded[MAXPLAYERS+1],
-	// Ban
-	g_bBanChecked[MAXPLAYERS+1];
-
-// Tag
-char g_szUsername[MAXPLAYERS+1][32],
-	g_szUserTag[MAXPLAYERS+1][16];
-
-Handle g_hOnUMDataChecked,
-	// Stats
-	g_TimerClient[MAXPLAYERS+1];
+Handle g_hOnUMDataChecked;
 
 ArrayList g_aGroupName;
+
+any g_aClient[MAXPLAYERS+1][client_Info];
 
 // Modules
 #include "user/vip"
@@ -96,13 +79,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 // Auth
 public int Native_IsAuthorized(Handle plugin, int numParams)
 {
-	return g_authClient[GetNativeCell(1)][GetNativeCell(2)];
+	return g_aClient[GetNativeCell(1)][Auth][GetNativeCell(2)];
 }
 
 // Identity
 public int Native_UserIdentity(Handle plugin, int numParams)
 {
-	return g_iUserId[GetNativeCell(1)];
+	return g_aClient[GetNativeCell(1)][UID];
 }
 
 // ---------- API ------------ end
@@ -111,14 +94,16 @@ public void OnPluginStart()
 {
 	// console command
 	AddCommandListener(Command_UserInfo, "sm_info");
+	AddCommandListener(Command_Sign, "sm_sign");
+	AddCommandListener(Command_Sign, "sm_qd");
 	RegAdminCmd("sm_ban", Command_Ban, ADMFLAG_BAN);
 
 	// global forwards
 	g_hOnUMDataChecked = CreateGlobalForward("OnClientDataChecked", ET_Ignore, Param_Cell, Param_Cell);
 
 	// init console
-	g_iUserId[0] = 0;
-	g_szUsername[0] = "SERVER";
+	g_aClient[0][UID] = 0;
+	strcopy(g_aClient[0][Name], 32, "SERVER");
 
 	// stats
 	// init
@@ -140,17 +125,16 @@ public void NP_Core_OnInitialized(int serverId, int modId)
 public void OnClientConnected(int client)
 {
 	for(int i = 0; i < view_as<int>(Authentication); ++i)
-		g_authClient[client][i] = false;
+		g_aClient[client][Auth][i] = false;
 
-	g_bAuthLoaded[client] = false;
-	g_bBanChecked[client] = false;
-	g_szUsername[client][0] = '\0';
-	g_iUserGroupId[client] = -1;
+	g_aClient[client][AuthLoaded] = false;
+	g_aClient[client][Name][0] = '\0';
+	g_aClient[client][GID] = -1;
 
 	// Tag
-	g_szUserTag[client][0] = '\0';
+	g_aClient[client][Tag][0] = '\0';
 	
-	g_iUserId[client] = 0;
+	g_aClient[client][UID] = 0;
 
 	// Stats
 	StartStats(client);
@@ -172,7 +156,7 @@ public void OnClientPutInServer(int client)
 		return;
 	}
 
-	if(!g_bAuthLoaded[client] || g_iUserId[client] <= 0)
+	if(!g_aClient[client][AuthLoaded] || g_aClient[client][UID] <= 0)
 	{
 		CreateTimer(1.0, Timer_Waiting, client, TIMER_FLAG_NO_MAPCHANGE);
 		return;
@@ -212,7 +196,7 @@ public void OnClientAuthorized(int client, const char[] auth)
 // ---------- functions ------------
 void CheckClient(int client, const char[] steamid)
 {
-	if(g_bAuthLoaded[client])
+	if(g_aClient[client][AuthLoaded])
 		return; 
 
 	if(!NP_Socket_IsReady())
@@ -269,27 +253,27 @@ void CheckClientCallback(const char[] data)
 		return;
 	}
 	
-	g_bAuthLoaded[client] = true;
+	g_aClient[client][AuthLoaded] = true;
 
-	g_iUserId[client] = json_object_get_int(playerinfo, "UID");
-	g_authClient[client][Spt] = json_object_get_bool(playerinfo, "Spt");
-	g_authClient[client][Vip] = json_object_get_bool(playerinfo, "Vip");
-	g_authClient[client][Ctb] = json_object_get_bool(playerinfo, "Ctb");
-	g_authClient[client][Opt] = json_object_get_bool(playerinfo, "Opt");
-	g_authClient[client][Adm] = json_object_get_bool(playerinfo, "Adm");
-	g_authClient[client][Own] = json_object_get_bool(playerinfo, "Own");
-	g_ivipLevel[client] = json_object_get_int(playerinfo, "Tviplevel");
-	g_iUserGroupId[client] = json_object_get_int(playerinfo, "Grp");
+	g_aClient[client][UID] = json_object_get_int(playerinfo, "UID");
+	g_aClient[client][Auth][Spt] = json_object_get_bool(playerinfo, "Spt");
+	g_aClient[client][Auth][Vip] = json_object_get_bool(playerinfo, "Vip");
+	g_aClient[client][Auth][Ctb] = json_object_get_bool(playerinfo, "Ctb");
+	g_aClient[client][Auth][Opt] = json_object_get_bool(playerinfo, "Opt");
+	g_aClient[client][Auth][Adm] = json_object_get_bool(playerinfo, "Adm");
+	g_aClient[client][Auth][Own] = json_object_get_bool(playerinfo, "Own");
+	g_aClient[client][VipLevel] = json_object_get_int(playerinfo, "Tviplevel");
+	g_aClient[client][GID] = json_object_get_int(playerinfo, "Grp");
 
-	g_StatsClient[client][STATS_TOTAL][iTotalOnlineTime]   = json_object_get_int(playerinfo, "OnlineTotal");
-	g_StatsClient[client][STATS_TOTAL][iTodayOnlineTime]   = json_object_get_int(playerinfo, "OnlineToday");
-	g_StatsClient[client][STATS_TOTAL][iObserveOnlineTime] = json_object_get_int(playerinfo, "OnlineOB");
-	g_StatsClient[client][STATS_TOTAL][iPlayOnlineTime]    = json_object_get_int(playerinfo, "OnlinePlay");
+	g_aClient[client][StatsTotal][iTotalOnlineTime]   = json_object_get_int(playerinfo, "OnlineTotal");
+	g_aClient[client][StatsTotal][iTodayOnlineTime]   = json_object_get_int(playerinfo, "OnlineToday");
+	g_aClient[client][StatsTotal][iObserveOnlineTime] = json_object_get_int(playerinfo, "OnlineOB");
+	g_aClient[client][StatsTotal][iPlayOnlineTime]    = json_object_get_int(playerinfo, "OnlinePlay");
 
-	g_iConnectTimes[client]   = json_object_get_int(playerinfo, "ConnectTimes")+1;
-	g_iClientVitality[client] = json_object_get_int(playerinfo, "Vitality");
+	g_aClient[client][ConnectTimes]   = json_object_get_int(playerinfo, "ConnectTimes")+1;
+	g_aClient[client][Vitality] = json_object_get_int(playerinfo, "Vitality");
 
-	g_iTrackingId[client] = json_object_get_int(playerinfo, "TrackingID");
+	g_aClient[client][StatsTrackingId] = json_object_get_int(playerinfo, "TrackingID");
 
 	CloseHandle(json);
 	CloseHandle(playerinfo);
@@ -304,10 +288,10 @@ void CallDataForward(int client)
 {
 	Call_StartForward(g_hOnUMDataChecked);
 	Call_PushCell(client);
-	Call_PushCell(g_iUserId[client]);
+	Call_PushCell(g_aClient[client][UID]);
 	Call_Finish();
 
-	GetClientName(client, g_szUsername[client], 32);
+	GetClientName(client, g_aClient[client][Name], 32);
 
 	ChangePlayerPreName(client);
 }
@@ -322,7 +306,7 @@ public Action Timer_CheckClient(Handle timer, int client)
 	if(!IsClientInGame(client))
 		return Plugin_Stop;
 
-	if(!g_bAuthLoaded[client] || g_iUserId[client] <= 0)
+	if(!g_aClient[client][AuthLoaded] || g_aClient[client][UID] <= 0)
 		OnClientAuthorized(client, "");
 
 	return Plugin_Stop;
