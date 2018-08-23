@@ -53,6 +53,7 @@ native int NP_Users_UserIdentity(int client);
 native bool NP_Users_IsAuthorized(int client, Authentication auth);
 
 native int NP_Group_GetUserGId(int client);
+native bool NP_Group_GetUserGName(int client, char[] buff, int size);
 native bool NP_Group_IsGIdValid(int gid);
 
 native int NP_Stats_TodayOnlineTime(int client);

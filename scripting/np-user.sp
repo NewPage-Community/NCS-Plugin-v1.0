@@ -49,6 +49,8 @@ ArrayList g_aGroupName;
 #include "user/admin"
 #include "user/ban"
 #include "user/tag"
+#include "user/group"
+#include "user/func"
 
 // ---------- API ------------
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -56,6 +58,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// Group
 	CreateNative("NP_Group_GetUserGId", Native_GetUserGId);
 	CreateNative("NP_Group_IsGIdValid", Native_IsGIdValid);
+	CreateNative("NP_Group_GetUserGName", Native_GetUserGName);
 
 	// Auth
 	CreateNative("NP_Users_IsAuthorized", Native_IsAuthorized);
@@ -90,17 +93,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	return APLRes_Success;
 }
 
-// Group
-public int Native_GetUserGId(Handle plugin, int numParams)
-{
-	return g_iUserGroupId[GetNativeCell(1)];
-}
-
-public int Native_IsGIdValid(Handle plugin, int numParams)
-{
-	return (GetNativeCell(1) != -1) ? 1 : 0;
-}
-
 // Auth
 public int Native_IsAuthorized(Handle plugin, int numParams)
 {
@@ -118,7 +110,7 @@ public int Native_UserIdentity(Handle plugin, int numParams)
 public void OnPluginStart()
 {
 	// console command
-	AddCommandListener(Command_Who, "sm_who");
+	AddCommandListener(Command_UserInfo, "sm_info");
 	RegAdminCmd("sm_ban", Command_Ban, ADMFLAG_BAN);
 
 	// global forwards
@@ -141,54 +133,8 @@ public void OnPluginStart()
 // get group name
 public void NP_Core_OnInitialized(int serverId, int modId)
 {
-	if(!NP_MySQL_IsConnected())
-	{
-		NP_Core_LogError("User", "CheckGroupName", "Mysql is not ready!");
-		CreateTimer(5.0, Timer_CheckGroupName, 0, TIMER_FLAG_NO_MAPCHANGE);
-		return;
-	}
-
-	char m_szQuery[128];
-	Format(m_szQuery, 256, "SELECT gid, gname FROM `%s_groups`", P_SQLPRE);
-	DBResultSet _result = SQL_Query(NP_MySQL_GetDatabase(), m_szQuery);
-	if(_result == null)
-	{
-		char error[256];
-		SQL_GetError(NP_MySQL_GetDatabase(), error, 256);
-		NP_Core_LogError("Mysql", "CheckGroupName", "Query Server Info: %s", error);
-		CreateTimer(5.0, Timer_CheckGroupName, 0, TIMER_FLAG_NO_MAPCHANGE);
-		return;
-	}
-
-	while(_result.FetchRow())
-	{
-		char groupName[32];
-		_result.FetchString(1, groupName, 32);
-		g_aGroupName.SetString(_result.FetchInt(0), groupName);
-	}
+	CheckGroup();
 }
-
-// ------------command------------
-
-public Action Command_Who(int client, const char[] command, int argc)
-{
-	if(!IsValidClient(client))
-		return Plugin_Handled;
-
-	static int _iLastUse[MAXPLAYERS+1] = {0, ...};
-	
-	if(_iLastUse[client] > GetTime() - 5)
-		return Plugin_Handled;
-	
-	_iLastUse[client] = GetTime();
-
-	// dont print all in one time. if players > 48 will not working.
-	CreateTimer(0.3, Timer_PrintConsole, client, TIMER_REPEAT);
-	
-	return Plugin_Handled;
-}
-
-// ------------command------------ end
 
 // ------------ native forward ------------
 public void OnClientConnected(int client)
@@ -233,6 +179,8 @@ public void OnClientPutInServer(int client)
 	}
 
 	CallDataForward(client);
+
+	VIPConnected(client);
 }
 
 public void OnRebuildAdminCache(AdminCachePart part)
@@ -369,12 +317,6 @@ void CallDataForward(int client)
 
 // ---------- timer ------------
 
-public Action Timer_CheckGroupName(Handle timer)
-{
-	NP_Core_OnInitialized(0, 0);
-	return Plugin_Stop;
-}
-
 public Action Timer_CheckClient(Handle timer, int client)
 {
 	if(!IsClientInGame(client))
@@ -394,42 +336,6 @@ public Action Timer_Waiting(Handle timer, int client)
 	OnClientPutInServer(client);
 
 	return Plugin_Stop;
-}
-
-public Action Timer_PrintConsole(Handle timer, int client)
-{
-	static int _iCurrentIndex[MAXPLAYERS+1] = {0, ...};
-	
-	if(!IsClientInGame(client))
-	{
-		_iCurrentIndex[client] = 0;
-		return Plugin_Stop;
-	}
-
-	int left = 16; // we loop 16 clients one time.
-	while(left--)
-	{
-		if(_iCurrentIndex[client] == 0)
-			PrintToConsole(client, "#slot    userid      name      Supporter    Vip    Contributor    Operator    Administrator    Owner");
-
-		int index = ++_iCurrentIndex[client];
-		
-		if(index >= MaxClients)
-		{
-			_iCurrentIndex[client] = 0;
-			return Plugin_Stop;
-		}
-
-		if(!IsValidClient(index))
-			continue;
-		
-		char strSlot[8], strUser[8];
-		StringPad(index, 4, ' ', strSlot, 8);
-		StringPad(GetClientUserId(index), 6, ' ', strUser, 8);
-		PrintToConsole(client, "#%s    %s    %N    %s    %s    %s    %s    %s    %s", strSlot, strUser, index, g_authClient[index][0], g_authClient[index][1], g_authClient[index][2], g_authClient[index][3], g_authClient[index][4], g_authClient[index][5]);
-	}
-
-	return Plugin_Continue;
 }
 
 public Action Timer_ReAuthorize(Handle timer, int client)

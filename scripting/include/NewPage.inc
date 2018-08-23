@@ -1,5 +1,5 @@
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v2.5"
+#define P_VERSION "Alpha-v2.6"
 #define P_URLS "https://new-page.cc"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"

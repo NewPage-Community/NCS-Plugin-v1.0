@@ -31,6 +31,11 @@ BEGIN
 	INSERT INTO `np_analytics` VALUES (DEFAULT, puid, p_serverId, p_ip, p_map, p_nowTime, p_nowDay, -1);
 	SET TrackingID = LAST_INSERT_ID();
 
+	/* Check today stats */
+	IF (date_format(FROM_UNIXTIME((SELECT `lastseen` FROM `np_users` WHERE `uid` = puid)),'%Y%m%d') < p_nowDay) THEN
+		UPDATE `np_stats` SET `onlineToday` = 0 WHERE `uid` = puid;
+	END IF;
+
 	/* Check Vip */
 	SELECT `vipexpired`, `vippoint` INTO t_vip, t_vippoint FROM `np_users` WHERE `uid` = puid;
 

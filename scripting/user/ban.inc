@@ -47,7 +47,7 @@ bool Util_BanClient(int client, int admin, int length, int bantype, const char[]
 		strcopy(adminname, 32, "SERVER");
 
 	char m_szQuery[512];
-	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", g_iUserId[client], steamid, ip, g_szUsername[client], length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
+	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", NP_Users_UserIdentity(client), steamid, ip, g_szUsername[client], length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
 	return NP_Socket_Write(m_szQuery);
 }
 
@@ -101,10 +101,10 @@ void BanClientCallback(const char[] data)
 	BanClient(target, 10, BANFLAG_AUTHID, kickReason, kickReason);
 	
 	if (IsValidClient(admin))
-		PrintToChat(admin, "\x0A已成功封禁 \x04%s", steamid);
+		PrintToChat(admin, "\x07已成功封禁 \x04%s", steamid);
 
 	char msg[512];
-	FormatEx(msg, 512, "玩家 \x05%s \x04(STEAMID) \x01已被封禁，原因：%s", steamid, BanReason);
+	FormatEx(msg, 512, "\x07玩家 \x05%s \x04(STEAMID) \x07已被封禁，原因：%s", steamid, BanReason);
 	NP_AllChat_Msg(msg);
 }
 

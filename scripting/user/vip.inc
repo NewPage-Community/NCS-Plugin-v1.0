@@ -69,3 +69,18 @@ public int Native_AddVipPoint(Handle plugin, int numParams)
 {
 	AddVipPoint(GetNativeCell(1), GetNativeCell(2));
 }
+
+void VIPConnected(int client)
+{
+	if (!NP_Vip_IsVIP(client))
+		return;
+
+	if (g_StatsClient[client][STATS_TOTAL][iTodayOnlineTime] == 0)
+	{
+		char msg[512];
+		FormatEx(msg, 512, "会员 - \x07%s\x01：叛乱，启动！", g_szUsername[client]);
+		NP_AllChat_Msg(msg);
+	}
+
+	PrintToChatAll("欢迎会员 \x07%s 加入本服务器！");
+}
