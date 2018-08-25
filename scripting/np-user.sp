@@ -35,6 +35,7 @@ any g_aClient[MAXPLAYERS+1][client_Info];
 #include "user/tag"
 #include "user/group"
 #include "user/func"
+#include "user/money"
 
 // ---------- API ------------
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -71,6 +72,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	// Tag
 	CreateNative("NP_Users_SetTag", Native_SetTag);
+
+	// Money
+	CreateNative("NP_Users_PayMoney", Native_PayMoney);
+	CreateNative("NP_Users_GiveMoney", Native_GiveMoney);
 	
 	// lib
 	RegPluginLibrary("np-user");
@@ -100,9 +105,9 @@ public int Native_UserIdentity(Handle plugin, int numParams)
 public void OnPluginStart()
 {
 	// console command
-	AddCommandListener(Command_UserInfo, "sm_info");
-	AddCommandListener(Command_Sign, "sm_sign");
-	AddCommandListener(Command_Sign, "sm_qd");
+	RegConsoleCmd("sm_info", Command_UserInfo);
+	RegConsoleCmd("sm_sign", Command_Sign);
+	RegConsoleCmd("sm_qd", Command_Sign);
 	RegAdminCmd("sm_ban", Command_Ban, ADMFLAG_BAN);
 
 	// global forwards
@@ -121,6 +126,8 @@ public void OnPluginStart()
 	CreateTimer(1.0, Timer_Global, _, TIMER_REPEAT);
 
 	g_aGroupName = CreateArray(32, 50);
+
+	LoadTranslations("common.phrases.txt");
 }
 
 // get group name
@@ -289,11 +296,14 @@ void CheckClientCallback(const char[] data)
 	g_aClient[client][SignTimes] = json_object_get_int(playerinfo, "SignTimes");
 	g_aClient[client][SignDate] = json_object_get_int(playerinfo, "SignDate");
 
-	CloseHandle(json);
-	CloseHandle(playerinfo);
+	g_aClient[client][VIPPoint] = json_object_get_int(playerinfo, "VIPPoint");
+	g_aClient[client][VIPExpired] = json_object_get_int(playerinfo, "VIPExpired");
 
 	if(!CheckBan(client, playerinfo))
 		return;
+
+	CloseHandle(json);
+	CloseHandle(playerinfo);
 
 	LoadAdmin(client, t_steamid);
 }

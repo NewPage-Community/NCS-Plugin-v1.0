@@ -121,10 +121,6 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 	if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
 		return 0;
 
-	Handle SJson = json_string(input);
-	json_string_value(SJson, input, inLen+1);
-	CloseHandle(SJson);
-
 	char buff [1024];
 	FormatEx(buff, 1024, "{\"Event\":\"SQLSave\",\"SQLSave\":\"%s\"}", input);
 	return g_hSocket.Write(buff);

@@ -45,7 +45,14 @@ bool AddVipPoint(int client, int point)
 
 	char m_szQuery[256];
 	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vippoint = vippoint + '%d' WHERE uid = '%d'", P_SQLPRE, point, NP_Users_UserIdentity(client));
-	return NP_MySQL_SaveDatabase(m_szQuery);
+	
+	if (NP_MySQL_SaveDatabase(m_szQuery))
+	{
+		g_aClient[client][VIPPoint] += point;
+		return true;
+	}
+
+	return false;
 }
 
 public int Native_IsVIP(Handle plugin, int numParams)
@@ -81,14 +88,14 @@ void VIPConnected(int client)
 	if (g_aClient[client][StatsTotal][iTodayOnlineTime] == 0)
 	{
 		char msg[512];
-		FormatEx(msg, 512, "会员 - \x07%s\x01：叛乱，启动！", g_aClient[client][Name]);
+		FormatEx(msg, 512, "会员 - \x02%s\x01：叛乱，启动！", g_aClient[client][Name]);
 		NP_AllChat_Msg(msg);
 	}
 
-	PrintToChatAll("欢迎会员 \x07%s 加入服务器！");
+	PrintToChatAll("欢迎会员 \x02%s 加入服务器！", g_aClient[client][Name]);
 }
 
-public void NP_OnClientSigned(int client, int signtimes)
+void VIPSigned(int client)
 {
 	if (!NP_Vip_IsVIP(client))
 		return;

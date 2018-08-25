@@ -65,6 +65,8 @@ enum client_Info
     Money,
     SignTimes,
     SignDate,
+    VIPPoint,
+    VIPExpired,
     Handle:StatsTimer
 }
 
@@ -95,6 +97,9 @@ native void NP_Users_BanClient(int client, int admin, int banLength, int banType
 native void NP_Users_BanIdentity(const char[] steamIdentity, int admin, int banLength, int banType, const char[] banReason);
 
 forward void NP_OnClientSigned(int client, int signtimes);
+
+native bool NP_Users_PayMoney(int client, int money);
+native bool NP_Users_GiveMoney(int client, int money);
 
 public SharedPlugin __pl_user =
 {

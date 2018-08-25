@@ -101,10 +101,10 @@ void BanClientCallback(const char[] data)
 	BanClient(target, 10, BANFLAG_AUTHID, kickReason, kickReason);
 	
 	if (IsValidClient(admin))
-		PrintToChat(admin, "\x04[提示] \x07已成功封禁 \x04%s", steamid);
+		PrintToChat(admin, "\x04[提示] \x02已成功封禁 \x04%s", steamid);
 
 	char msg[512];
-	FormatEx(msg, 512, "\x07玩家 \x05%s \x04(STEAMID) \x07已被封禁，原因：%s", steamid, BanReason);
+	FormatEx(msg, 512, "\x02玩家 \x05%s \x04(STEAMID) \x02已被封禁，原因：%s", steamid, BanReason);
 	NP_AllChat_Msg(msg);
 }
 
@@ -131,6 +131,7 @@ public Action Command_Ban(int client, int args)
 	if(args < 3)
 	{
 		PrintToChat(client, "\x04用法\x01: sm_ban <#userid或者名字> <时间(分钟)|0为永久> [原因]");
+		g_eBan[admin][szReason][0] = '\0';
 		return Plugin_Handled;
 	}
 
@@ -173,9 +174,16 @@ public Action Command_Ban(int client, int args)
 
 void Util_ShowBanType(int admin)
 {
+	char time[16];
+
+	if (g_eBan[admin][iLength] == 0)
+		Format(time, 16, "永久");
+	else
+		Format(time, 16, "%d分钟", g_eBan[admin][iLength]);
+
 	Menu menu = new Menu(MenuHandler_BanType);
 	
-	menu.SetTitle("对象: %N\n时长: %d分钟\n \n请选择封禁类型: \n ", g_eBan[admin][iTarget], g_eBan[admin][iLength]);
+	menu.SetTitle("对象: %N\n时长: %s\n原因: %s\n \n请选择封禁类型: \n ", g_eBan[admin][iTarget], time, g_eBan[admin][szReason]);
 
 	menu.AddItem("", "全服封禁", CheckCommandAccess(admin, "sm_unban", ADMFLAG_UNBAN|ADMFLAG_ROOT) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 

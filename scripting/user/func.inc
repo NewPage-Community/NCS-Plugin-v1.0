@@ -1,4 +1,4 @@
-public Action Command_UserInfo(int client, const char[] command, int argc)
+public Action Command_UserInfo(int client, int args)
 {
 	if (!IsValidClient(client))
 		return Plugin_Handled;
@@ -10,9 +10,9 @@ public Action Command_UserInfo(int client, const char[] command, int argc)
 	}
 
 	Menu infoMenu = new Menu(MenuHandler_UserInfo);
-	infoMenu.SetTitle("%N 您好！\n欢迎查看用户信息", client);
-	infoMenu.AddItem("ACCT", "账号信息");
-	infoMenu.AddItem("VIP", "会员信息");
+	infoMenu.SetTitle("%s 您好！\n欢迎查看用户信息", g_aClient[client][Name]);
+	infoMenu.AddItem("ACCT", "账号信息");
+	infoMenu.AddItem("VIP", "会员信息");
 	infoMenu.ExitButton = true;
 	infoMenu.Display(client, 0);
 	return Plugin_Handled;
@@ -37,18 +37,16 @@ void ShowUserInfo(int client)
 	if (!IsValidClient(client))
 		return;
 
-	char buff[128], steamid[32], onlineTime[16], groupName[32];
+	char buff[512], steamid[32], groupName[32];
 
 	GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true);
-
-	FormatTime(onlineTime, 16, "%T", NP_Stats_TotalOnlineTime(client));
 
 	if (NP_Group_GetUserGId(client) < 0)
 		Format(groupName, 32, "无");
 	else
 		g_aGroupName.GetString(NP_Group_GetUserGId(client), groupName, 32);
 
-	Format(buff, 128, "UID：%d\nSTEAMID：%s\n在线时间：%s\n用户组：%s\n签到次数：%d\n软妹币：%d元", NP_Users_UserIdentity(client), steamid, onlineTime, groupName, g_aClient[client][SignTimes], g_aClient[client][Money]);
+	Format(buff, 512, "UID：%d\nSTEAMID：%s\n在线时间：%d小时\n用户组：%s\n签到次数：%d\n软妹币：%d元", NP_Users_UserIdentity(client), steamid, NP_Stats_TotalOnlineTime(client)/60, groupName, g_aClient[client][SignTimes], g_aClient[client][Money]);
 
 	Menu infoMenu = new Menu(MenuHandler_UserInfo);
 	infoMenu.SetTitle("账号信息", client);
@@ -62,31 +60,10 @@ void ShowVIPInfo(int client)
 	if (!IsValidClient(client))
 		return;
 
-	if (!NP_MySQL_IsConnected())
-	{
-		NP_Core_LogError("User-Func", "ShowVIPInfo", "Mysql is not ready!");
-		return;
-	}
+	char notVIP[16], expireTime[128], buff[512];
 
-	int vipPoint, vipExpired;
-	char m_szQuery[128], notVIP[16], expireTime[16], buff[128];
-
-	Format(m_szQuery, 256, "SELECT `vippoint`, `vipexpired` FROM `%s_users`", P_SQLPRE);
-	DBResultSet _result = SQL_Query(NP_MySQL_GetDatabase(), m_szQuery);
-	if (_result == null)
-	{
-		char error[256];
-		SQL_GetError(NP_MySQL_GetDatabase(), error, 256);
-		NP_Core_LogError("User-Func", "ShowVIPInfo", "Query Server Info: %s", error);
-		CreateTimer(5.0, Timer_CheckGroupName, 0, TIMER_FLAG_NO_MAPCHANGE);
-		return;
-	}
-
-	if (_result.FetchRow())
-	{
-		vipPoint = _result.FetchInt(0);
-		vipExpired = _result.FetchInt(1);
-	}
+	int vipPoint = g_aClient[client][VIPPoint];
+	int vipExpired = g_aClient[client][VIPExpired];
 
 	if (!NP_Vip_IsVIP(client))
 	{
@@ -95,14 +72,17 @@ void ShowVIPInfo(int client)
 		else
 			Format(notVIP, 16, "已过期");
 
-		Format(expireTime, 16, "未开通");
+		Format(expireTime, 128, "未开通");
 	}
 	else
 	{
-		FormatTime(expireTime, 16, "%F", vipExpired);
+		if (vipExpired == 99999999999)
+			Format(expireTime, 128, "永久");
+		else
+			FormatTime(expireTime, 128, "%m月%d日 %H时%M分", vipExpired);
 	}
 	
-	Format(buff, 128, "会员状态：%s\n会员等级：%d级\n会员积分：%d\n到期时间：%s", NP_Vip_IsVIP(client) ? "已开通" : notVIP, NP_Vip_VIPLevel(client), vipPoint, expireTime);
+	Format(buff, 512, "会员状态：%s\n会员等级：%d级\n会员积分：%d\n到期时间：%s", NP_Vip_IsVIP(client) ? "已开通" : notVIP, NP_Vip_VIPLevel(client), vipPoint, expireTime);
 
 	Menu infoMenu = new Menu(MenuHandler_UserInfo);
 	infoMenu.SetTitle("会员信息", client);
@@ -111,7 +91,7 @@ void ShowVIPInfo(int client)
 	infoMenu.Display(client, 0);
 }
 
-public Action Command_Sign(int client, const char[] command, int argc)
+public Action Command_Sign(int client, int args)
 {
 	if (!IsValidClient(client))
 		return Plugin_Handled;
@@ -139,7 +119,12 @@ public Action Command_Sign(int client, const char[] command, int argc)
 		return Plugin_Handled;
 	}
 
+	g_aClient[client][SignTimes]++;
+
 	PrintToChat(client, "\x04[提示]\x01 签到成功！");
+
+	MoneySigned(client);
+	VIPSigned(client);
 
 	Call_StartForward(g_hOnClientSigned);
 	Call_PushCell(client);

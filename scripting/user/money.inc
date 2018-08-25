@@ -47,8 +47,18 @@ bool PayClientMoney(int client, int money)
 	return false;
 }
 
-public void NP_OnClientSigned(int client, int signtimes)
-{		
+void MoneySigned(int client)
+{
 	if (GiveClientMoney(client, 3000))
 		PrintToChat(client, "\x04[提示] \x01签到获得\x053000\x01元！");
+}
+
+public int Native_PayMoney(Handle plugin, int numParams)
+{
+	return PayClientMoney(GetNativeCell(1), GetNativeCell(2));
+}
+
+public int Native_GiveMoney(Handle plugin, int numParams)
+{
+	return GiveClientMoney(GetNativeCell(1), GetNativeCell(2));
 }

@@ -54,6 +54,6 @@ BEGIN
 	END IF;
 
 	/* results */
-	SELECT a.uid, a.username, a.imm, a.spt, a.vip, a.ctb, a.opt, a.adm, a.own, tviplevel, a.grp, b.onlineTotal, b.onlineToday, b.onlineOB, b.onlinePlay, b.connectTimes, b.vitality, TrackingID, a.money, a.signtimes, a.signdate FROM np_users a, np_stats b WHERE a.uid = puid AND b.uid = puid;
+	SELECT a.uid, a.username, a.imm, a.spt, a.vip, a.ctb, a.opt, a.adm, a.own, tviplevel, a.grp, b.onlineTotal, b.onlineToday, b.onlineOB, b.onlinePlay, b.connectTimes, b.vitality, TrackingID, a.money, a.signtimes, a.signdate, t_vippoint, t_vip FROM np_users a, np_stats b WHERE a.uid = puid AND b.uid = puid;
 	
 END
