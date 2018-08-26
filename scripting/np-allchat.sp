@@ -31,6 +31,8 @@ public int Native_SendMsg(Handle plugin, int numParams)
 	if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
 		return 0;
 
+	ReplaceString(input, inLen+1, "\"", "");
+
 	char buff[512];
 	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"PlayerName\":\"###MSG###\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), input);
 	
@@ -56,6 +58,8 @@ public Action Command_AllChat(int client, int argc)
 
 	char playerName[32];
 	GetClientName(client, playerName, 32);
+
+	ReplaceString(playerName, 32, "\"", "");
 
 	char buff[512];
 	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"ServerModID\":%d,\"PlayerName\":\"%s\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), NP_Core_GetServerModId(), playerName, szChat);
@@ -97,9 +101,6 @@ void AllChatProcess(const char[] data)
 
 	json_object_get_string(msgdata, "PlayerName", playername, 32);
 	json_object_get_string(msgdata, "Msg", msg, 256);
-
-	ReplaceString(playername, 32, "\"", "");
-	ReplaceString(msg, 256, "\"", "");
 
 	if(!strcmp(playername, "###MSG###"))
 		PrintToChatAll("\x04[公告] \x01%s", msg);

@@ -49,8 +49,16 @@ bool PayClientMoney(int client, int money)
 
 void MoneySigned(int client)
 {
-	if (GiveClientMoney(client, 3000))
-		PrintToChat(client, "\x04[提示] \x01签到获得\x053000\x01元！");
+	if (NP_Vip_IsVIP(client))
+	{
+		if (GiveClientMoney(client, 5000))
+			PrintToChat(client, "\x04[提示] \x01签到获得\x055000\x01元！");
+	}
+	else
+	{
+		if (GiveClientMoney(client, 3000))
+			PrintToChat(client, "\x04[提示] \x01签到获得\x053000\x01元！");
+	}
 }
 
 public int Native_PayMoney(Handle plugin, int numParams)

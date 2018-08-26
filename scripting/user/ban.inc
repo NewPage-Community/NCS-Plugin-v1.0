@@ -19,7 +19,7 @@ bool CheckBan(int client, Handle playerinfo)
 			FormatTime(timeExpired, 64, "%Y.%m.%d %H:%M:%S", BanETime);
 		else
 			FormatEx(timeExpired, 64, "永久封禁");
-		FormatEx(kickReason, 256, "您已被服务器封锁,禁止进入游戏!\n封禁类型:\t%s\n封禁原因:\t%s\n操作人员:\t%s\n到期时间:\t%s\n请联系管理员", g_banType[BanType], BanReason, BanAdminName, timeExpired);
+		FormatEx(kickReason, 256, "您已被服务器封锁,禁止进入游戏! 请联系管理员\n封禁类型: %s 封禁原因: %s\n操作人员: %s 到期时间: %s", g_banType[BanType], BanReason, BanAdminName, timeExpired);
 		BanClient(client, 10, BANFLAG_AUTHID, kickReason, kickReason);
 		return false;
 	}
@@ -35,19 +35,23 @@ bool Util_BanClient(int client, int admin, int length, int bantype, const char[]
 	if (!NP_Socket_IsReady())
 		return false;
 
-	char ip[24], steamid[32], adminname[32];
+	char ip[24], steamid[32], adminname[32], clientname[32];
 
 	GetClientIP(client, ip, 24, false);
 	GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true);
-
 	
 	if (admin > 0)
 		strcopy(adminname, 32, g_aClient[admin][Name]);
 	else
 		strcopy(adminname, 32, "SERVER");
 
+	strcopy(clientname, 32, g_aClient[client][Name]);
+
+	ReplaceString(adminname, 32, "\"", "");
+	ReplaceString(clientname, 32, "\"", "");
+
 	char m_szQuery[512];
-	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", NP_Users_UserIdentity(client), steamid, ip, g_aClient[client][Name], length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
+	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", NP_Users_UserIdentity(client), steamid, ip, clientname, length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
 	return NP_Socket_Write(m_szQuery);
 }
 
@@ -66,8 +70,10 @@ bool Util_BanIdentity(char[] steamid, int admin, int length, int bantype, const 
 	else
 		strcopy(adminname, 32, "SERVER");
 
+	ReplaceString(adminname, 32, "\"", "");
+
 	char m_szQuery[512];
-	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", -1, steamid, "0.0.0.0", "N/C", length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
+	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", -1, steamid, "0.0.0.0", "N/C", length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
 
 	return NP_Socket_Write(m_szQuery);
 }
@@ -75,20 +81,22 @@ bool Util_BanIdentity(char[] steamid, int admin, int length, int bantype, const 
 void BanClientCallback(const char[] data)
 {
 	Handle json = json_load(data);
+	Handle banclient = json_object_get(json, "BanClient");
 
 	char steamid[32], BanAdminName[32], BanReason[128];
-	json_object_get_string(json, "SteamID", steamid, 32);
-	json_object_get_string(json, "AdminName", BanAdminName, 32);
-	json_object_get_string(json, "Reason", BanReason, 128);
+	json_object_get_string(banclient, "SteamID", steamid, 32);
+	json_object_get_string(banclient, "AdminName", BanAdminName, 32);
+	json_object_get_string(banclient, "Reason", BanReason, 128);
 
-	int BanType = json_object_get_int(json, "BanType");
-	int BanETime = json_object_get_int(json, "BanETime");
-	int length = json_object_get_int(json, "Length");
+	int BanType = json_object_get_int(banclient, "BanType");
+	int BanETime = json_object_get_int(banclient, "BanETime");
+	int length = json_object_get_int(banclient, "Length");
 
 	int target = FindClientBySteamId(AuthId_SteamID64, steamid);
-	int admin = json_object_get_int(json, "AdminID");
+	int admin = json_object_get_int(banclient, "AdminID");
 
 	CloseHandle(json);
+	CloseHandle(banclient);
 
 	char kickReason[256], timeExpired[64];
 
@@ -97,7 +105,7 @@ void BanClientCallback(const char[] data)
 	else
 		FormatEx(timeExpired, 64, "永久封禁");
 
-	FormatEx(kickReason, 256, "您已被服务器封锁,禁止进入游戏!\n封禁类型:\t%s\n封禁原因:\t%s\n操作人员:\t%s\n到期时间:\t%s\n请联系管理员", g_banType[BanType], BanReason, BanAdminName, timeExpired);
+	FormatEx(kickReason, 256, "您已被服务器封锁,禁止进入游戏! 请联系管理员\n封禁类型: %s 封禁原因: %s\n操作人员: %s 到期时间: %s", g_banType[BanType], BanReason, BanAdminName, timeExpired);
 	BanClient(target, 10, BANFLAG_AUTHID, kickReason, kickReason);
 	
 	if (IsValidClient(admin))
@@ -127,15 +135,14 @@ public Action Command_Ban(int client, int args)
 {
 	if(!client)
 		return Plugin_Handled;
+
+	int admin = client;
 	
 	if(args < 3)
 	{
 		PrintToChat(client, "\x04用法\x01: sm_ban <#userid或者名字> <时间(分钟)|0为永久> [原因]");
-		g_eBan[admin][szReason][0] = '\0';
 		return Plugin_Handled;
 	}
-
-	int admin = client;
 
 	char buffer[64];
 	GetCmdArg(1, buffer, 64);
@@ -155,10 +162,19 @@ public Action Command_Ban(int client, int args)
 	}
 
 	char reason[256];
-	for(int i = 3; i <= args; i++)
+
+	if (args >= 3)
 	{
-		GetCmdArg(i, buffer, 64);
-		Format(reason, 256, "%s %s", reason, buffer);
+		GetCmdArg(3, reason, sizeof(reason));
+		for (int i = 4; i <= args; i++)
+		{
+			GetCmdArg(i, buffer, sizeof(buffer));
+			Format(reason, sizeof(reason), "%s %s", reason, buffer);
+		}
+	}
+	else
+	{
+		reason[0] = '\0';
 	}
 
 	g_eBan[admin][iTarget] = target;
@@ -190,7 +206,7 @@ void Util_ShowBanType(int admin)
 	menu.AddItem("", "模式封禁");
 	menu.AddItem("", "本服封禁");
 	
-	menu.ExitButton = false;
+	menu.ExitButton = true;
 	menu.Display(admin, 0);
 }
 

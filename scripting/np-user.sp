@@ -128,6 +128,8 @@ public void OnPluginStart()
 	g_aGroupName = CreateArray(32, 50);
 
 	LoadTranslations("common.phrases.txt");
+
+	HookEvent("round_start", EventRoundStart, EventHookMode_Post);
 }
 
 // get group name
@@ -137,6 +139,15 @@ public void NP_Core_OnInitialized(int serverId, int modId)
 }
 
 // ------------ native forward ------------
+
+public Action EventRoundStart(Handle event, const char[] name, bool dontBroadcast)
+{
+	for (int client = 1; client <= MaxClients; client++)
+		if (IsClientInGame(client))
+			CreateTimer(1.0, SetTeams, client);
+	return Plugin_Handled;
+}
+
 public void OnClientConnected(int client)
 {
 	for(int i = 0; i < view_as<int>(Authentication); ++i)

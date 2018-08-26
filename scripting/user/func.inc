@@ -133,3 +133,10 @@ public Action Command_Sign(int client, int args)
 
 	return Plugin_Handled;
 }
+
+public Action SetTeams(Handle timer, int client)
+{
+	if (IsClientInGame(client))
+		if (GetDay() > g_aClient[client][SignDate])
+			PrintToChat(client,"\x04[提示] \x04您今天还未签到!输入\x05!qd\x01每日可获得软妹币!");
+}
