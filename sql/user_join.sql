@@ -45,9 +45,9 @@ BEGIN
 		SET b_vip = 0;
 	END IF;
 
-	UPDATE `np_users` SET `vip` = b_vip WHERE `uid` = puid;
-
 	SELECT MAX(a.level) INTO tviplevel FROM np_viplevel a WHERE t_vippoint >= a.point;
+
+	UPDATE `np_users` SET `vip` = b_vip, `viplevel` = tviplevel WHERE `uid` = puid;
 
 	IF (!b_vip) THEN
 		SET tviplevel = 0;

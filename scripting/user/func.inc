@@ -120,6 +120,7 @@ public Action Command_Sign(int client, int args)
 	}
 
 	g_aClient[client][SignTimes]++;
+	g_aClient[client][SignDate] = today;
 
 	PrintToChat(client, "\x04[提示]\x01 签到成功！");
 
