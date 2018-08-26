@@ -25,31 +25,31 @@ void ChangePlayerPreName(int client)
 	{
 		char groupName[32];
 		g_aGroupName.GetString(g_aClient[client][GID], groupName, 32);
-		Format(newName, 64, "[%s] %s", groupName, newName);
+		Format(newName, 64, "<%s> %s", groupName, newName);
 	}
 	else if(g_aClient[client][Auth][Own])
 	{
-		Format(newName, 64, "[服主] %s", newName);
+		Format(newName, 64, "<服主> %s", newName);
 	}
 	else if(g_aClient[client][Auth][Adm])
 	{
-		Format(newName, 64, "[ADMIN] %s", newName);
+		Format(newName, 64, "<ADMIN> %s", newName);
 	}
 	else if(g_aClient[client][Auth][Opt])
 	{
-		Format(newName, 64, "[管理] %s", newName);
+		Format(newName, 64, "<管理> %s", newName);
 	}
 	else if(g_aClient[client][Auth][Ctb])
 	{
-		Format(newName, 64, "[员工] %s", newName);
+		Format(newName, 64, "<员工> %s", newName);
 	}
 	else if(g_aClient[client][Auth][Vip])
 	{
-		Format(newName, 64, "[会员] %s", newName);
+		Format(newName, 64, "<会员> %s", newName);
 	}
 	else if(g_aClient[client][Auth][Spt])
 	{
-		Format(newName, 64, "[捐助] %s", newName);
+		Format(newName, 64, "<捐助> %s", newName);
 	}
 
 	if (!StrEqual(oldName, newName))
