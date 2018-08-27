@@ -199,7 +199,10 @@ public void OnRebuildAdminCache(AdminCachePart part)
 	if(part == AdminCache_Admins)
 		for(int client = 1; client <= MaxClients; ++client)
 			if(IsClientAuthorized(client))
+			{
+				SetClientName(client, g_aClient[client][Name]);
 				OnClientAuthorized(client, "");
+			}
 }
 
 public void OnClientAuthorized(int client, const char[] auth)

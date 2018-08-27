@@ -2,7 +2,8 @@ public int Native_SetTag(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	GetNativeString(2, g_aClient[client][Tag], 16);
-	ChangePlayerPreName(client);
+	if(NP_Users_IsAuthLoaded(client))
+		ChangePlayerPreName(client);
 }
 
 void ChangePlayerPreName(int client)
