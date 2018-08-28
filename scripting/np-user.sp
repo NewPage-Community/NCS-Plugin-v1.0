@@ -320,6 +320,9 @@ void CheckClientCallback(const char[] data)
 	CloseHandle(playerinfo);
 
 	LoadAdmin(client, t_steamid);
+
+	GetClientName(client, g_aClient[client][Name], 32);
+	ChangePlayerPreName(client);
 }
 
 void CallDataForward(int client)
@@ -328,10 +331,6 @@ void CallDataForward(int client)
 	Call_PushCell(client);
 	Call_PushCell(g_aClient[client][UID]);
 	Call_Finish();
-
-	GetClientName(client, g_aClient[client][Name], 32);
-
-	ChangePlayerPreName(client);
 }
 
 // ---------- functions ------------ end
