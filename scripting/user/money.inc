@@ -49,15 +49,16 @@ bool PayClientMoney(int client, int money)
 
 void MoneySigned(int client)
 {
+	int money = g_cSignMoney.IntValue, VIPmoney = g_cSignVIPMoney.IntValue;
 	if (NP_Vip_IsVIP(client))
 	{
-		if (GiveClientMoney(client, 5000))
-			PrintToChat(client, "\x04[提示] \x01签到获得\x055000\x01元！");
+		if (GiveClientMoney(client, money))
+			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", money);
 	}
 	else
 	{
-		if (GiveClientMoney(client, 3000))
-			PrintToChat(client, "\x04[提示] \x01签到获得\x053000\x01元！");
+		if (GiveClientMoney(client, VIPmoney))
+			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", VIPmoney);
 	}
 }
 

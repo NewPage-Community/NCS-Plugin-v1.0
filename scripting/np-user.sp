@@ -25,6 +25,10 @@ Handle g_hOnUMDataChecked,
 
 ArrayList g_aGroupName;
 
+ConVar g_cSignMoney,
+	g_cSignVIPMoney,
+	g_cSignVIPPoint;
+
 any g_aClient[MAXPLAYERS+1][client_Info];
 
 // Modules
@@ -130,6 +134,10 @@ public void OnPluginStart()
 	LoadTranslations("common.phrases.txt");
 
 	HookEvent("round_start", EventRoundStart, EventHookMode_Post);
+
+	g_cSignMoney = CreateConVar("np_user_sign_givemoney", "3000", "签到奖励软妹币", 0, true, 0.0);
+	g_cSignVIPMoney = CreateConVar("np_user_sign_VIPgivemoney", "5000", "会员签到奖励软妹币", 0, true, 0.0);
+	g_cSignVIPPoint = CreateConVar("np_user_sign_givevippoint", "10", "签到奖励会员经验", 0, true, 0.0);
 }
 
 // get group name

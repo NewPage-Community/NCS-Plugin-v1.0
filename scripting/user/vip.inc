@@ -97,9 +97,11 @@ void VIPConnected(int client)
 
 void VIPSigned(int client)
 {
+	int point = g_cSignVIPPoint.IntValue;
+
 	if (!NP_Vip_IsVIP(client))
 		return;
 
-	if (AddVipPoint(client, 10))
-		PrintToChat(client, "\x04[VIP] \x01签到获得\x0510\x01点经验！");
+	if (AddVipPoint(client, point))
+		PrintToChat(client, "\x04[VIP] \x01签到获得\x05%d\x01点经验！", point);
 }
