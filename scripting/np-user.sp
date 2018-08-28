@@ -246,7 +246,7 @@ void CheckClient(int client, const char[] steamid)
 	FormatEx(m_szQuery, 256, "{\"Event\":\"PlayerConnection\",\"PlayerConnection\":{\"SteamID\":\"%s\",\"CIndex\":%d,\"IP\":\"%s\",\"JoinTime\":%d,\"TodayDate\":%i,\"Map\":\"%s\",\"ServerID\":%d,\"ServerModID\":%d}}", steamid, client, ip, GetTime(), g_iToday, map, NP_Core_GetServerId(), NP_Core_GetServerModId());
 	NP_Socket_Write(m_szQuery);
 	//防止因为网络波动而无法加载用户数据
-	CreateTimer(5.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(10.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 

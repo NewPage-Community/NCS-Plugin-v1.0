@@ -46,7 +46,7 @@ void ShowUserInfo(int client)
 	else
 		g_aGroupName.GetString(NP_Group_GetUserGId(client), groupName, 32);
 
-	Format(buff, 512, "UID：%d\nSTEAMID：%s\n在线时间：%d小时\n用户组：%s\n签到次数：%d\n软妹币：%d元", NP_Users_UserIdentity(client), steamid, NP_Stats_TotalOnlineTime(client)/60, groupName, g_aClient[client][SignTimes], g_aClient[client][Money]);
+	Format(buff, 512, "UID：%d\nSTEAMID：%s\n在线时间：%d小时\n用户组：%s\n签到次数：%d\n软妹币：%d元", NP_Users_UserIdentity(client), steamid, NP_Stats_TotalOnlineTime(client)/3600, groupName, g_aClient[client][SignTimes], g_aClient[client][Money]);
 
 	Menu infoMenu = new Menu(MenuHandler_UserInfo);
 	infoMenu.SetTitle("账号信息", client);
@@ -139,5 +139,5 @@ public Action SetTeams(Handle timer, int client)
 {
 	if (IsClientInGame(client))
 		if (GetDay() > g_aClient[client][SignDate])
-			PrintToChat(client,"\x04[提示] \x04您今天还未签到!输入\x05!qd\x01每日可获得软妹币!");
+			PrintToChat(client,"\x04[提示] \x04您今天还未签到!输入 \x05!qd \x04每日可获得软妹币!");
 }
