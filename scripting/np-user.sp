@@ -254,6 +254,12 @@ void CheckClientCallback(const char[] data)
 {
 	Handle json = json_load(data);
 
+	if (json == INVALID_HANDLE)
+	{
+		NP_Core_LogError("User", "CheckClientCallback", "Error: Json -> \"%s\"", data);
+		return;
+	}
+
 	int client = json_object_get_int(json, "CIndex");
 
 	if(!client)

@@ -79,6 +79,13 @@ public void NP_Socket_OnReceived(const char[] event, const char[] data, const in
 void AllChatProcess(const char[] data)
 {
 	Handle json = json_load(data);
+
+	if (json == INVALID_HANDLE)
+	{
+		NP_Core_LogError("User", "CheckClientCallback", "Error: Json -> \"%s\"", data);
+		return;
+	}
+
 	Handle msgdata;
 	char playername[32], msg[256];
 

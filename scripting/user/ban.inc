@@ -81,6 +81,13 @@ bool Util_BanIdentity(char[] steamid, int admin, int length, int bantype, const 
 void BanClientCallback(const char[] data)
 {
 	Handle json = json_load(data);
+
+	if (json == INVALID_HANDLE)
+	{
+		NP_Core_LogError("User", "CheckClientCallback", "Error: Json -> \"%s\"", data);
+		return;
+	}
+
 	Handle banclient = json_object_get(json, "BanClient");
 
 	char steamid[32], BanAdminName[32], BanReason[128];
