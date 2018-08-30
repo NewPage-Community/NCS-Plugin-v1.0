@@ -10,7 +10,7 @@ bool GrantVip(int client, int duration)
 	}
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = '%d' WHERE uid = '%d'", P_SQLPRE, GetTime()+duration*86400, NP_Users_UserIdentity(client));
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = %d WHERE uid = %d", P_SQLPRE, GetTime()+duration*86400, NP_Users_UserIdentity(client));
 	return NP_MySQL_SaveDatabase(m_szQuery);
 }
 
@@ -27,7 +27,7 @@ bool DeleteVip(int client)
 	}
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = '%d' WHERE uid = '%d'", P_SQLPRE, 0, NP_Users_UserIdentity(client));
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = %d WHERE uid = %d", P_SQLPRE, 0, NP_Users_UserIdentity(client));
 	return NP_MySQL_SaveDatabase(m_szQuery);
 }
 
@@ -44,7 +44,7 @@ bool AddVipPoint(int client, int point)
 	}
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vippoint = vippoint + '%d' WHERE uid = '%d'", P_SQLPRE, point, NP_Users_UserIdentity(client));
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vippoint = vippoint + %d WHERE uid = %d", P_SQLPRE, point, NP_Users_UserIdentity(client));
 	
 	if (NP_MySQL_SaveDatabase(m_szQuery))
 	{
@@ -102,6 +102,6 @@ void VIPSigned(int client)
 	if (!NP_Vip_IsVIP(client))
 		return;
 
-	if (AddVipPoint(client, point))
+	if (AddVipPoint(client, point) && point > 0)
 		PrintToChat(client, "\x04[VIP] \x01签到获得\x05%d\x01点经验！", point);
 }

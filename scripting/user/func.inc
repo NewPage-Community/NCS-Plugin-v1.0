@@ -111,7 +111,7 @@ public Action Command_Sign(int client, int args)
 	}
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "UPDATE `%s_users` SET `signtimes` = `signtimes` + 1, `signdate` = %d WHERE uid = %d", P_SQLPRE, today, NP_Users_UserIdentity(client));
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET signtimes = signtimes + 1, signdate = %d WHERE uid = %d", P_SQLPRE, today, NP_Users_UserIdentity(client));
 	
 	if (!NP_MySQL_SaveDatabase(m_szQuery))
 	{

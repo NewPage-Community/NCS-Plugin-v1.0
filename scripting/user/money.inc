@@ -10,7 +10,7 @@ bool GiveClientMoney(int client, int money)
 	}
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "UPDATE %s_users SET money = money + '%d' WHERE uid = '%d'", P_SQLPRE, money, NP_Users_UserIdentity(client));
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET money = money + %d WHERE uid = %d", P_SQLPRE, money, NP_Users_UserIdentity(client));
 
 	if (NP_MySQL_SaveDatabase(m_szQuery))
 	{
@@ -36,7 +36,7 @@ bool PayClientMoney(int client, int money)
 		return false;
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "UPDATE %s_users SET money = money - '%d' WHERE uid = '%d'", P_SQLPRE, money, NP_Users_UserIdentity(client));
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET money = money - %d WHERE uid = %d", P_SQLPRE, money, NP_Users_UserIdentity(client));
 
 	if (NP_MySQL_SaveDatabase(m_szQuery))
 	{
@@ -49,16 +49,17 @@ bool PayClientMoney(int client, int money)
 
 void MoneySigned(int client)
 {
-	int money = g_cSignMoney.IntValue, VIPmoney = g_cSignVIPMoney.IntValue;
-	if (NP_Vip_IsVIP(client))
-	{
-		if (GiveClientMoney(client, money))
-			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", money);
-	}
-	else
+	int money = g_cSignMoney.IntValue;
+	int VIPmoney = g_cSignVIPMoney.IntValue;
+	if (NP_Vip_IsVIP(client) && VIPmoney > 0)
 	{
 		if (GiveClientMoney(client, VIPmoney))
 			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", VIPmoney);
+	}
+	else if(money > 0)
+	{
+		if (GiveClientMoney(client, money))
+			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", money);
 	}
 }
 
