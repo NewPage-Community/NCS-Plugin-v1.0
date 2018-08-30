@@ -354,11 +354,14 @@ void CallDataForward(int client)
 
 public Action Timer_CheckClient(Handle timer, int client)
 {
-	if(!IsClientInGame(client))
+	if(!IsClientConnected(client))
 		return Plugin_Stop;
 
 	if(!g_aClient[client][AuthLoaded] || g_aClient[client][UID] <= 0)
+	{
+		NP_Core_LogMessage("User", "Timer_CheckClient", "Error: Client data have not loaded! -> \"%L\"", client);
 		OnClientAuthorized(client, "");
+	}
 
 	return Plugin_Stop;
 }
@@ -381,7 +384,7 @@ public Action Timer_ReAuthorize(Handle timer, int client)
 	char steamid[32];
 	if(!GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true))
 	{
-		NP_Core_LogMessage("User", "OnClientAuthorized", "Error: Can not verify client`s SteamId64 -> \"%L\"", client);
+		NP_Core_LogMessage("User", "Timer_ReAuthorize", "Error: Can not verify client`s SteamId64 -> \"%L\"", client);
 		return Plugin_Continue;
 	}
 
