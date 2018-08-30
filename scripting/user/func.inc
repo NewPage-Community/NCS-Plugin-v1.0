@@ -67,7 +67,7 @@ void ShowVIPInfo(int client)
 
 	if (!NP_Vip_IsVIP(client))
 	{
-		if (NP_Vip_VIPLevel(client) < 0)
+		if (NP_Vip_VIPLevel(client) <= 0)
 			Format(notVIP, 16, "未开通");
 		else
 			Format(notVIP, 16, "已过期");
