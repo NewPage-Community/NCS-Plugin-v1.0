@@ -30,7 +30,7 @@ void EndStats(int client)
 	strcopy(playerName, 32, g_aClient[client][Name]);
 	ReplaceString(playerName, 32, "\"", "");
 
-	FormatEx(buff, 256, "{\"Event\":\"UserStats\",\"UserStats\":{\"UID\":%d,\"SessionID\":%d,\"TodayOnline\":%d,\"TotalOnline\":%d,\"SpecOnline\":%d,\"PlayOnline\":%d,\"UserName\":\"%s\"}}", NP_Users_UserIdentity(client), g_aClient[client][StatsTrackingId], g_aClient[client][StatsSession][iTodayOnlineTime], g_aClient[client][StatsSession][iTotalOnlineTime], g_aClient[client][StatsSession][iObserveOnlineTime], g_aClient[client][StatsSession][iPlayOnlineTime], playerName);
+	FormatEx(buff, 256, "{\"Event\":\"UserStats\",\"UserStats\":{\"UID\":%d,\"SessionID\":%d,\"TodayOnline\":%d,\"TotalOnline\":%d,\"SpecOnline\":%d,\"PlayOnline\":%d,\"UserName\":\"%s\",\"VIPReward\":%d}}", NP_Users_UserIdentity(client), g_aClient[client][StatsTrackingId], g_aClient[client][StatsSession][iTodayOnlineTime], g_aClient[client][StatsSession][iTotalOnlineTime], g_aClient[client][StatsSession][iObserveOnlineTime], g_aClient[client][StatsSession][iPlayOnlineTime], playerName, g_iVIPReward[client]);
 	NP_Socket_Write(buff);
 }
 
@@ -47,6 +47,8 @@ public Action Timer_Client(Handle timer, int client)
 	
 	g_aClient[client][StatsSession][iTodayOnlineTime]++;
 	g_aClient[client][StatsSession][iTotalOnlineTime]++;
+
+	VIPReward(client, g_aClient[client][StatsSession][iTodayOnlineTime]);
  
 	return Plugin_Continue;
 }
@@ -93,6 +95,7 @@ public Action Timer_Global(Handle timer)
 		{
 			g_aClient[client][StatsSession][iTodayOnlineTime] = 0;
 			g_aClient[client][StatsTotal][iTodayOnlineTime]   = 0;
+			g_iVIPReward[client] = 0;
 		}
 	}
 	

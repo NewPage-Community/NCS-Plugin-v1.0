@@ -1,3 +1,5 @@
+int g_iVIPReward[MAXPLAYERS+1];
+
 bool GrantVip(int client, int duration)
 {
 	if (!NP_Users_IsAuthLoaded(client))
@@ -104,4 +106,17 @@ void VIPSigned(int client)
 
 	if (AddVipPoint(client, point) && point > 0)
 		PrintToChat(client, "\x04[VIP] \x01签到获得\x05%d\x01点经验！", point);
+}
+
+void VIPReward(int client, int onlinetime)
+{
+	int reward = g_cVIPOnlineReward.IntValue;
+	if(!(onlinetime%3600))
+	{
+		if(g_iVIPReward[client] < g_cVIPOnlineMaxReward.IntValue)
+		{
+			AddVipPoint(client, reward);
+			g_iVIPReward[client] += reward;
+		}
+	}
 }

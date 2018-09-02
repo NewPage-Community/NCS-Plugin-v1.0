@@ -27,7 +27,9 @@ ArrayList g_aGroupName;
 
 ConVar g_cSignMoney,
 	g_cSignVIPMoney,
-	g_cSignVIPPoint;
+	g_cSignVIPPoint,
+	g_cVIPOnlineReward,
+	g_cVIPOnlineMaxReward;
 
 any g_aClient[MAXPLAYERS+1][client_Info];
 
@@ -138,6 +140,8 @@ public void OnPluginStart()
 	g_cSignMoney = CreateConVar("np_user_sign_givemoney", "3000", "签到奖励软妹币", 0, true, 0.0);
 	g_cSignVIPMoney = CreateConVar("np_user_sign_VIPgivemoney", "5000", "会员签到奖励软妹币", 0, true, 0.0);
 	g_cSignVIPPoint = CreateConVar("np_user_sign_givevippoint", "10", "签到奖励会员经验", 0, true, 0.0);
+	g_cVIPOnlineReward = CreateConVar("np_user_vip_onlinereward", "1", "会员每小时增加的成长值", 0, true, 0.0);
+	g_cVIPOnlineMaxReward = CreateConVar("np_user_vip_onlinemaxreward", "12", "会员每天增加的成长值上线", 0, true, 0.0);
 }
 
 // get group name
@@ -165,6 +169,7 @@ public void OnClientConnected(int client)
 	g_aClient[client][Name][0] = '\0';
 	g_aClient[client][GID] = -1;
 	g_aClient[client][Money] = 0;
+	g_iVIPReward[client] = 0;
 
 	// Tag
 	g_aClient[client][Tag][0] = '\0';
@@ -326,6 +331,7 @@ void CheckClientCallback(const char[] data)
 
 	g_aClient[client][VIPPoint] = json_object_get_int(playerinfo, "VIPPoint");
 	g_aClient[client][VIPExpired] = json_object_get_int(playerinfo, "VIPExpired");
+	g_iVIPReward[client] = json_object_get_int(playerinfo, "VIPReward");
 
 	if(!CheckBan(client, playerinfo))
 		return;
