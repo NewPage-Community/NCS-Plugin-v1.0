@@ -131,13 +131,22 @@ public Action Command_Sign(int client, int args)
 	Call_PushCell(client);
 	Call_PushCell(g_aClient[client][SignTimes]);
 	Call_Finish();
-
+	
 	return Plugin_Handled;
 }
 
-public Action SetTeams(Handle timer, int client)
+public Action Timer_SignTips(Handle timer, int client)
 {
 	if (IsClientInGame(client))
+	{
 		if (GetDay() > g_aClient[client][SignDate])
-			PrintToChat(client,"\x04[提示] \x04您今天还未签到!输入 \x05!qd \x04每日可获得软妹币!");
+		{
+			PrintToChat(client,"\x04[提示] \x04您今天还未签到!聊天输入 \x05!qd \x04每日可获得软妹币!");
+			PrintHintText(client, "您今天还未签到!聊天输入 !qd 每日可获得软妹币!");
+		}
+	}
+	else
+		KillTimer(timer);
+
+	return Plugin_Continue;
 }

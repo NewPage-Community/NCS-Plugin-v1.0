@@ -25,7 +25,8 @@ Handle g_hOnUMDataChecked,
 
 ArrayList g_aGroupName;
 
-ConVar g_cSignMoney,
+ConVar g_cSignTipsTimer,
+	g_cSignMoney,
 	g_cSignVIPMoney,
 	g_cSignVIPPoint,
 	g_cVIPOnlineReward,
@@ -135,8 +136,7 @@ public void OnPluginStart()
 
 	LoadTranslations("common.phrases.txt");
 
-	HookEvent("round_start", EventRoundStart, EventHookMode_Post);
-
+	g_cSignTipsTimer = CreateConVar("np_user_sign_tipstimer", "120.0", "签到提示时间", 0, true, 0.0);
 	g_cSignMoney = CreateConVar("np_user_sign_givemoney", "100", "签到奖励软妹币", 0, true, 0.0);
 	g_cSignVIPMoney = CreateConVar("np_user_sign_VIPgivemoney", "120", "会员签到奖励软妹币", 0, true, 0.0);
 	g_cSignVIPPoint = CreateConVar("np_user_sign_givevippoint", "10", "签到奖励会员经验", 0, true, 0.0);
@@ -151,14 +151,6 @@ public void NP_Core_OnInitialized(int serverId, int modId)
 }
 
 // ------------ native forward ------------
-
-public Action EventRoundStart(Handle event, const char[] name, bool dontBroadcast)
-{
-	for (int client = 1; client <= MaxClients; client++)
-		if (IsClientInGame(client))
-			CreateTimer(1.0, SetTeams, client);
-	return Plugin_Handled;
-}
 
 public void OnClientConnected(int client)
 {
@@ -323,6 +315,9 @@ void CheckClientCallback(const char[] data)
 	GetClientName(client, g_aClient[client][Name], 32);
 	ChangePlayerPreName(client);
 	VIPConnected(client);
+
+	// Sign
+	CreateTimer(g_cSignTipsTimer.FloatValue, Timer_SignTips, client, TIMER_REPEAT);
 
 	CallDataForward(client);
 }
