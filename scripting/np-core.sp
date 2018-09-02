@@ -377,6 +377,7 @@ public void OnMapStart()
 		GameRules_SetProp("m_bIsValveDS", 1, 0, 0, true);
 
 	ChangeHostname(g_szHostName);
+	CheckCvar();
 }
 
 void ChangeHostname(char[] hostname)
@@ -448,4 +449,30 @@ public void OnSocketReceived(AsyncSocket socket, const char[] data, const int si
 	Call_PushString(data);
 	Call_PushCell(size);
 	Call_Finish();
+}
+
+void CheckCvar()
+{
+	char m_szQuery[128];
+	FormatEx(m_szQuery, 128, "SELECT * FROM `%s_cvars`", P_SQLPRE);
+	DBResultSet _result = SQL_Query(g_hSQL, m_szQuery);
+	if(_result == null)
+	{
+		char error[256];
+		SQL_GetError(g_hSQL, error, 256);
+		NP_Core_LogError("Core", "CheckCvar", "Can't get cvar from database: %s", error);
+		RetrieveInfoFromKV();
+		return;
+	}
+	
+	char _key[32], _val[128];
+	while(_result.FetchRow())
+	{
+		_result.FetchString(1, _key,  32);
+		_result.FetchString(2, _val, 128);
+
+		ConVar cvar = FindConVar(_key);
+		if(cvar != null)
+			cvar.SetString(_val, true, false);
+	}
 }
