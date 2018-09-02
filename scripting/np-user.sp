@@ -186,27 +186,6 @@ public void OnClientDisconnect(int client)
 	EndStats(client);
 }
 
-// we call this forward after client is fully in-game.
-// this forward -> tell other plugins, we are available, allow to load client`s data.
-public void OnClientPutInServer(int client)
-{
-	if(IsFakeClient(client) || IsClientSourceTV(client))
-	{
-		CallDataForward(client);
-		return;
-	}
-
-	if(!g_aClient[client][AuthLoaded] || g_aClient[client][UID] <= 0)
-	{
-		CreateTimer(1.0, Timer_Waiting, client, TIMER_FLAG_NO_MAPCHANGE);
-		return;
-	}
-
-	CallDataForward(client);
-
-	VIPConnected(client);
-}
-
 public void OnRebuildAdminCache(AdminCachePart part)
 {
 	if(part == AdminCache_Admins)
@@ -343,6 +322,9 @@ void CheckClientCallback(const char[] data)
 
 	GetClientName(client, g_aClient[client][Name], 32);
 	ChangePlayerPreName(client);
+	VIPConnected(client);
+
+	CallDataForward(client);
 }
 
 void CallDataForward(int client)
@@ -368,16 +350,6 @@ public Action Timer_CheckClient(Handle timer, int client)
 		NP_Core_LogMessage("User", "Timer_CheckClient", "Error: Client data have not loaded! -> \"%L\"", client);
 		OnClientAuthorized(client, "");
 	}
-
-	return Plugin_Stop;
-}
-
-public Action Timer_Waiting(Handle timer, int client)
-{
-	if(!IsClientInGame(client))
-		return Plugin_Stop;
-	
-	OnClientPutInServer(client);
 
 	return Plugin_Stop;
 }
