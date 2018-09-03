@@ -453,6 +453,13 @@ public void OnSocketReceived(AsyncSocket socket, const char[] data, const int si
 
 void CheckCvar()
 {
+	if (g_hSQL == null)
+	{
+		NP_Core_LogError("Core", "CheckCvar", "Database is unavailable now");
+		CreateTimer(1.0, Timer_CheckCvar);
+		return;
+	}
+
 	char m_szQuery[128];
 	FormatEx(m_szQuery, 128, "SELECT * FROM `%s_cvars`", P_SQLPRE);
 	DBResultSet _result = SQL_Query(g_hSQL, m_szQuery);
@@ -468,11 +475,17 @@ void CheckCvar()
 	char _key[32], _val[128];
 	while(_result.FetchRow())
 	{
-		_result.FetchString(1, _key,  32);
-		_result.FetchString(2, _val, 128);
+		_result.FetchString(0, _key,  32);
+		_result.FetchString(1, _val, 128);
 
 		ConVar cvar = FindConVar(_key);
 		if(cvar != null)
 			cvar.SetString(_val, true, false);
 	}
+}
+
+public Action Timer_CheckCvar(Handle timer, int client)
+{
+	CheckCvar();
+	return Plugin_Handled;
 }

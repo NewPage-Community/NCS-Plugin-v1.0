@@ -137,7 +137,7 @@ public Action Command_Sign(int client, int args)
 
 public Action Timer_SignTips(Handle timer, int client)
 {
-	if (IsClientInGame(client))
+	if (IsClientConnected(client))
 	{
 		if (GetDay() > g_aClient[client][SignDate])
 		{
