@@ -2,6 +2,7 @@
 #pragma semicolon 1
 
 #include <NewPage>
+#include <NewPage/user>
 #include <sourcemod>
 
 #define P_NAME P_PRE ... " - Reserved Slots"
