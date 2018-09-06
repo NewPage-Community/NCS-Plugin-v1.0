@@ -5,7 +5,7 @@ public Action Command_UserInfo(int client, int args)
 
 	if (!NP_Users_IsAuthLoaded(client))
 	{
-		PrintToChat(client, "你的账号信息仍未被加载！");
+		PrintToChat(client, "\x04[提示]\x01 你的账号信息仍未被加载！");
 		return Plugin_Handled;
 	}
 

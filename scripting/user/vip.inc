@@ -82,6 +82,11 @@ public int Native_AddVipPoint(Handle plugin, int numParams)
 	return AddVipPoint(GetNativeCell(1), GetNativeCell(2));
 }
 
+public int Native_VipGetPoint(Handle plugin, int numParams)
+{
+	return g_aClient[GetNativeCell(1)][VIPPoint];
+}
+
 void VIPConnected(int client)
 {
 	if (!NP_Vip_IsVIP(client))
@@ -110,8 +115,12 @@ void VIPSigned(int client)
 
 void VIPReward(int client, int onlinetime)
 {
+	if (!NP_Vip_IsVIP(client))
+		return;
+
 	int reward = g_cVIPOnlineReward.IntValue;
-	if(!(onlinetime%3600))
+	
+	if (!(onlinetime%3600))
 	{
 		if(g_iVIPReward[client] < g_cVIPOnlineMaxReward.IntValue)
 		{
