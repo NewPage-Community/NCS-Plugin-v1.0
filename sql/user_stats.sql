@@ -7,16 +7,17 @@ IN
     specOnline INT(11),
     playOnline INT(11),
     userName VARCHAR(32),
-    vipReward INT(11)
+    cIP VARCHAR(32),
+    sMap VARCHAR(128)
 )
     SQL SECURITY INVOKER
 BEGIN
 
     /* UPDATE dxg_users */
-    UPDATE `np_users` SET lastseen = UNIX_TIMESTAMP(), username = userName, vipreward = vipReward WHERE uid = userId;
+    UPDATE `np_users` SET lastseen = UNIX_TIMESTAMP(), username = userName WHERE uid = userId;
 
     UPDATE `np_stats` SET connectTimes = connectTimes + 1, onlineToday  = onlineToday + todayOnline, onlineTotal = onlineTotal + totalOnline, onlineOB = onlineOB + specOnline, onlinePlay = onlinePlay + playOnline WHERE uid = userId;
         
-    UPDATE `np_analytics` SET duration = totalOnline WHERE uid = userId AND id = sessionId;
+    UPDATE `np_analytics` SET duration = totalOnline, ip = cIP, map = sMap WHERE uid = userId AND id = sessionId;
 
 END

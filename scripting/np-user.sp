@@ -168,9 +168,6 @@ public void OnClientConnected(int client)
 	g_aClient[client][Tag][0] = '\0';
 	
 	g_aClient[client][UID] = 0;
-
-	// Stats
-	StartStats(client);
 }
 
 public void OnClientDisconnect(int client)
@@ -228,10 +225,14 @@ void CheckClient(int client, const char[] steamid)
 	GetCurrentMap(map, 128);
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "{\"Event\":\"PlayerConnection\",\"PlayerConnection\":{\"SteamID\":\"%s\",\"CIndex\":%d,\"IP\":\"%s\",\"JoinTime\":%d,\"TodayDate\":%i,\"Map\":\"%s\",\"ServerID\":%d,\"ServerModID\":%d}}", steamid, client, ip, GetTime(), g_iToday, map, NP_Core_GetServerId(), NP_Core_GetServerModId());
-	NP_Socket_Write(m_szQuery);
+	FormatEx(m_szQuery, 256, "{\"E\":\"PC\",\"S\":\"%s\",\"SI\":%d}", steamid, NP_Core_GetServerId());
+	if (NP_Socket_Write(m_szQuery))
+	{
+		CreateTimer(0.1, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
+		return;
+	}
 	//防止因为网络波动而无法加载用户数据
-	CreateTimer(10.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(3.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 
@@ -245,25 +246,13 @@ void CheckClientCallback(const char[] data)
 		return;
 	}
 
-	int client = json_object_get_int(json, "CIndex");
+	//matche player information
+	char steamid[32];
+	json_object_get_string(json, "SteamID", steamid, 32);
+	int client = FindClientBySteamId(AuthId_SteamID64, steamid);
 
-	if(!client)
-	{
-		CloseHandle(json);
+	if (IsValidClient(client))
 		return;
-	}
-
-	//Verification is whether player information matches
-	char d_steamid[32], t_steamid[32];
-	json_object_get_string(json, "SteamID", d_steamid, 32);
-	GetClientAuthId(client, AuthId_SteamID64, t_steamid, 32, true);
-
-	//Drop the data
-	if(strcmp(d_steamid, t_steamid) != 0)
-	{
-		CloseHandle(json);
-		return;
-	}
 
 	Handle playerinfo = json_object_get(json, "PlayerInfo");
 
@@ -311,7 +300,8 @@ void CheckClientCallback(const char[] data)
 	CloseHandle(json);
 	CloseHandle(playerinfo);
 
-	LoadAdmin(client, t_steamid);
+	LoadAdmin(client, steamid);
+	StartStats(client);
 
 	GetClientName(client, g_aClient[client][Name], 32);
 	ChangePlayerPreName(client);
@@ -343,7 +333,7 @@ public Action Timer_CheckClient(Handle timer, int client)
 
 	if(!g_aClient[client][AuthLoaded] || g_aClient[client][UID] <= 0)
 	{
-		NP_Core_LogMessage("User", "Timer_CheckClient", "Error: Client data have not loaded! -> \"%L\"", client);
+		NP_Core_LogMessage("User", "Timer_CheckClient", "Log: Client data have not loaded! -> \"%L\"", client);
 		OnClientAuthorized(client, "");
 	}
 
@@ -358,7 +348,7 @@ public Action Timer_ReAuthorize(Handle timer, int client)
 	char steamid[32];
 	if(!GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true))
 	{
-		NP_Core_LogMessage("User", "Timer_ReAuthorize", "Error: Can not verify client`s SteamId64 -> \"%L\"", client);
+		NP_Core_LogMessage("User", "Timer_ReAuthorize", "Log: Can not verify client`s SteamId64 -> \"%L\"", client);
 		return Plugin_Continue;
 	}
 

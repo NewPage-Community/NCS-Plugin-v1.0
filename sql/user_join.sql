@@ -2,9 +2,6 @@ CREATE DEFINER=`root`@`%` PROCEDURE `user_join`(
 IN
 	p_steamId BIGINT(20),
 	p_serverId SMALLINT(5),
-	p_modId SMALLINT(5),
-	p_ip VARCHAR(24),
-	p_map VARCHAR(128),
 	p_nowTime INT(11),
 	p_nowDay INT(11)
 )
@@ -28,7 +25,7 @@ BEGIN
 	END IF;
 
 	/* Add analytics */
-	INSERT INTO `np_analytics` VALUES (DEFAULT, puid, p_serverId, p_ip, p_map, p_nowTime, p_nowDay, -1);
+	INSERT INTO `np_analytics` VALUES (DEFAULT, puid, p_serverId, '', '', p_nowTime, p_nowDay, -1);
 	SET TrackingID = LAST_INSERT_ID();
 
 	/* Check today stats */

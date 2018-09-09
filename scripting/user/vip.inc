@@ -57,6 +57,30 @@ bool AddVipPoint(int client, int point)
 	return false;
 }
 
+bool AddReward(int client, int point)
+{
+	//if player isn's vip
+	if(!g_aClient[client][Auth][Vip])
+		return false;
+
+	if(!NP_Socket_IsReady())
+	{
+		NP_Core_LogError("User-Vip", "AddVipPoint", "Error: Socket is unavailable -> \"%L\"", client);
+		return false;
+	}
+
+	char m_szQuery[256];
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipreward = %d WHERE uid = %d", P_SQLPRE, g_iVIPReward[client] + point, NP_Users_UserIdentity(client));
+	
+	if (NP_MySQL_SaveDatabase(m_szQuery))
+	{
+		g_iVIPReward[client] += point;
+		return true;
+	}
+
+	return false;
+}
+
 public int Native_IsVIP(Handle plugin, int numParams)
 {
 	return g_aClient[GetNativeCell(1)][Auth][Vip];
@@ -124,8 +148,7 @@ void VIPReward(int client, int onlinetime)
 	{
 		if(g_iVIPReward[client] < g_cVIPOnlineMaxReward.IntValue)
 		{
-			AddVipPoint(client, reward);
-			g_iVIPReward[client] += reward;
+			AddReward(client, reward);
 		}
 	}
 }

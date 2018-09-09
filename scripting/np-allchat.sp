@@ -59,7 +59,7 @@ public Action Command_AllChat(int client, int argc)
 	char playerName[32];
 	GetClientName(client, playerName, 32);
 
-	ReplaceString(playerName, 32, "\"", "");
+	StringToJson(playerName, 32);
 
 	char buff[512];
 	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"ServerModID\":%d,\"PlayerName\":\"%s\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), NP_Core_GetServerModId(), playerName, szChat);
