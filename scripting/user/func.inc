@@ -79,7 +79,7 @@ void ShowVIPInfo(int client)
 		if (vipExpired == 99999999999)
 			Format(expireTime, 128, "永久");
 		else
-			FormatTime(expireTime, 128, "%Y-%m-%d %H:%M:%S", vipExpired);
+			FormatTime(expireTime, 128, "%Y-%m-%d", vipExpired);
 	}
 	
 	FormatEx(buff, 512, "会员状态：%s\n会员等级：%d级\n会员成长值：%d\n到期时间：%s\n今日获取成长值：%d/%d", NP_Vip_IsVIP(client) ? "已开通" : notVIP, NP_Vip_VIPLevel(client), vipPoint, expireTime, g_iVIPReward[client], g_cVIPOnlineMaxReward.IntValue);
