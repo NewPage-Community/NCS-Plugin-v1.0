@@ -377,7 +377,7 @@ public void OnMapStart()
 		GameRules_SetProp("m_bIsValveDS", 1, 0, 0, true);
 
 	ChangeHostname(g_szHostName);
-	CheckCvar();
+	CreateTimer(3.0, Timer_CheckCvar);
 }
 
 void ChangeHostname(char[] hostname)
