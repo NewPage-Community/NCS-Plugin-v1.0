@@ -225,46 +225,45 @@ void CheckClient(int client, const char[] steamid)
 	GetCurrentMap(map, 128);
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "{\"E\":\"PC\",\"S\":\"%s\",\"SI\":%d}", steamid, NP_Core_GetServerId());
-	if (NP_Socket_Write(m_szQuery))
-	{
-		CreateTimer(0.1, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
-		return;
-	}
+	FormatEx(m_szQuery, 256, "{\"E\":\"PC\",\"S\":\"%s\",\"SI\":%d,\"C\":%d}", steamid, NP_Core_GetServerId(), client);
+	NP_Socket_Write(m_szQuery);
 	//防止因为网络波动而无法加载用户数据
-	CreateTimer(3.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(5.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 
 void CheckClientCallback(const char[] data)
 {
 	Handle json = json_load(data);
-
 	if (json == INVALID_HANDLE)
 	{
 		NP_Core_LogError("User", "CheckClientCallback", "Error: Json -> \"%s\"", data);
 		return;
 	}
 
-	//matche player information
-	char steamid[32];
-	json_object_get_string(json, "SteamID", steamid, 32);
-	int client = FindClientBySteamId(AuthId_SteamID64, steamid);
+	int client = json_object_get_int(json, "CIndex");
+	if (!client)
+		return;
 
-	if (IsValidClient(client))
+	//matche player information
+	char data_steamid[32], steamid[32];
+	json_object_get_string(json, "SteamID", data_steamid, 32);
+	GetClientAuthId(client, AuthId_SteamID64, steamid, 32);
+	if(strcmp(data_steamid, steamid) != 0)
 		return;
 
 	Handle playerinfo = json_object_get(json, "PlayerInfo");
-
 	if(playerinfo == INVALID_HANDLE)
 	{
 		CloseHandle(json);
 		CloseHandle(playerinfo);
 		return;
 	}
-	
-	g_aClient[client][AuthLoaded] = true;
 
+	//init data
+	StartStats(client);
+
+	//get data
 	g_aClient[client][UID] = json_object_get_int(playerinfo, "UID");
 	g_aClient[client][Auth][Spt] = json_object_get_bool(playerinfo, "Spt");
 	g_aClient[client][Auth][Vip] = json_object_get_bool(playerinfo, "Vip");
@@ -294,6 +293,10 @@ void CheckClientCallback(const char[] data)
 	g_aClient[client][VIPExpired] = json_object_get_int(playerinfo, "VIPExpired");
 	g_iVIPReward[client] = json_object_get_int(playerinfo, "VIPReward");
 
+	GetClientName(client, g_aClient[client][Name], 32);
+
+	g_aClient[client][AuthLoaded] = true;
+
 	if(!CheckBan(client, playerinfo))
 		return;
 
@@ -301,9 +304,7 @@ void CheckClientCallback(const char[] data)
 	CloseHandle(playerinfo);
 
 	LoadAdmin(client, steamid);
-	StartStats(client);
 
-	GetClientName(client, g_aClient[client][Name], 32);
 	ChangePlayerPreName(client);
 	VIPConnected(client);
 
@@ -331,7 +332,7 @@ public Action Timer_CheckClient(Handle timer, int client)
 	if(!IsClientConnected(client))
 		return Plugin_Stop;
 
-	if(!g_aClient[client][AuthLoaded] || g_aClient[client][UID] <= 0)
+	if(!g_aClient[client][AuthLoaded])
 	{
 		NP_Core_LogMessage("User", "Timer_CheckClient", "Log: Client data have not loaded! -> \"%L\"", client);
 		OnClientAuthorized(client, "");

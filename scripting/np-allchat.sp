@@ -36,7 +36,9 @@ public int Native_SendMsg(Handle plugin, int numParams)
 	char buff[512];
 	Format(buff, 512, "{\"Event\":\"AllServersChat\",\"AllServersChat\":{\"ServerID\":%d,\"PlayerName\":\"###MSG###\",\"Msg\":\"%s\"}}", NP_Core_GetServerId(), input);
 	
-	return (NP_Socket_Write(buff)) ? 1 : 0;
+	NP_Socket_Write(buff);
+
+	return 1;
 }
 
 public void OnPluginStart()

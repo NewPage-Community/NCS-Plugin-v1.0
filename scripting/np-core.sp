@@ -96,7 +96,9 @@ public int Native_SocketWrite(Handle plugin, int numParams)
 	if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
 		return 0;
 
-	return g_hSocket.Write(input);
+	g_hSocket.Write(input);
+
+	return 1;
 }
 
 public int Native_IsConnected(Handle plugin, int numParams)
