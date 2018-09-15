@@ -182,6 +182,8 @@ public int Native_LogMessage(Handle plugin, int numParams)
 
 public void OnPluginStart()
 {
+	RegServerCmd("np_hotupdate", Command_HotUpdate);
+
 	// forwards
 	g_hOnInitialized = CreateGlobalForward("NP_Core_OnInitialized",  ET_Ignore, Param_Cell, Param_Cell);
 	g_hOnSocketReceived = CreateGlobalForward("NP_Socket_OnReceived",  ET_Ignore, Param_String, Param_String, Param_Cell);
@@ -529,4 +531,29 @@ public Action Timer_Request(Handle timer, System2HTTPRequest request)
 {
 	request.POST();
 	return Plugin_Handled;
+}
+
+public Action Command_HotUpdate(int args)
+{
+	PrintToChatAll("\x04[提示] \x01服务器将进行热更新!");
+	PrintCenterTextAll("\x04[提示] \x01服务器将进行热更新!");
+	CreateTimer(1.0, Timer_HotUpdate, 0);
+}
+
+public Action Timer_HotUpdate(Handle timer, int time)
+{
+	if(time++ < 10)
+	{
+		PrintToChatAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", time);
+		PrintCenterTextAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", time);
+		return Plugin_Stop;
+	}
+
+	for(int i = 1; i <= GetMaxClients(); i++)
+		if (IsClientInGame(i))
+				ClientCommand(i, "retry");
+
+	ServerCommand("_restart");
+
+	return Plugin_Stop;
 }
