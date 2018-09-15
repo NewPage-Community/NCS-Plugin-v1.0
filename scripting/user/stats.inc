@@ -25,7 +25,7 @@ void EndStats(int client)
 	if(g_aClient[client][StatsTrackingId] <= 0)
 		return;
 
-	char buff[256], playerName[32], ip[32], map[128];
+	char m_szQuery[256], playerName[32], ip[32], map[128];
 
 	GetClientIP(client, ip, 32);
 	GetCurrentMap(map, 128);
@@ -33,8 +33,8 @@ void EndStats(int client)
 	strcopy(playerName, 32, g_aClient[client][Name]);
 	StringToJson(playerName, 32);
 
-	FormatEx(buff, 256, "{\"Event\":\"UserStats\",\"UserStats\":{\"UID\":%d,\"SessionID\":%d,\"TodayOnline\":%d,\"TotalOnline\":%d,\"SpecOnline\":%d,\"PlayOnline\":%d,\"UserName\":\"%s\",\"IP\":\"%s\",\"Map\":\"%s\"}}", NP_Users_UserIdentity(client), g_aClient[client][StatsTrackingId], g_aClient[client][StatsSession][iTodayOnlineTime], g_aClient[client][StatsSession][iTotalOnlineTime], g_aClient[client][StatsSession][iObserveOnlineTime], g_aClient[client][StatsSession][iPlayOnlineTime], playerName, ip, map);
-	NP_Socket_Write(buff);
+	FormatEx(m_szQuery, 256, "CALL user_stats(%d, %d, %d, %d, %d, %d, %s, %s, %s)", NP_Users_UserIdentity(client), g_aClient[client][StatsTrackingId], g_aClient[client][StatsSession][iTodayOnlineTime], g_aClient[client][StatsSession][iTotalOnlineTime], g_aClient[client][StatsSession][iObserveOnlineTime], g_aClient[client][StatsSession][iPlayOnlineTime], playerName, ip, map);
+	NP_MySQL_SaveDatabase(m_szQuery);
 }
 
 public Action Timer_Client(Handle timer, int client)

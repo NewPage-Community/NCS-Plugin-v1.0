@@ -30,7 +30,7 @@ int g_iServerId = -1,
 	g_iServerModId = -1,
 	g_iSocketRetry = 0,
 	g_iSSPort = 23000,
-	g_iHttpPort = 81;
+	g_iHttpPort = 83;
 
 bool g_bConnected = false,
 	g_bSocketReady = false;
@@ -128,7 +128,9 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 		return 0;
 
 	System2HTTPRequest httpRequest = new System2HTTPRequest(SaveSQLCallback, "%s/savesql.php", g_sHttpURL);
-	httpRequest.SetData("ServerID=%d&Token=%s&SQL=%s", g_iServerId, Token, input);
+	httpRequest.Timeout = 30;
+	httpRequest.SetHeader("Content-Type", "application/json");
+	httpRequest.SetData("{\"ServerID\":%d,\"Token\":\"%s\",\"SQL\":\"%s\"}", g_iServerId, Token, input);
 	httpRequest.SetPort(g_iHttpPort);
 	httpRequest.POST();
 	delete httpRequest;
@@ -316,8 +318,7 @@ void CheckingServer()
 	// we used random rcon password.
 	GenerateRandomString(g_szRconPswd, 24);
 
-	ConVar rcon = FindConVar("rcon_password");
-	rcon.SetString(g_szRconPswd, false, false);
+	SetConVarString(FindConVar("rcon_password"), g_szRconPswd, false, false);
 	System2_GetStringMD5(g_szRconPswd, Token, 33);
 
 	// sync to database
