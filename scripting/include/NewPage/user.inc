@@ -94,6 +94,8 @@ native int NP_Vip_GetPoint(int client);
 
 native void NP_Users_SetTag(int client, char[] TagName);
 
+native void NP_Users_GetName(int client, char[] name, int length);
+
 native void NP_Users_BanClient(int client, int admin, int banLength, int banType, const char[] banReason);
 native void NP_Users_BanIdentity(const char[] steamIdentity, int admin, int banLength, int banType, const char[] banReason);
 

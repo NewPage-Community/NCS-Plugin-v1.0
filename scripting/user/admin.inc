@@ -59,3 +59,15 @@ void LoadAdmin(int client, const char[] steamid)
 			RunAdminCacheChecks(client);
 	}
 }
+
+void AdminLog(int client, const char[] message)
+{
+	if (client < 1 || GetUserAdmin(client) == INVALID_ADMIN_ID || !NP_Users_IsAuthLoaded(client))
+		return;
+
+	char m_szQuery[1024], msg[512];
+	strcopy(msg, 512, message);
+	NP_MySQL_EscapeString(msg);
+	Format(m_szQuery, 1024, "INSERT INTO `%s_adminlog` VALUES (DEFAULT, %d, %d, '%s', DEFAULT);", P_SQLPRE, NP_Users_UserIdentity(client), NP_Core_GetServerId(), message);
+	NP_MySQL_SaveDatabase(m_szQuery);
+}

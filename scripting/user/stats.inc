@@ -31,6 +31,7 @@ void EndStats(int client)
 	GetCurrentMap(map, 128);
 
 	strcopy(playerName, 32, g_aClient[client][Name]);
+	NP_MySQL_EscapeString(playerName);
 	StringToJson(playerName, 32);
 
 	FormatEx(m_szQuery, 256, "CALL user_stats(%d, %d, %d, %d, %d, %d, '%s', '%s', '%s')", NP_Users_UserIdentity(client), g_aClient[client][StatsTrackingId], g_aClient[client][StatsSession][iTodayOnlineTime], g_aClient[client][StatsSession][iTotalOnlineTime], g_aClient[client][StatsSession][iObserveOnlineTime], g_aClient[client][StatsSession][iPlayOnlineTime], playerName, ip, map);

@@ -81,6 +81,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// Tag
 	CreateNative("NP_Users_SetTag", Native_SetTag);
 
+	// Name
+	CreateNative("NP_Users_GetName", Native_GetName);
+
 	// Money
 	CreateNative("NP_Users_PayMoney", Native_PayMoney);
 	CreateNative("NP_Users_GiveMoney", Native_GiveMoney);
@@ -106,6 +109,12 @@ public int Native_IsAuthLoaded(Handle plugin, int numParams)
 public int Native_UserIdentity(Handle plugin, int numParams)
 {
 	return g_aClient[GetNativeCell(1)][UID];
+}
+
+// Name
+public int Native_GetName(Handle plugin, int numParams)
+{
+	SetNativeString(2, g_aClient[GetNativeCell(1)][Name], GetNativeCell(3), true);
 }
 
 // ---------- API ------------ end
@@ -201,6 +210,11 @@ public void OnClientAuthorized(int client, const char[] auth)
 	}
 
 	CheckClient(client, steamid);
+}
+
+public Action OnLogAction(Handle source, Identity ident, int client, int target, const char[] message)
+{
+	AdminLog(client, message);
 }
 
 // ------------ native forward ------------ end

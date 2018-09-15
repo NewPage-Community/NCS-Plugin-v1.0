@@ -26,6 +26,7 @@ native int  NP_Core_GetServerModId();
 native bool NP_MySQL_IsConnected();
 native Database NP_MySQL_GetDatabase();
 native bool NP_MySQL_SaveDatabase(const char[] QueryString);
+native void NP_MySQL_EscapeString(char[] string);
 
 // socket
 native bool NP_Socket_IsReady();

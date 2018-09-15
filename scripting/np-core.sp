@@ -57,6 +57,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("NP_MySQL_IsConnected", Native_IsConnected);
 	CreateNative("NP_MySQL_GetDatabase", Native_GetDatabase);
 	CreateNative("NP_MySQL_SaveDatabase", Native_SaveDatabase);
+	CreateNative("NP_MySQL_EscapeString", Native_EscapeString);
 
 	// core
 	CreateNative("NP_Core_GetServerId",    Native_GetServerId);
@@ -136,6 +137,21 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 	delete httpRequest;
 
 	return 1;
+}
+
+public int Native_EscapeString(Handle plugin, int numParams)
+{
+	// dynamic length
+	int inLen = 0;
+	GetNativeStringLength(1, inLen);
+	int length = inLen + 1;
+	char[] input = new char[length];
+	if(GetNativeString(1, input, length) != SP_ERROR_NONE)
+		return;
+
+	char[] temp = new char[length];
+	g_hSQL.Escape(input, temp, length);
+	SetNativeString(1, temp, length, true);
 }
 
 public int Native_GetServerId(Handle plugin, int numParams)
