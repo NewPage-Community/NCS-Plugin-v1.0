@@ -66,8 +66,8 @@ void AdminLog(int client, const char[] message)
 		return;
 
 	char m_szQuery[1024], msg[512];
-	strcopy(msg, 512, message);
-	NP_MySQL_EscapeString(msg);
-	Format(m_szQuery, 1024, "INSERT INTO `%s_adminlog` VALUES (DEFAULT, %d, %d, '%s', DEFAULT);", P_SQLPRE, NP_Users_UserIdentity(client), NP_Core_GetServerId(), message);
+	NP_MySQL_GetDatabase().Escape(message, msg, 512);
+	StringToJson(msg, 512);
+	Format(m_szQuery, 1024, "INSERT INTO `%s_adminlog` VALUES (DEFAULT, %d, %d, '%s', DEFAULT)", P_SQLPRE, NP_Users_UserIdentity(client), NP_Core_GetServerId(), msg);
 	NP_MySQL_SaveDatabase(m_szQuery);
 }

@@ -57,7 +57,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("NP_MySQL_IsConnected", Native_IsConnected);
 	CreateNative("NP_MySQL_GetDatabase", Native_GetDatabase);
 	CreateNative("NP_MySQL_SaveDatabase", Native_SaveDatabase);
-	CreateNative("NP_MySQL_EscapeString", Native_EscapeString);
 
 	// core
 	CreateNative("NP_Core_GetServerId",    Native_GetServerId);
@@ -137,21 +136,6 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 	delete httpRequest;
 
 	return 1;
-}
-
-public int Native_EscapeString(Handle plugin, int numParams)
-{
-	// dynamic length
-	int inLen = 0;
-	GetNativeStringLength(1, inLen);
-	int length = inLen + 1;
-	char[] input = new char[length];
-	if(GetNativeString(1, input, length) != SP_ERROR_NONE)
-		return;
-
-	char[] temp = new char[length];
-	g_hSQL.Escape(input, temp, length);
-	SetNativeString(1, temp, length, true);
 }
 
 public int Native_GetServerId(Handle plugin, int numParams)
@@ -537,17 +521,9 @@ void SaveSQLCallback(bool success, const char[] error, System2HTTPRequest reques
 	response.GetContent(content, sizeof(content), 0);
 
 	if (StringToInt(content) == -1)
-	{
 		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't Save SQL data");
-		CreateTimer(1.0, Timer_Request, request);
-	}
 }
 
-public Action Timer_Request(Handle timer, System2HTTPRequest request)
-{
-	request.POST();
-	return Plugin_Handled;
-}
 
 public Action Command_HotUpdate(int args)
 {
@@ -558,10 +534,11 @@ public Action Command_HotUpdate(int args)
 
 public Action Timer_HotUpdate(Handle timer, int time)
 {
-	if(time++ < 10)
+	if(time < 10)
 	{
-		PrintToChatAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", time);
-		PrintCenterTextAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", time);
+		PrintToChatAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", 10 - time);
+		PrintCenterTextAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", 10 - time);
+		CreateTimer(1.0, Timer_HotUpdate, time + 1);
 		return Plugin_Stop;
 	}
 
@@ -569,7 +546,7 @@ public Action Timer_HotUpdate(Handle timer, int time)
 		if (IsClientInGame(i))
 				ClientCommand(i, "retry");
 
-	ServerCommand("_restart");
+	ServerCommand("quit");
 
 	return Plugin_Stop;
 }
