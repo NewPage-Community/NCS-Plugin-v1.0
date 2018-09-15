@@ -9,6 +9,7 @@
 #define REQUIRE_EXTENSIONS
 
 #include <async_socket>
+#include <system2>
 #include <smjansson>
 
 #define P_NAME P_PRE ... " - Core"
@@ -28,7 +29,8 @@ int g_iServerId = -1,
 	g_iServerPort = 27015,
 	g_iServerModId = -1,
 	g_iSocketRetry = 0,
-	g_iSSPort = 23000;
+	g_iSSPort = 23000,
+	g_iHttpPort = 81;
 
 bool g_bConnected = false,
 	g_bSocketReady = false;
@@ -37,6 +39,8 @@ static char g_szServerIp[24]  = "127.0.0.1";
 static char g_szRconPswd[24]  = "RCONPASSWORD";
 static char g_szHostName[128] = "NewPage Server";
 static char g_sSSIP[24] = "127.0.0.1";
+static char g_sHttpURL[128] = "http://127.0.0.1";
+static char Token[33];
 
 Handle g_hOnInitialized = INVALID_HANDLE;
 Handle g_hOnSocketReceived = INVALID_HANDLE;
@@ -123,9 +127,13 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 	if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
 		return 0;
 
-	char buff [1024];
-	FormatEx(buff, 1024, "{\"Event\":\"SQLSave\",\"SQLSave\":\"%s\"}", input);
-	return g_hSocket.Write(buff);
+	System2HTTPRequest httpRequest = new System2HTTPRequest(SaveSQLCallback, "%s/savesql.php", g_sHttpURL);
+	httpRequest.SetData("ServerID=%d&Token=%s&SQL=%s", g_iServerId, Token, input);
+	httpRequest.SetPort(g_iHttpPort);
+	httpRequest.POST();
+	delete httpRequest;
+
+	return 1;
 }
 
 public int Native_GetServerId(Handle plugin, int numParams)
@@ -308,6 +316,10 @@ void CheckingServer()
 	// we used random rcon password.
 	GenerateRandomString(g_szRconPswd, 24);
 
+	ConVar rcon = FindConVar("rcon_password");
+	rcon.SetString(g_szRconPswd, false, false);
+	System2_GetStringMD5(g_szRconPswd, Token, 33);
+
 	// sync to database
 	FormatEx(m_szQuery, 128, "UPDATE `%s_servers` SET `rcon`='%s' WHERE `sid`='%d';", P_SQLPRE, g_szRconPswd, g_iServerId);
 	if(!SQL_FastQuery(g_hSQL, m_szQuery, 128))
@@ -489,5 +501,31 @@ void CheckCvar()
 public Action Timer_CheckCvar(Handle timer, int client)
 {
 	CheckCvar();
+	return Plugin_Handled;
+}
+
+void SaveSQLCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method) {
+	char url[256];
+	request.GetURL(url, sizeof(url));
+
+	if (!success)
+	{
+		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't retrieve URL %s. Error: %s", url, error);
+		return;
+	}
+	
+	char content[128];
+	response.GetContent(content, sizeof(content), 0);
+
+	if (StringToInt(content) == -1)
+	{
+		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't Save SQL data");
+		CreateTimer(1.0, Timer_Request, request);
+	}
+}
+
+public Action Timer_Request(Handle timer, System2HTTPRequest request)
+{
+	request.POST();
 	return Plugin_Handled;
 }
