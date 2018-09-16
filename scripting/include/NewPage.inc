@@ -195,3 +195,25 @@ stock void GetToken(char[] token, int length)
 	System2_GetStringMD5(rcon, md5, 33);
 	strcopy(token, length, md5);
 }
+
+stock void DrawPanelTextEx(Handle panel, const char[] fmt, any ...)
+{
+    char vf[256];
+    VFormat(vf, 256, fmt, 3);
+    DrawPanelText(panel, vf);
+}
+
+stock void SetMenuTitleEx(Handle menu, const char[] fmt, any ...)
+{
+	char m_szBuffer[256];
+	VFormat(m_szBuffer, 256, fmt, 3);
+	Format(m_szBuffer, 256, "%s\n　", m_szBuffer);
+	SetMenuTitle(menu, m_szBuffer);
+}
+
+stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[] display, any ...)
+{
+	char m_szBuffer[256];
+	VFormat(m_szBuffer, 256, display, 5);
+	return AddMenuItem(menu, info, m_szBuffer, style);
+}

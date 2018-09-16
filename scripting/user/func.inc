@@ -1,3 +1,5 @@
+Menu InfoMenu;
+
 public Action Command_UserInfo(int client, int args)
 {
 	if (!IsValidClient(client))
@@ -9,12 +11,12 @@ public Action Command_UserInfo(int client, int args)
 		return Plugin_Handled;
 	}
 
-	Menu infoMenu = new Menu(MenuHandler_UserInfo);
-	infoMenu.SetTitle("%s 您好！\n欢迎查看用户信息", g_aClient[client][Name]);
-	infoMenu.AddItem("ACCT", "账号信息");
-	infoMenu.AddItem("VIP", "会员信息");
-	infoMenu.ExitButton = true;
-	infoMenu.Display(client, 0);
+	InfoMenu = new Menu(MenuHandler_UserInfo);
+	InfoMenu.SetTitle("%s 您好！\n欢迎查看用户信息", g_aClient[client][Name]);
+	InfoMenu.AddItem("ACCT", "账号信息");
+	InfoMenu.AddItem("VIP", "会员信息");
+	InfoMenu.ExitButton = true;
+	InfoMenu.Display(client, 0);
 	return Plugin_Handled;
 }
 
@@ -37,7 +39,7 @@ void ShowUserInfo(int client)
 	if (!IsValidClient(client))
 		return;
 
-	char buff[512], steamid[32], groupName[32];
+	char steamid[32], groupName[32];
 
 	GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true);
 
@@ -46,13 +48,21 @@ void ShowUserInfo(int client)
 	else
 		g_aGroupName.GetString(NP_Group_GetUserGId(client), groupName, 32);
 
-	Format(buff, 512, "UID：%d\nSTEAMID：%s\n在线时间：%d小时\n用户组：%s\n签到次数：%d\n软妹币：%d元", NP_Users_UserIdentity(client), steamid, NP_Stats_TotalOnlineTime(client)/3600, groupName, g_aClient[client][SignTimes], g_aClient[client][Money]);
+	Panel panel = CreatePanel();
 
-	Menu infoMenu = new Menu(MenuHandler_UserInfo);
-	infoMenu.SetTitle("账号信息", client);
-	infoMenu.AddItem("", buff, ITEMDRAW_DISABLED);
-	infoMenu.ExitButton = true;
-	infoMenu.Display(client, 0);
+	panel.SetTitle("个人信息");
+	DrawPanelTextEx(panel, " ");
+	DrawPanelTextEx(panel, "社区个人唯一ID (UID): %d", NP_Users_UserIdentity(client));
+	DrawPanelTextEx(panel, "STEAMID 64: %s", steamid);
+	DrawPanelTextEx(panel, "用户组: %s", groupName);
+	DrawPanelTextEx(panel, "在线时间: %d 小时", NP_Stats_TotalOnlineTime(client)/3600);
+	DrawPanelTextEx(panel, "软妹币: %d 元", g_aClient[client][Money]);
+	DrawPanelTextEx(panel, "签到次数: %d", g_aClient[client][SignTimes]);
+	DrawPanelTextEx(panel, " ");
+	panel.DrawItem("返回");
+	panel.DrawItem("退出");
+
+	panel.Send(client, MenuHandler_InfoPanel, 30);
 }
 
 void ShowVIPInfo(int client)
@@ -60,7 +70,7 @@ void ShowVIPInfo(int client)
 	if (!IsValidClient(client))
 		return;
 
-	char notVIP[16], expireTime[128], buff[512];
+	char notVIP[16], expireTime[128];
 
 	int vipPoint = g_aClient[client][VIPPoint];
 	int vipExpired = g_aClient[client][VIPExpired];
@@ -81,14 +91,32 @@ void ShowVIPInfo(int client)
 		else
 			FormatTime(expireTime, 128, "%Y-%m-%d", vipExpired);
 	}
-	
-	FormatEx(buff, 512, "会员状态：%s\n会员等级：%d级\n会员成长值：%d\n到期时间：%s\n今日获取成长值：%d/%d", NP_Vip_IsVIP(client) ? "已开通" : notVIP, NP_Vip_VIPLevel(client), vipPoint, expireTime, g_iVIPReward[client], g_cVIPOnlineMaxReward.IntValue);
 
-	Menu infoMenu = new Menu(MenuHandler_UserInfo);
-	infoMenu.SetTitle("会员信息", client);
-	infoMenu.AddItem("", buff, ITEMDRAW_DISABLED);
-	infoMenu.ExitButton = true;
-	infoMenu.Display(client, 0);
+	Panel panel = CreatePanel();
+	
+	panel.SetTitle("会员信息");
+	DrawPanelTextEx(panel, " ");
+	DrawPanelTextEx(panel, "会员状态: %s", NP_Vip_IsVIP(client) ? "已开通" : notVIP);
+	DrawPanelTextEx(panel, "会员等级：%d 级", NP_Vip_VIPLevel(client));
+	DrawPanelTextEx(panel, "会员成长值：%d 点", vipPoint);
+	DrawPanelTextEx(panel, "到期时间：%s", expireTime);
+	DrawPanelTextEx(panel, "今日获取成长值：%d/%d", g_iVIPReward[client], g_cVIPOnlineMaxReward.IntValue);
+	DrawPanelTextEx(panel, " ");
+	panel.DrawItem("返回");
+	panel.DrawItem("退出");
+
+	panel.Send(client, MenuHandler_InfoPanel, 30);
+}
+
+public int MenuHandler_InfoPanel(Handle menu, MenuAction action, int client, int itemNum)
+{
+    if(action == MenuAction_Select)
+    {
+        if(itemNum==1)
+            DisplayMenu(InfoMenu, client, 0);
+    }
+    else if(action == MenuAction_End)
+        CloseHandle(menu);
 }
 
 public Action Command_Sign(int client, int args)
@@ -142,7 +170,7 @@ public Action Timer_SignTips(Handle timer, int client)
 		if (GetDay() > g_aClient[client][SignDate])
 		{
 			PrintToChat(client,"\x04[提示] \x04您今天还未签到!聊天输入 \x05!qd \x04每日可获得软妹币!");
-			PrintHintText(client, "您今天还未签到!聊天输入 !qd 每日可获得软妹币!");
+			PrintHintText(client, "您今天还未签到! 聊天输入 !qd 每日可获得软妹币!");
 		}
 	}
 	else
