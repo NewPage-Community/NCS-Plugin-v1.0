@@ -5,12 +5,6 @@ bool GrantVip(int client, int duration)
 	if (!NP_Users_IsAuthLoaded(client))
 		return false;
 
-	if (!NP_Socket_IsReady())
-	{
-		NP_Core_LogError("User-Vip", "GrantVip", "Error: Socket is unavailable -> \"%L\"", client);
-		return false;
-	}
-
 	char m_szQuery[256];
 	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = %d WHERE uid = %d", P_SQLPRE, GetTime()+duration*86400, NP_Users_UserIdentity(client));
 	return NP_MySQL_SaveDatabase(m_szQuery);
@@ -22,12 +16,6 @@ bool DeleteVip(int client)
 	if(!g_aClient[client][Auth][Vip])
 		return false;
 
-	if(!NP_Socket_IsReady())
-	{
-		NP_Core_LogError("User-Vip", "DeleteVip", "Error: Socket is unavailable -> \"%L\"", client);
-		return false;
-	}
-
 	char m_szQuery[256];
 	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = %d WHERE uid = %d", P_SQLPRE, 0, NP_Users_UserIdentity(client));
 	return NP_MySQL_SaveDatabase(m_szQuery);
@@ -38,12 +26,6 @@ bool AddVipPoint(int client, int point)
 	//if player isn's vip
 	if(!g_aClient[client][Auth][Vip])
 		return false;
-
-	if(!NP_Socket_IsReady())
-	{
-		NP_Core_LogError("User-Vip", "AddVipPoint", "Error: Socket is unavailable -> \"%L\"", client);
-		return false;
-	}
 
 	char m_szQuery[256];
 	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vippoint = vippoint + %d WHERE uid = %d", P_SQLPRE, point, NP_Users_UserIdentity(client));
@@ -62,12 +44,6 @@ bool AddReward(int client, int point)
 	//if player isn's vip
 	if(!g_aClient[client][Auth][Vip])
 		return false;
-
-	if(!NP_Socket_IsReady())
-	{
-		NP_Core_LogError("User-Vip", "AddVipPoint", "Error: Socket is unavailable -> \"%L\"", client);
-		return false;
-	}
 
 	char m_szQuery[256];
 	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipreward = %d WHERE uid = %d", P_SQLPRE, g_iVIPReward[client] + point, NP_Users_UserIdentity(client));
@@ -119,8 +95,8 @@ void VIPConnected(int client)
 	if (g_aClient[client][StatsTotal][iTodayOnlineTime] == 0)
 	{
 		char msg[512];
-		FormatEx(msg, 512, "会员 - %s：叛乱，启动！", g_aClient[client][Name]);
-		NP_AllChat_Msg(msg);
+		FormatEx(msg, 512, "%s ： 叛乱，启动！", g_aClient[client][Name]);
+		NP_AllChat_Msg(Custom, "[会员]", msg);
 	}
 
 	PrintToChatAll("欢迎会员 \x02%s 加入服务器！", g_aClient[client][Name]);

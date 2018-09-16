@@ -50,7 +50,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// Group
 	CreateNative("NP_Group_GetUserGId", Native_GetUserGId);
 	CreateNative("NP_Group_IsGIdValid", Native_IsGIdValid);
-	CreateNative("NP_Group_GetUserGName", Native_GetUserGName);
+	CreateNative("NP_Group_GetGrpName", Native_GetGrpGName);
 
 	// Auth
 	CreateNative("NP_Users_IsAuthorized", Native_IsAuthorized);
@@ -225,37 +225,60 @@ void CheckClient(int client, const char[] steamid)
 	if(g_aClient[client][AuthLoaded])
 		return; 
 
-	if(!NP_Socket_IsReady())
-	{
-		NP_Core_LogError("User", "LoadClientAuth", "Error: Socket is unavailable -> \"%L\"", client);
-		CreateTimer(5.0, Timer_ReAuthorize, client, TIMER_FLAG_NO_MAPCHANGE);
-		return;
-	}
-
-	char ip[32];
+	char Token[33], ip[32], map[128];
+	GetToken(Token, 33);
 	GetClientIP(client, ip, 32);
-	
-	char map[128];
 	GetCurrentMap(map, 128);
+	
+	System2HTTPRequest httpRequest = new System2HTTPRequest(CheckClientCallback, "%s/playerinfo.php", P_APIURL);
+	httpRequest.Timeout = 30;
+	httpRequest.SetHeader("Content-Type", "application/json");
+	httpRequest.SetData("{\"ServerID\":%d,\"Token\":\"%s\",\"SteamID\":\"%s\",\"Client\":%d,\"IP\":\"%s\",\"Map\":\"%s\"}", NP_Core_GetServerId(), Token, steamid, client, ip, map);
+	httpRequest.SetPort(P_APIPORT);
+	httpRequest.POST();
+	delete httpRequest;
 
-	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "{\"E\":\"PC\",\"S\":\"%s\",\"SI\":%d,\"C\":%d}", steamid, NP_Core_GetServerId(), client);
-	NP_Socket_Write(m_szQuery);
 	//防止因为网络波动而无法加载用户数据
 	CreateTimer(5.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-
-void CheckClientCallback(const char[] data)
+void CheckClientCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
 {
-	Handle json = json_load(data);
-	if (json == INVALID_HANDLE)
+	char url[256];
+	request.GetURL(url, sizeof(url));
+
+	if (!success)
 	{
-		NP_Core_LogError("User", "CheckClientCallback", "Error: Json -> \"%s\"", data);
+		NP_Core_LogError("User", "CheckClientCallback", "ERROR: Couldn't retrieve URL %s - %d. Error: %s", url, method, error);
+		return;
+	}
+	
+	char[] content = new char[response.ContentLength + 1];
+	response.GetContent(content, response.ContentLength + 1);
+
+	char source[512];
+	request.GetData(source, 512);
+
+	if (StringToInt(content) == -1)
+	{
+		NP_Core_LogError("User", "CheckClientCallback", "ERROR: Couldn't Get client data -> %s", source);
+		return;
+	}
+		
+	LoadClient(content);
+}
+
+void LoadClient(char[] data)
+{
+	Handle json;
+
+	if ((json = json_load(data)) == INVALID_HANDLE)
+	{
+		NP_Core_LogError("User", "LoadClient", "Error: Json -> \"%s\"", data);
 		return;
 	}
 
-	int client = json_object_get_int(json, "CIndex");
+	int client = json_object_get_int(json, "Client");
 	if (!client)
 		return;
 
@@ -266,56 +289,47 @@ void CheckClientCallback(const char[] data)
 	if(strcmp(data_steamid, steamid) != 0)
 		return;
 
-	Handle playerinfo = json_object_get(json, "PlayerInfo");
-	if(playerinfo == INVALID_HANDLE)
-	{
-		CloseHandle(json);
-		CloseHandle(playerinfo);
-		return;
-	}
-
 	//init data
 	StartStats(client);
 
 	//get data
-	g_aClient[client][UID] = json_object_get_int(playerinfo, "UID");
-	g_aClient[client][Auth][Spt] = json_object_get_bool(playerinfo, "Spt");
-	g_aClient[client][Auth][Vip] = json_object_get_bool(playerinfo, "Vip");
-	g_aClient[client][Auth][Ctb] = json_object_get_bool(playerinfo, "Ctb");
-	g_aClient[client][Auth][Opt] = json_object_get_bool(playerinfo, "Opt");
-	g_aClient[client][Auth][Adm] = json_object_get_bool(playerinfo, "Adm");
-	g_aClient[client][Auth][Own] = json_object_get_bool(playerinfo, "Own");
-	g_aClient[client][VipLevel] = json_object_get_int(playerinfo, "Tviplevel");
-	g_aClient[client][GID] = json_object_get_int(playerinfo, "Grp");
+	g_aClient[client][UID] = json_object_get_int(json, "UID");
+	g_aClient[client][Auth][Spt] = json_object_get_bool(json, "Spt");
+	g_aClient[client][Auth][Vip] = json_object_get_bool(json, "Vip");
+	g_aClient[client][Auth][Ctb] = json_object_get_bool(json, "Ctb");
+	g_aClient[client][Auth][Opt] = json_object_get_bool(json, "Opt");
+	g_aClient[client][Auth][Adm] = json_object_get_bool(json, "Adm");
+	g_aClient[client][Auth][Own] = json_object_get_bool(json, "Own");
+	g_aClient[client][VipLevel] = json_object_get_int(json, "Viplevel");
+	g_aClient[client][GID] = json_object_get_int(json, "Grp");
 
-	g_aClient[client][StatsTotal][iTotalOnlineTime]   = json_object_get_int(playerinfo, "OnlineTotal");
-	g_aClient[client][StatsTotal][iTodayOnlineTime]   = json_object_get_int(playerinfo, "OnlineToday");
-	g_aClient[client][StatsTotal][iObserveOnlineTime] = json_object_get_int(playerinfo, "OnlineOB");
-	g_aClient[client][StatsTotal][iPlayOnlineTime]    = json_object_get_int(playerinfo, "OnlinePlay");
+	g_aClient[client][StatsTotal][iTotalOnlineTime]   = json_object_get_int(json, "OnlineTotal");
+	g_aClient[client][StatsTotal][iTodayOnlineTime]   = json_object_get_int(json, "OnlineToday");
+	g_aClient[client][StatsTotal][iObserveOnlineTime] = json_object_get_int(json, "OnlineOB");
+	g_aClient[client][StatsTotal][iPlayOnlineTime]    = json_object_get_int(json, "OnlinePlay");
 
-	g_aClient[client][ConnectTimes]   = json_object_get_int(playerinfo, "ConnectTimes")+1;
-	g_aClient[client][Vitality] = json_object_get_int(playerinfo, "Vitality");
+	g_aClient[client][ConnectTimes]   = json_object_get_int(json, "ConnectTimes")+1;
+	g_aClient[client][Vitality] = json_object_get_int(json, "Vitality");
 
-	g_aClient[client][StatsTrackingId] = json_object_get_int(playerinfo, "TrackingID");
+	g_aClient[client][StatsTrackingId] = json_object_get_int(json, "TrackingID");
 
-	g_aClient[client][Money] = json_object_get_int(playerinfo, "Money");
+	g_aClient[client][Money] = json_object_get_int(json, "Money");
 
-	g_aClient[client][SignTimes] = json_object_get_int(playerinfo, "SignTimes");
-	g_aClient[client][SignDate] = json_object_get_int(playerinfo, "SignDate");
+	g_aClient[client][SignTimes] = json_object_get_int(json, "SignTimes");
+	g_aClient[client][SignDate] = json_object_get_int(json, "SignDate");
 
-	g_aClient[client][VIPPoint] = json_object_get_int(playerinfo, "VIPPoint");
-	g_aClient[client][VIPExpired] = json_object_get_int(playerinfo, "VIPExpired");
-	g_iVIPReward[client] = json_object_get_int(playerinfo, "VIPReward");
+	g_aClient[client][VIPPoint] = json_object_get_int(json, "VIPPoint");
+	g_aClient[client][VIPExpired] = json_object_get_int(json, "VIPExpired");
+	g_iVIPReward[client] = json_object_get_int(json, "VIPReward");
 
 	GetClientName(client, g_aClient[client][Name], 32);
 
 	g_aClient[client][AuthLoaded] = true;
 
-	if(!CheckBan(client, playerinfo))
+	if(!CheckBan(client, json))
 		return;
 
 	CloseHandle(json);
-	CloseHandle(playerinfo);
 
 	LoadAdmin(client, steamid);
 
@@ -372,16 +386,16 @@ public Action Timer_ReAuthorize(Handle timer, int client)
 	return Plugin_Stop;
 }
 
-// ---------- timer ------------ end
-
-// ---------- socket ------------ start
-
-public void NP_Socket_OnReceived(const char[] event, const char[] data, const int size)
+public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
 {
-	if(!strcmp(event, "PlayerInfo"))
-		CheckClientCallback(data);
-	if(!strcmp(event, "BanClient"))
-		BanClientCallback(data);
+	request.POST();
+	return Plugin_Stop;
 }
 
-// ---------- socket ------------ end
+// ---------- timer ------------ end
+
+public void NP_Core_RconData(const char[] data, const char[] event)
+{
+	if(!strcmp(event, "BanCallback"))
+		BanCallback(data);
+}

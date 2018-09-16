@@ -46,12 +46,13 @@ public Action Command_VIPCmd(int client, int args)
 		return Plugin_Handled;
 	}
 
-	char Time[128];
+	char Time[128], playername[32];
 	int level = NP_Vip_VIPLevel(client);
 	FormatTime(Time, 128, "%p", GetTime());
+	NP_Users_GetName(client, playername, 32);
 
 	Menu infoMenu = new Menu(MenuHandler_VIPFunc);
-	infoMenu.SetTitle("尊贵的会员，%s好！", !strcmp(Time, "AM") ? "上午" : "下午");
+	infoMenu.SetTitle("尊贵的会员 %s，%s好！", playername, !strcmp(Time, "AM") ? "上午" : "下午");
 	infoMenu.AddItem("VOTEKICK", "投票踢人", level >= 5 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	infoMenu.ExitButton = true;
 	infoMenu.Display(client, 0);

@@ -1,3 +1,4 @@
+DELIMITER $$
 CREATE DEFINER=`root`@`%` PROCEDURE `user_stats`(
 IN
     userId INT(11),
@@ -6,9 +7,7 @@ IN
     totalOnline INT(11),
     specOnline INT(11),
     playOnline INT(11),
-    userName VARCHAR(32),
-    clientIP VARCHAR(32),
-    nowMap VARCHAR(128)
+    userName VARCHAR(32)
 )
     SQL SECURITY INVOKER
 BEGIN
@@ -18,6 +17,6 @@ BEGIN
 
     UPDATE `np_stats` SET connectTimes = connectTimes + 1, onlineToday  = onlineToday + todayOnline, onlineTotal = onlineTotal + totalOnline, onlineOB = onlineOB + specOnline, onlinePlay = onlinePlay + playOnline WHERE uid = userId;
         
-    UPDATE `np_analytics` SET duration = totalOnline, ip = clientIP, map = nowMap WHERE uid = userId AND id = sessionId;
+    UPDATE `np_analytics` SET duration = totalOnline WHERE uid = userId AND id = sessionId;
 
 END

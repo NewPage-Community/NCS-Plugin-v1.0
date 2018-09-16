@@ -1,8 +1,12 @@
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.0"
+#define P_VERSION "Alpha-v3.1"
 #define P_URLS "https://new-page.cc"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"
+#define P_APIURL "http://127.0.0.1"
+#define P_APIPORT 83
+
+#include <system2>
 
 #if !defined REQUIRE_PLUGIN
 	#endinput
@@ -27,10 +31,7 @@ native bool NP_MySQL_IsConnected();
 native Database NP_MySQL_GetDatabase();
 native bool NP_MySQL_SaveDatabase(const char[] QueryString);
 
-// socket
-native bool NP_Socket_IsReady();
-native bool NP_Socket_Write(const char[] sendString);
-forward void NP_Socket_OnReceived(const char[] event, const char[] data, const int size);
+forward void NP_Core_RconData(const char[] data, const char[] event);
 
 public SharedPlugin __pl_core =
 {
@@ -185,4 +186,12 @@ stock void StringToJson(char[] string, int length)
 {
 	ReplaceString(string, length, "\\", "\\\\");
 	ReplaceString(string, length, "\"", "\\\"");
+}
+
+stock void GetToken(char[] token, int length)
+{
+	char rcon[24], md5[33];
+	FindConVar("rcon_password").GetString(rcon, 24);
+	System2_GetStringMD5(rcon, md5, 33);
+	strcopy(token, length, md5);
 }

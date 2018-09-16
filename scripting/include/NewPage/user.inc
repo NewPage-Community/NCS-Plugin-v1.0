@@ -76,7 +76,7 @@ native bool NP_Users_IsAuthorized(int client, Authentication auth);
 native bool NP_Users_IsAuthLoaded(int client);
 
 native int NP_Group_GetUserGId(int client);
-native bool NP_Group_GetUserGName(int client, char[] buff, int size);
+native bool NP_Group_GetGrpName(int client, char[] grpname, int size);
 native bool NP_Group_IsGIdValid(int gid);
 
 native int NP_Stats_TodayOnlineTime(int client);

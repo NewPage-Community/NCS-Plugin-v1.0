@@ -8,4 +8,11 @@
 
 #define _NewPage_AllChat_Include_
 
-native bool NP_AllChat_Msg(const char[] msg);
+enum ChatType
+{
+    PlayerChat = 0,
+    Announcement,
+    Custom
+}
+
+native bool NP_AllChat_Msg(ChatType type, const char[] name, const char[] msg);

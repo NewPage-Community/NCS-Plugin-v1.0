@@ -32,12 +32,9 @@ bool Util_BanClient(int client, int admin, int length, int bantype, const char[]
 	if (NP_Core_GetServerId() < 0)
 		return false;
 
-	if (!NP_Socket_IsReady())
-		return false;
+	char ip[24], steamid[32], adminname[32], clientname[32], Token[33];
 
-	char ip[24], steamid[32], adminname[32], clientname[32];
-
-	GetClientIP(client, ip, 24, false);
+	GetClientIP(client, ip, 24);
 	GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true);
 	
 	if (admin > 0)
@@ -47,12 +44,19 @@ bool Util_BanClient(int client, int admin, int length, int bantype, const char[]
 
 	strcopy(clientname, 32, g_aClient[client][Name]);
 
-	ReplaceString(adminname, 32, "\"", "");
-	ReplaceString(clientname, 32, "\"", "");
+	StringToJson(clientname, 32);
+	StringToJson(adminname, 32);
 
-	char m_szQuery[512];
-	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", NP_Users_UserIdentity(client), steamid, ip, clientname, length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
-	return NP_Socket_Write(m_szQuery);
+	GetToken(Token, 33);
+
+	System2HTTPRequest httpRequest = new System2HTTPRequest(BanClientCallback, "%s/addban.php", P_APIURL);
+	httpRequest.Timeout = 30;
+	httpRequest.SetHeader("Content-Type", "application/json");
+	httpRequest.SetData("{\"Token\":\"%s\",\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}", Token, NP_Users_UserIdentity(client), steamid, ip, clientname, length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
+	httpRequest.SetPort(P_APIPORT);
+	httpRequest.POST();
+
+	return true;
 }
 
 bool Util_BanIdentity(char[] steamid, int admin, int length, int bantype, const char[] reason)
@@ -60,50 +64,86 @@ bool Util_BanIdentity(char[] steamid, int admin, int length, int bantype, const 
 	if (NP_Core_GetServerId() < 0)
 		return false;
 
-	if (!NP_Socket_IsReady())
-		return false;
-
-	char adminname[32];
+	char adminname[32], Token[33];
 	
 	if (admin > 0)
 		strcopy(adminname, 32, g_aClient[admin][Name]);
 	else
 		strcopy(adminname, 32, "SERVER");
 
-	ReplaceString(adminname, 32, "\"", "");
+	StringToJson(adminname, 32);
 
-	char m_szQuery[512];
-	FormatEx(m_szQuery, 512, "{\"Event\":\"AddBan\",\"BanInfo\":{\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}}", -1, steamid, "0.0.0.0", "N/C", length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
+	GetToken(Token, 33);
 
-	return NP_Socket_Write(m_szQuery);
+	System2HTTPRequest httpRequest = new System2HTTPRequest(BanClientCallback, "%s/addban.php", P_APIURL);
+	httpRequest.Timeout = 30;
+	httpRequest.SetHeader("Content-Type", "application/json");
+	httpRequest.SetData("{\"Token\":\"%s\",\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}", Token, -1, steamid, "0.0.0.0", "N/C", length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
+	httpRequest.SetPort(P_APIPORT);
+	httpRequest.POST();
+
+	return true;
 }
 
-void BanClientCallback(const char[] data)
+void BanClientCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
 {
-	Handle json = json_load(data);
+	char url[256];
+	request.GetURL(url, sizeof(url));
 
-	if (json == INVALID_HANDLE)
+	if (!success)
 	{
-		NP_Core_LogError("User", "CheckClientCallback", "Error: Json -> \"%s\"", data);
+		NP_Core_LogError("User", "BanClientCallback", "ERROR: Couldn't retrieve URL %s - %d. Error: %s", url, method, error);
+		CreateTimer(5.0, Timer_RetryRequest, request);
 		return;
 	}
 
-	Handle banclient = json_object_get(json, "BanClient");
+	char[] content = new char[response.ContentLength + 1];
+	response.GetContent(content, response.ContentLength + 1);
+
+	char source[512];
+	request.GetData(source, 512);
+
+	if (StringToInt(content) == -1)
+	{
+		NP_Core_LogError("User", "BanClientCallback", "ERROR: Couldn't add ban -> %s", source);
+		delete request;
+		return;
+	}
+
+	delete request;
+}
+
+void BanCallback(const char[] data)
+{
+	Handle json, baninfo;
+
+	if ((json = json_load(data)) == INVALID_HANDLE)
+	{
+		NP_Core_LogError("User", "BanCallback", "Error: Json -> \"%s\"", data);
+		return;
+	}
+
+	if((baninfo = json_object_get(json, "BanCallback")) == INVALID_HANDLE)
+	{
+		NP_Core_LogError("User", "BanCallback", "Can't find AllServersChat object -> %s", data);
+		CloseHandle(json);
+		return;
+	}
 
 	char steamid[32], BanAdminName[32], BanReason[128];
-	json_object_get_string(banclient, "SteamID", steamid, 32);
-	json_object_get_string(banclient, "AdminName", BanAdminName, 32);
-	json_object_get_string(banclient, "Reason", BanReason, 128);
+	json_object_get_string(baninfo, "SteamID", steamid, 32);
+	json_object_get_string(baninfo, "AdminName", BanAdminName, 32);
+	json_object_get_string(baninfo, "Reason", BanReason, 128);
 
-	int BanType = json_object_get_int(banclient, "BanType");
-	int BanETime = json_object_get_int(banclient, "BanETime");
-	int length = json_object_get_int(banclient, "Length");
+	int BanType = json_object_get_int(baninfo, "BanType");
+	int BanETime = json_object_get_int(baninfo, "BanETime");
+	int length = json_object_get_int(baninfo, "Length");
 
 	int target = FindClientBySteamId(AuthId_SteamID64, steamid);
-	int admin = json_object_get_int(banclient, "AdminID");
+	int admin = json_object_get_int(baninfo, "AdminID");
 
 	CloseHandle(json);
-	CloseHandle(banclient);
+	CloseHandle(baninfo);
 
 	char kickReason[256], timeExpired[64];
 
@@ -119,8 +159,8 @@ void BanClientCallback(const char[] data)
 		PrintToChat(admin, "\x04[提示] \x02已成功封禁 \x04%s", steamid);
 
 	char msg[512];
-	FormatEx(msg, 512, "\x02玩家 \x05%s \x04(STEAMID) \x02已被封禁，原因：%s", steamid, BanReason);
-	NP_AllChat_Msg(msg);
+	FormatEx(msg, 512, "玩家 %s (STEAMID) 已被 %s 封禁，原因：%s", steamid, BanAdminName, BanReason);
+	NP_AllChat_Msg(Custom, "[全服封禁]", msg);
 }
 
 public int Native_BanClient(Handle plugin, int numParams)

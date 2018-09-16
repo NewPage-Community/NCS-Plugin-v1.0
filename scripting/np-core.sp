@@ -8,8 +8,6 @@
 #define AUTOLOAD_EXTENSIONS
 #define REQUIRE_EXTENSIONS
 
-#include <async_socket>
-#include <system2>
 #include <smjansson>
 
 #define P_NAME P_PRE ... " - Core"
@@ -27,29 +25,20 @@ public Plugin myinfo =
 
 int g_iServerId = -1,
 	g_iServerPort = 27015,
-	g_iServerModId = -1,
-	g_iSocketRetry = 0,
-	g_iSSPort = 23000,
-	g_iHttpPort = 83;
+	g_iServerModId = -1;
 
-bool g_bConnected = false,
-	g_bSocketReady = false;
+bool g_bConnected = false;
 
-static char g_szServerIp[24]  = "127.0.0.1";
-static char g_szRconPswd[24]  = "RCONPASSWORD";
-static char g_szHostName[128] = "NewPage Server";
-static char g_sSSIP[24] = "127.0.0.1";
-static char g_sHttpURL[128] = "http://127.0.0.1";
-static char Token[33];
+static char g_szServerIp[24]  = "127.0.0.1",
+			g_szRconPswd[24]  = "RCONPASSWORD",
+			g_szHostName[128] = "NewPage Server";
 
-Handle g_hOnInitialized = INVALID_HANDLE;
-Handle g_hOnSocketReceived = INVALID_HANDLE;
+Handle g_hOnInitialized = INVALID_HANDLE,
+	g_hRconData = INVALID_HANDLE;
 
 Database g_hSQL = null;
 
 EngineVersion g_Engine = Engine_Unknown;
-
-AsyncSocket g_hSocket;
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -66,10 +55,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("NP_Core_LogError",   Native_LogError);
 	CreateNative("NP_Core_LogMessage", Native_LogMessage);
 
-	// socket
-	CreateNative("NP_Socket_Write", Native_SocketWrite);
-	CreateNative("NP_Socket_IsReady", Native_SocketReady);
-
 	// lib
 	RegPluginLibrary("np-core");
 
@@ -81,28 +66,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_iServerPort = GetConVarInt(FindConVar("hostport"));
 
 	return APLRes_Success;
-}
-
-public int Native_SocketReady(Handle plugin, int numParams)
-{
-	return g_bSocketReady;
-}
-
-public int Native_SocketWrite(Handle plugin, int numParams)
-{
-	if(g_hSocket == null)
-		return 0;
-
-	// dynamic length
-	int inLen = 0;
-	GetNativeStringLength(1, inLen);
-	char[] input = new char[inLen+1];
-	if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
-		return 0;
-
-	g_hSocket.Write(input);
-
-	return 1;
 }
 
 public int Native_IsConnected(Handle plugin, int numParams)
@@ -117,9 +80,6 @@ public int Native_GetDatabase(Handle plugin, int numParams)
 
 public int Native_SaveDatabase(Handle plugin, int numParams)
 {
-	if(g_hSocket == null)
-		return 0;
-
 	// dynamic length
 	int inLen = 0;
 	GetNativeStringLength(1, inLen);
@@ -127,13 +87,15 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 	if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
 		return 0;
 
-	System2HTTPRequest httpRequest = new System2HTTPRequest(SaveSQLCallback, "%s/savesql.php", g_sHttpURL);
+	char Token[33];
+	GetToken(Token, 33);
+
+	System2HTTPRequest httpRequest = new System2HTTPRequest(SaveSQLCallback, "%s/savesql.php", P_APIURL);
 	httpRequest.Timeout = 30;
 	httpRequest.SetHeader("Content-Type", "application/json");
 	httpRequest.SetData("{\"ServerID\":%d,\"Token\":\"%s\",\"SQL\":\"%s\"}", g_iServerId, Token, input);
-	httpRequest.SetPort(g_iHttpPort);
+	httpRequest.SetPort(P_APIPORT);
 	httpRequest.POST();
-	delete httpRequest;
 
 	return 1;
 }
@@ -183,43 +145,17 @@ public int Native_LogMessage(Handle plugin, int numParams)
 public void OnPluginStart()
 {
 	RegServerCmd("np_hotupdate", Command_HotUpdate);
+	RegServerCmd("np_rcondata", Command_RconData);
 
 	// forwards
 	g_hOnInitialized = CreateGlobalForward("NP_Core_OnInitialized",  ET_Ignore, Param_Cell, Param_Cell);
-	g_hOnSocketReceived = CreateGlobalForward("NP_Socket_OnReceived",  ET_Ignore, Param_String, Param_String, Param_Cell);
+	g_hRconData = CreateGlobalForward("NP_Core_RconData",  ET_Ignore, Param_String, Param_String);
 
 	// connections
 	ConnectToDatabase(0);
 	
 	// log dir
 	CheckLogsDirectory();
-
-	// Connect to socket server
-	ConnectToSocketServer();
-}
-
-public void OnPluginEnd()
-{
-	CloseHandle(g_hSQL);
-	CloseHandle(g_hSocket);
-}
-
-void ConnectToSocketServer()
-{
-	if(++g_iSocketRetry > 10)
-	{
-		NP_Core_LogError("Socket", "ConnectToSocketServer", "Connect to socket server failed!");
-		return;
-	}
-
-	g_hSocket = new AsyncSocket();
-	g_hSocket.Connect(g_sSSIP, g_iSSPort);
-	if(g_hSocket != null)
-	{
-		g_hSocket.SetConnectCallback(OnSocketConnected);
-		g_hSocket.SetErrorCallback(SocketErrorCallback);
-		g_hSocket.SetDataCallback(OnSocketReceived);
-	}
 }
 
 public void CheckLogsDirectory()
@@ -321,7 +257,7 @@ void CheckingServer()
 	GenerateRandomString(g_szRconPswd, 24);
 
 	SetConVarString(FindConVar("rcon_password"), g_szRconPswd, false, false);
-	System2_GetStringMD5(g_szRconPswd, Token, 33);
+	HookConVarChange(FindConVar("rcon_password"), RconProtect);
 
 	// sync to database
 	FormatEx(m_szQuery, 128, "UPDATE `%s_servers` SET `rcon`='%s' WHERE `sid`='%d';", P_SQLPRE, g_szRconPswd, g_iServerId);
@@ -425,49 +361,6 @@ void AddNewServer()
 	CheckingServer();
 }
 
-public void OnSocketConnected(AsyncSocket socket)
-{
-	g_bSocketReady = true;
-	g_iSocketRetry = 0;
-	PrintToServer("Newpage Core - Socket server connected!");
-}
-
-public void SocketErrorCallback(AsyncSocket socket, int error, const char[] errorName)
-{
-	NP_Core_LogError("Socket", "SocketErrorCallback", "%d - %s", error, errorName);
-	// Server close the connect
-	if(error == -4077 || error == -4078)
-	{
-		g_bSocketReady = false;
-		CloneHandle(socket);
-		CreateTimer(5.0, Timer_SocketReconnect);
-	}
-}
-
-public Action Timer_SocketReconnect(Handle timer)
-{
-	ConnectToSocketServer();
-	return Plugin_Stop;
-}
-
-public void OnSocketReceived(AsyncSocket socket, const char[] data, const int size)
-{
-	Handle json = json_load(data);
-
-	if(json == INVALID_HANDLE)
-		return;
-
-	char event[16];
-	json_object_get_string(json, "Event", event, 16);
-	CloseHandle(json);
-
-	Call_StartForward(g_hOnSocketReceived);
-	Call_PushString(event);
-	Call_PushString(data);
-	Call_PushCell(size);
-	Call_Finish();
-}
-
 void CheckCvar()
 {
 	if (g_hSQL == null)
@@ -507,28 +400,41 @@ public Action Timer_CheckCvar(Handle timer, int client)
 	return Plugin_Handled;
 }
 
-void SaveSQLCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method) {
+void SaveSQLCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
+{
 	char url[256];
 	request.GetURL(url, sizeof(url));
 
 	if (!success)
 	{
-		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't retrieve URL %s. Error: %s", url, error);
+		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't retrieve URL %s - %d. Error: %s", url, method, error);
+		CreateTimer(5.0, Timer_RetryRequest, request);
 		return;
 	}
 	
-	char content[128];
-	response.GetContent(content, sizeof(content), 0);
+	char[] content = new char[response.ContentLength + 1];
+	response.GetContent(content, response.ContentLength + 1);
 
 	if (StringToInt(content) == -1)
-		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't Save SQL data");
+	{
+		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't Save SQL data -> %s", content);
+		delete request;
+		return;
+	}
+
+	delete request;
 }
 
+public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
+{
+	request.POST();
+	return Plugin_Stop;
+}
 
 public Action Command_HotUpdate(int args)
 {
 	PrintToChatAll("\x04[提示] \x01服务器将进行热更新!");
-	PrintCenterTextAll("\x04[提示] \x01服务器将进行热更新!");
+	PrintCenterTextAll("服务器将进行热更新!");
 	CreateTimer(1.0, Timer_HotUpdate, 0);
 }
 
@@ -537,7 +443,7 @@ public Action Timer_HotUpdate(Handle timer, int time)
 	if(time < 10)
 	{
 		PrintToChatAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", 10 - time);
-		PrintCenterTextAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", 10 - time);
+		PrintCenterTextAll("服务器将在 %ds 后重启!", 10 - time);
 		CreateTimer(1.0, Timer_HotUpdate, time + 1);
 		return Plugin_Stop;
 	}
@@ -549,4 +455,33 @@ public Action Timer_HotUpdate(Handle timer, int time)
 	ServerCommand("quit");
 
 	return Plugin_Stop;
+}
+
+public Action Command_RconData(int args)
+{
+	char data[512];
+	GetCmdArgString(data, 512);
+
+	Handle json = json_load(data);
+
+	if(json == INVALID_HANDLE)
+	{
+		NP_Core_LogError("Core", "RconData", "Error: Json -> %s", data);
+		return;
+	}
+
+	char event[16];
+	json_object_get_string(json, "Event", event, 16);
+	CloseHandle(json);
+
+	Call_StartForward(g_hRconData);
+	Call_PushString(data);
+	Call_PushString(event);
+	Call_Finish();
+}
+
+void RconProtect(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	PrintToServer("RconProtect : %s -> %s", oldValue, newValue);
+	SetConVarString(convar, g_szRconPswd, false, false);
 }

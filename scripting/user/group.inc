@@ -8,7 +8,7 @@ public int Native_IsGIdValid(Handle plugin, int numParams)
 	return (GetNativeCell(1) != -1) ? 1 : 0;
 }
 
-public int Native_GetUserGName(Handle plugin, int numParams)
+public int Native_GetGrpGName(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 
@@ -31,7 +31,7 @@ void CheckGroup()
 {
 	if(!NP_MySQL_IsConnected())
 	{
-		NP_Core_LogError("User-Group", "CheckGroupName", "Mysql is not ready!");
+		NP_Core_LogError("User", "CheckGroupName", "Mysql is not ready!");
 		CreateTimer(5.0, Timer_CheckGroupName, 0, TIMER_FLAG_NO_MAPCHANGE);
 		return;
 	}
@@ -43,7 +43,7 @@ void CheckGroup()
 	{
 		char error[256];
 		SQL_GetError(NP_MySQL_GetDatabase(), error, 256);
-		NP_Core_LogError("User-Group", "CheckGroupName", "Query Server Info: %s", error);
+		NP_Core_LogError("User", "CheckGroupName", "Query Server Info: %s", error);
 		CreateTimer(5.0, Timer_CheckGroupName, 0, TIMER_FLAG_NO_MAPCHANGE);
 		return;
 	}

@@ -17,7 +17,7 @@ void LoadAdmin(int client, const char[] steamid)
 		if (!_adminId.BindIdentity(AUTHMETHOD_STEAM, auth))
 		{
 			RemoveAdmin(_adminId);
-			NP_Core_LogError("User-admin", "LoadAdmin", "Failed to bind admin \"%s\" to identity \"%s\"", g_aClient[client][Name], auth);
+			NP_Core_LogError("User", "LoadAdmin", "Failed to bind admin \"%s\" to identity \"%s\"", g_aClient[client][Name], auth);
 			return;
 		}
 

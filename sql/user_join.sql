@@ -1,7 +1,10 @@
+DELIMITER $$
 CREATE DEFINER=`root`@`%` PROCEDURE `user_join`(
 IN
 	p_steamId BIGINT(20),
 	p_serverId SMALLINT(5),
+	clientIP VARCHAR(32),
+    nowMap VARCHAR(128),
 	p_nowTime INT(11),
 	p_nowDay INT(11)
 )
@@ -25,7 +28,7 @@ BEGIN
 	END IF;
 
 	/* Add analytics */
-	INSERT INTO `np_analytics` VALUES (DEFAULT, puid, p_serverId, '', '', p_nowTime, p_nowDay, -1);
+	INSERT INTO `np_analytics` VALUES (DEFAULT, puid, p_serverId, clientIP, nowMap, p_nowTime, p_nowDay, -1);
 	SET TrackingID = LAST_INSERT_ID();
 
 	/* Check today stats */
@@ -52,6 +55,6 @@ BEGIN
 	END IF;
 
 	/* results */
-	SELECT a.uid, a.username, a.imm, a.spt, a.vip, a.ctb, a.opt, a.adm, a.own, tviplevel, a.grp, b.onlineTotal, b.onlineToday, b.onlineOB, b.onlinePlay, b.connectTimes, b.vitality, TrackingID, a.money, a.signtimes, a.signdate, t_vippoint, t_vip, a.vipreward FROM np_users a, np_stats b WHERE a.uid = puid AND b.uid = puid;
+	SELECT a.uid AS UID, a.imm AS Imm, a.spt AS Spt, a.vip AS Vip, a.ctb AS Ctb, a.opt AS Opt, a.adm AS Adm, a.own AS Own, tviplevel AS Viplevel, a.grp AS Grp, b.onlineTotal AS OnlineTotal, b.onlineToday AS OnlineToday, b.onlineOB AS OnlineOB, b.onlinePlay AS OnlinePlay, b.connectTimes AS ConnectTimes, b.vitality AS Vitality, TrackingID, a.money AS Money, a.signtimes AS SignTimes, a.signdate AS SignDate, t_vippoint AS VIPPoint, t_vip AS VIPExpired, a.vipreward AS VIPReward FROM np_users a, np_stats b WHERE a.uid = puid AND b.uid = puid;
 	
 END
