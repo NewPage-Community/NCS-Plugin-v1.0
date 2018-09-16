@@ -203,14 +203,6 @@ stock void DrawPanelTextEx(Handle panel, const char[] fmt, any ...)
     DrawPanelText(panel, vf);
 }
 
-stock void SetMenuTitleEx(Handle menu, const char[] fmt, any ...)
-{
-	char m_szBuffer[256];
-	VFormat(m_szBuffer, 256, fmt, 3);
-	Format(m_szBuffer, 256, "%s\n　", m_szBuffer);
-	SetMenuTitle(menu, m_szBuffer);
-}
-
 stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[] display, any ...)
 {
 	char m_szBuffer[256];

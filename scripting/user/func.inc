@@ -12,7 +12,7 @@ public Action Command_UserInfo(int client, int args)
 	}
 
 	InfoMenu = new Menu(MenuHandler_UserInfo);
-	InfoMenu.SetTitle("%s 您好！\n欢迎查看用户信息", g_aClient[client][Name]);
+	InfoMenu.SetTitle("欢迎查看用户信息");
 	InfoMenu.AddItem("ACCT", "账号信息");
 	InfoMenu.AddItem("VIP", "会员信息");
 	InfoMenu.ExitButton = true;
@@ -22,8 +22,11 @@ public Action Command_UserInfo(int client, int args)
 
 public int MenuHandler_UserInfo(Menu menu, MenuAction action, int client, int slot)
 {
-	if (action == MenuAction_End)
-		delete menu;
+	if (action == MenuAction_Cancel)
+	{
+		if(slot == MenuCancel_ExitBack)
+			delete menu;
+	}
 	else if (action == MenuAction_Select)
 	{
 		switch (slot)
@@ -110,13 +113,13 @@ void ShowVIPInfo(int client)
 
 public int MenuHandler_InfoPanel(Handle menu, MenuAction action, int client, int itemNum)
 {
-    if(action == MenuAction_Select)
-    {
-        if(itemNum==1)
-            DisplayMenu(InfoMenu, client, 0);
-    }
-    else if(action == MenuAction_End)
-        CloseHandle(menu);
+	if(action == MenuAction_Select)
+	{
+		if(itemNum==1)
+			InfoMenu.Display(client, 0);
+	}
+	else if(action == MenuAction_End)
+		CloseHandle(menu);
 }
 
 public Action Command_Sign(int client, int args)
