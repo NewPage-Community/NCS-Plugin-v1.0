@@ -96,7 +96,7 @@ void VIPConnected(int client)
 	{
 		char msg[512];
 		FormatEx(msg, 512, "%s ： 叛乱，启动！", g_aClient[client][Name]);
-		NP_AllChat_Msg(Custom, "[会员]", msg);
+		NP_AllChat_Msg(Custom, "会员", msg);
 	}
 
 	PrintToChatAll("欢迎会员 \x02%s 加入服务器！", g_aClient[client][Name]);

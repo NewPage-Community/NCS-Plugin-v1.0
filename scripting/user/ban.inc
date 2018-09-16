@@ -160,7 +160,7 @@ void BanCallback(const char[] data)
 
 	char msg[512];
 	FormatEx(msg, 512, "玩家 %s (STEAMID) 已被 %s 封禁，原因：%s", steamid, BanAdminName, BanReason);
-	NP_AllChat_Msg(Custom, "[全服封禁]", msg);
+	NP_AllChat_Msg(Custom, "全服封禁", msg);
 }
 
 public int Native_BanClient(Handle plugin, int numParams)
