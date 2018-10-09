@@ -1,12 +1,21 @@
+#if defined _NewPage_included
+#endinput
+#endif
+#define _NewPage_included
+
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.1"
-#define P_URLS "https://new-page.cc"
+#define P_VERSION "Alpha-v3.2"
+#define P_URLS "https://new-page.xyz"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"
 #define P_APIURL "http://127.0.0.1"
 #define P_APIPORT 83
 
 #include <system2>
+#include <smjansson>
+#include <NewPage/allchat>
+#include <NewPage/store>
+#include <NewPage/user>
 
 #if !defined REQUIRE_PLUGIN
 	#endinput
@@ -69,12 +78,6 @@ stock void StringPad(int number, int length, char c, char[] output, int maxLen)
 	output[padLen] = '\0';
 
 	StrCat(output, maxLen, buffer);
-}
-
-/* return tick or cross */
-stock void TickOrCross(bool res, char[] output)
-{
-	strcopy(output, 4, res ? "✔" : "✘");
 }
 
 /*  Convert Steam64 To SteamID  */ 
@@ -188,19 +191,11 @@ stock void StringToJson(char[] string, int length)
 	ReplaceString(string, length, "\"", "\\\"");
 }
 
-stock void GetToken(char[] token, int length)
-{
-	char rcon[24], md5[33];
-	FindConVar("rcon_password").GetString(rcon, 24);
-	System2_GetStringMD5(rcon, md5, 33);
-	strcopy(token, length, md5);
-}
-
 stock void DrawPanelTextEx(Handle panel, const char[] fmt, any ...)
 {
-    char vf[256];
-    VFormat(vf, 256, fmt, 3);
-    DrawPanelText(panel, vf);
+	char vf[256];
+	VFormat(vf, 256, fmt, 3);
+	DrawPanelText(panel, vf);
 }
 
 stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[] display, any ...)
@@ -208,4 +203,53 @@ stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[]
 	char m_szBuffer[256];
 	VFormat(m_szBuffer, 256, display, 5);
 	return AddMenuItem(menu, info, m_szBuffer, style);
+}
+
+stock void CreateRequest(System2HTTPResponseCallback callback, const char[] url, const char[] data, any ...)
+{
+	char vf[256], rcon[24], md5[33];
+	FindConVar("rcon_password").GetString(rcon, 24);
+	System2_GetStringMD5(rcon, md5, 33);
+	VFormat(vf, 256, data, 4);
+
+	System2HTTPRequest httpRequest = new System2HTTPRequest(callback, "%s/%s", P_APIURL, url);
+	httpRequest.Timeout = 30;
+	httpRequest.SetHeader("Content-Type", "application/json");
+	httpRequest.SetData("{\"ServerID\":%d,\"Token\":\"%s\",%s}", NP_Core_GetServerId(), md5, vf);
+	httpRequest.SetPort(P_APIPORT);
+	httpRequest.POST();
+}
+
+stock bool CheckRequest(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method, const char[] module = "Global", const char[] func = "Invalid Function")
+{
+	char url[256];
+	request.GetURL(url, sizeof(url));
+
+	if (!success)
+	{
+		NP_Core_LogError(module, func, "ERROR: Couldn't retrieve URL %s - %d. Error: %s", url, method, error);
+		CreateTimer(5.0, Timer_RetryRequest, request);
+		return false;
+	}
+	
+	char[] content = new char[response.ContentLength + 1];
+	response.GetContent(content, response.ContentLength + 1);
+
+	char source[512];
+	request.GetData(source, 512);
+
+	if (StringToInt(content) == -1)
+	{
+		NP_Core_LogError(module, func, "ERROR: Couldn't sent data -> (%s) (%s)", source, content);
+		delete request;
+		return false;
+	}
+
+	return true;
+}
+
+public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
+{
+	request.POST();
+	return Plugin_Stop;
 }

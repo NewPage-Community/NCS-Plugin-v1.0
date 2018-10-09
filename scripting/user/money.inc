@@ -60,3 +60,8 @@ public int Native_GiveMoney(Handle plugin, int numParams)
 {
 	return GiveClientMoney(GetNativeCell(1), GetNativeCell(2));
 }
+
+public int Native_GetMoney(Handle plugin, int numParams)
+{
+	return g_aClient[GetNativeCell(1)][Money];
+}

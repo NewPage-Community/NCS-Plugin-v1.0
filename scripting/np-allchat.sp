@@ -1,8 +1,6 @@
 #pragma semicolon 1
 
 #include <NewPage>
-#include <smjansson>
-#include <NewPage/allchat>
 
 #define P_NAME P_PRE ... " - All Servers Chat"
 #define P_DESC "All Servers Chat plugin"
@@ -31,7 +29,7 @@ public int Native_SendMsg(Handle plugin, int numParams)
 	if(GetNativeString(3, msg, inLen+1) != SP_ERROR_NONE)
 		return 0;
 
-	char name[32], Token[33];
+	char name[32];
 	switch(GetNativeCell(1))
 	{
 		case PlayerChat: GetNativeString(2, name, 32);
@@ -42,17 +40,7 @@ public int Native_SendMsg(Handle plugin, int numParams)
 	StringToJson(name, 32);
 	StringToJson(msg, inLen+1);
 
-	GetToken(Token, 33);
-
-	System2HTTPRequest httpRequest = new System2HTTPRequest(AllChatRequestCallback, "%s/allchat.php", P_APIURL);
-	httpRequest.Timeout = 30;
-	httpRequest.SetHeader("Content-Type", "application/json");
-	httpRequest.SetData("{\"ServerID\":%d,\"ServerModID\":%d,\"Token\":\"%s\",\"Event\":\"AllServersChat\",\"AllServersChat\":{\"Name\":\"%s\",\"Msg\":\"%s\",\"Type\":%d}}", NP_Core_GetServerId(), NP_Core_GetServerModId(), Token, name, msg, GetNativeCell(1));
-	httpRequest.SetPort(P_APIPORT);
-	httpRequest.POST();
-
-	char buff[512];
-	httpRequest.GetData(buff, 512);
+	CreateRequest(AllChatRequestCallback, "allchat.php", "\"ServerModID\":%d,\"Event\":\"AllServersChat\",\"AllServersChat\":{\"Name\":\"%s\",\"Msg\":\"%s\",\"Type\":%d}", NP_Core_GetServerModId(), name, msg, GetNativeCell(1));
 	
 	return 1;
 }
@@ -87,28 +75,8 @@ public Action Command_AllChat(int client, int argc)
 
 void AllChatRequestCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
 {
-	char url[256];
-	request.GetURL(url, sizeof(url));
-
-	if (!success)
-	{
-		NP_Core_LogError("AllChat", "AllChatRequestCallback", "ERROR: Couldn't retrieve URL %s - %d. Error: %s", url, method, error);
-		CreateTimer(5.0, Timer_RetryRequest, request);
+	if(!CheckRequest(success, error, request, response, method, "AllChat", "AllChatRequestCallback"))
 		return;
-	}
-	
-	char[] content = new char[response.ContentLength + 1];
-	response.GetContent(content, response.ContentLength + 1);
-
-	char source[512];
-	request.GetData(source, 512);
-
-	if (StringToInt(content) == -1)
-	{
-		NP_Core_LogError("AllChat", "AllChatRequestCallback", "ERROR: Couldn't sent data -> %s", source);
-		delete request;
-		return;
-	}
 
 	delete request;
 }
@@ -156,10 +124,4 @@ void AllChatProcess(const char[] data)
 		PrintToChatAll("\x04[%s] \x01%s", name, msg);
 
 	CloseHandle(json);
-}
-
-public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
-{
-	request.POST();
-	return Plugin_Stop;
 }

@@ -103,6 +103,7 @@ forward void NP_OnClientSigned(int client, int signtimes);
 
 native bool NP_Users_PayMoney(int client, int money);
 native bool NP_Users_GiveMoney(int client, int money);
+native int NP_Users_GetMoney(int client);
 
 public SharedPlugin __pl_user =
 {

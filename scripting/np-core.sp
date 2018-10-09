@@ -1,14 +1,10 @@
 #pragma semicolon 1
 
 #include <NewPage>
-
-// game rules.
 #include <sdktools_gamerules>
 
 #define AUTOLOAD_EXTENSIONS
 #define REQUIRE_EXTENSIONS
-
-#include <smjansson>
 
 #define P_NAME P_PRE ... " - Core"
 #define P_DESC "Server initialization plugin"
@@ -87,15 +83,7 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 	if(GetNativeString(1, input, inLen+1) != SP_ERROR_NONE)
 		return 0;
 
-	char Token[33];
-	GetToken(Token, 33);
-
-	System2HTTPRequest httpRequest = new System2HTTPRequest(SaveSQLCallback, "%s/savesql.php", P_APIURL);
-	httpRequest.Timeout = 30;
-	httpRequest.SetHeader("Content-Type", "application/json");
-	httpRequest.SetData("{\"ServerID\":%d,\"Token\":\"%s\",\"SQL\":\"%s\"}", g_iServerId, Token, input);
-	httpRequest.SetPort(P_APIPORT);
-	httpRequest.POST();
+	CreateRequest(SaveSQLCallback, "savesql.php", "\"SQL\":\"%s\"", input);
 
 	return 1;
 }
@@ -402,33 +390,13 @@ public Action Timer_CheckCvar(Handle timer, int client)
 
 void SaveSQLCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
 {
-	char url[256];
-	request.GetURL(url, sizeof(url));
-
-	if (!success)
-	{
-		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't retrieve URL %s - %d. Error: %s", url, method, error);
-		CreateTimer(5.0, Timer_RetryRequest, request);
+	if(!CheckRequest(success, error, request, response, method, "Core", "SaveSQLCallback"))
 		return;
-	}
-	
+
 	char[] content = new char[response.ContentLength + 1];
 	response.GetContent(content, response.ContentLength + 1);
 
-	if (StringToInt(content) == -1)
-	{
-		NP_Core_LogError("Core", "SaveSQLCallback", "ERROR: Couldn't Save SQL data -> %s", content);
-		delete request;
-		return;
-	}
-
 	delete request;
-}
-
-public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
-{
-	request.POST();
-	return Plugin_Stop;
 }
 
 public Action Command_Restart(int args)

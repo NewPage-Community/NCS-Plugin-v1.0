@@ -1,7 +1,6 @@
 #pragma semicolon 1
 
 #include <NewPage>
-#include <NewPage/user>
 #include <adminmenu>
 
 #define P_NAME P_PRE ... " - VIP Function"

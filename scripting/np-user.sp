@@ -1,9 +1,6 @@
 #pragma semicolon 1
 
 #include <NewPage>
-#include <NewPage/user>
-#include <NewPage/allchat>
-#include <smjansson>
 #include <sdktools_functions>
 
 #define P_NAME P_PRE ... " - User Manager"
@@ -87,6 +84,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// Money
 	CreateNative("NP_Users_PayMoney", Native_PayMoney);
 	CreateNative("NP_Users_GiveMoney", Native_GiveMoney);
+	CreateNative("NP_Users_GetMoney", Native_GetMoney);
 	
 	// lib
 	RegPluginLibrary("np-user");
@@ -225,18 +223,11 @@ void CheckClient(int client, const char[] steamid)
 	if(g_aClient[client][AuthLoaded])
 		return; 
 
-	char Token[33], ip[32], map[128];
-	GetToken(Token, 33);
+	char ip[32], map[128];
 	GetClientIP(client, ip, 32);
 	GetCurrentMap(map, 128);
-	
-	System2HTTPRequest httpRequest = new System2HTTPRequest(CheckClientCallback, "%s/playerinfo.php", P_APIURL);
-	httpRequest.Timeout = 30;
-	httpRequest.SetHeader("Content-Type", "application/json");
-	httpRequest.SetData("{\"ServerID\":%d,\"Token\":\"%s\",\"SteamID\":\"%s\",\"Client\":%d,\"IP\":\"%s\",\"Map\":\"%s\"}", NP_Core_GetServerId(), Token, steamid, client, ip, map);
-	httpRequest.SetPort(P_APIPORT);
-	httpRequest.POST();
-	delete httpRequest;
+
+	CreateRequest(CheckClientCallback, "playerinfo.php", "\"SteamID\":\"%s\",\"Client\":%d,\"IP\":\"%s\",\"Map\":\"%s\"", steamid, client, ip, map);
 
 	//防止因为网络波动而无法加载用户数据
 	CreateTimer(5.0, Timer_CheckClient, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -244,28 +235,15 @@ void CheckClient(int client, const char[] steamid)
 
 void CheckClientCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
 {
-	char url[256];
-	request.GetURL(url, sizeof(url));
-
-	if (!success)
-	{
-		NP_Core_LogError("User", "CheckClientCallback", "ERROR: Couldn't retrieve URL %s - %d. Error: %s", url, method, error);
+	if(!CheckRequest(success, error, request, response, method, "User", "CheckClientCallback"))
 		return;
-	}
-	
+
 	char[] content = new char[response.ContentLength + 1];
 	response.GetContent(content, response.ContentLength + 1);
-
-	char source[512];
-	request.GetData(source, 512);
-
-	if (StringToInt(content) == -1)
-	{
-		NP_Core_LogError("User", "CheckClientCallback", "ERROR: Couldn't Get client data -> %s", source);
-		return;
-	}
 		
 	LoadClient(content);
+
+	delete request;
 }
 
 void LoadClient(char[] data)
@@ -383,12 +361,6 @@ public Action Timer_ReAuthorize(Handle timer, int client)
 
 	CheckClient(client, steamid);
 	
-	return Plugin_Stop;
-}
-
-public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
-{
-	request.POST();
 	return Plugin_Stop;
 }
 

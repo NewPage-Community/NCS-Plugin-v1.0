@@ -32,7 +32,7 @@ bool Util_BanClient(int client, int admin, int length, int bantype, const char[]
 	if (NP_Core_GetServerId() < 0)
 		return false;
 
-	char ip[24], steamid[32], adminname[32], clientname[32], Token[33];
+	char ip[24], steamid[32], adminname[32], clientname[32];
 
 	GetClientIP(client, ip, 24);
 	GetClientAuthId(client, AuthId_SteamID64, steamid, 32, true);
@@ -47,14 +47,7 @@ bool Util_BanClient(int client, int admin, int length, int bantype, const char[]
 	StringToJson(clientname, 32);
 	StringToJson(adminname, 32);
 
-	GetToken(Token, 33);
-
-	System2HTTPRequest httpRequest = new System2HTTPRequest(BanClientCallback, "%s/addban.php", P_APIURL);
-	httpRequest.Timeout = 30;
-	httpRequest.SetHeader("Content-Type", "application/json");
-	httpRequest.SetData("{\"Token\":\"%s\",\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}", Token, NP_Users_UserIdentity(client), steamid, ip, clientname, length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
-	httpRequest.SetPort(P_APIPORT);
-	httpRequest.POST();
+	CreateRequest(BanClientCallback, "addban.php", "\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"", NP_Users_UserIdentity(client), steamid, ip, clientname, length*60, bantype, NP_Core_GetServerModId(), admin, adminname, reason);
 
 	return true;
 }
@@ -64,7 +57,7 @@ bool Util_BanIdentity(char[] steamid, int admin, int length, int bantype, const 
 	if (NP_Core_GetServerId() < 0)
 		return false;
 
-	char adminname[32], Token[33];
+	char adminname[32];
 	
 	if (admin > 0)
 		strcopy(adminname, 32, g_aClient[admin][Name]);
@@ -73,42 +66,20 @@ bool Util_BanIdentity(char[] steamid, int admin, int length, int bantype, const 
 
 	StringToJson(adminname, 32);
 
-	GetToken(Token, 33);
-
-	System2HTTPRequest httpRequest = new System2HTTPRequest(BanClientCallback, "%s/addban.php", P_APIURL);
-	httpRequest.Timeout = 30;
-	httpRequest.SetHeader("Content-Type", "application/json");
-	httpRequest.SetData("{\"Token\":\"%s\",\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerID\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"}", Token, -1, steamid, "0.0.0.0", "N/C", length*60, bantype, NP_Core_GetServerId(), NP_Core_GetServerModId(), admin, adminname, reason);
-	httpRequest.SetPort(P_APIPORT);
-	httpRequest.POST();
+	CreateRequest(BanClientCallback, "addban.php", "\"UID\":%d,\"SteamID\":\"%s\",\"IP\":\"%s\",\"NikeName\":\"%s\",\"Length\":%i,\"BanType\":%d,\"ServerModID\":%d,\"AdminID\":%d,\"AdminName\":\"%s\",\"Reason\":\"%s\"", -1, steamid, "0.0.0.0", "N/C", length*60, bantype, NP_Core_GetServerModId(), admin, adminname, reason);
 
 	return true;
 }
 
 void BanClientCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
 {
-	char url[256];
-	request.GetURL(url, sizeof(url));
-
-	if (!success)
-	{
-		NP_Core_LogError("User", "BanClientCallback", "ERROR: Couldn't retrieve URL %s - %d. Error: %s", url, method, error);
-		CreateTimer(5.0, Timer_RetryRequest, request);
+	if(!CheckRequest(success, error, request, response, method, "User", "BanClientCallback"))
 		return;
-	}
 
 	char[] content = new char[response.ContentLength + 1];
 	response.GetContent(content, response.ContentLength + 1);
 
-	char source[512];
-	request.GetData(source, 512);
-
-	if (StringToInt(content) == -1)
-	{
-		NP_Core_LogError("User", "BanClientCallback", "ERROR: Couldn't add ban -> %s", source);
-		delete request;
-		return;
-	}
+	BanCallback(content);
 
 	delete request;
 }
