@@ -3,9 +3,6 @@
 #include <NewPage>
 #include <sdktools_gamerules>
 
-#define AUTOLOAD_EXTENSIONS
-#define REQUIRE_EXTENSIONS
-
 #define P_NAME P_PRE ... " - Core"
 #define P_DESC "Server initialization plugin"
 

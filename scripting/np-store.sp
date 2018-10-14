@@ -1,9 +1,7 @@
 #pragma semicolon 1
 
 #include <NewPage>
-
-#define AUTOLOAD_EXTENSIONS
-#define REQUIRE_EXTENSIONS
+#include <NewPage/store>
 
 #define P_NAME P_PRE ... " - Store"
 #define P_DESC "In-game store function"

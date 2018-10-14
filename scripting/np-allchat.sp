@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <NewPage>
+#include <chat-processor>
 
 #define P_NAME P_PRE ... " - All Servers Chat"
 #define P_DESC "All Servers Chat plugin"

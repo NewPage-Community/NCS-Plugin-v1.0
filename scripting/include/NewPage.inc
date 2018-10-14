@@ -11,11 +11,12 @@
 #define P_APIURL "http://127.0.0.1"
 #define P_APIPORT 83
 
+#define AUTOLOAD_EXTENSIONS
+#define REQUIRE_EXTENSIONS
+
 #include <system2>
 #include <smjansson>
-#include <chat-processor>
 #include <NewPage/allchat>
-#include <NewPage/store>
 #include <NewPage/user>
 
 #if !defined REQUIRE_PLUGIN
