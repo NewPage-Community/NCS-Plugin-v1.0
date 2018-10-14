@@ -95,7 +95,7 @@ void VIPConnected(int client)
 	if (g_aClient[client][StatsTotal][iTodayOnlineTime] == 0)
 	{
 		char msg[512];
-		FormatEx(msg, 512, "%s ： 叛乱，启动！", g_aClient[client][Name]);
+		FormatEx(msg, 512, "{red}%s{default} ： 叛乱，启动！", g_aClient[client][Name]);
 		NP_AllChat_Msg(Custom, "会员", msg);
 	}
 

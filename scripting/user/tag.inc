@@ -6,6 +6,11 @@ public int Native_SetTag(Handle plugin, int numParams)
 		ChangePlayerPreName(client);
 }
 
+public int Native_GetTag(Handle plugin, int numParams)
+{
+	SetNativeString(2, g_aClient[GetNativeCell(1)][Tag], GetNativeCell(3), true);
+}
+
 void ChangePlayerPreName(int client)
 {
 	char newName[64], oldName[64];

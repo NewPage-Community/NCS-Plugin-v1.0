@@ -13,6 +13,7 @@
 
 #include <system2>
 #include <smjansson>
+#include <chat-processor>
 #include <NewPage/allchat>
 #include <NewPage/store>
 #include <NewPage/user>
@@ -252,4 +253,55 @@ public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
 {
 	request.POST();
 	return Plugin_Stop;
+}
+
+stock void ProcessColorString(char[] message, int maxLen)
+{
+	EngineVersion engine = GetEngineVersion();
+	if (engine == Engine_Insurgency)
+	{
+		ReplaceString(message, maxLen, "{normal}",      "\x01", false);
+		ReplaceString(message, maxLen, "{default}",     "\x01", false);
+		ReplaceString(message, maxLen, "{white}",       "\x01", false);
+		ReplaceString(message, maxLen, "{darkred}",     "\x08FF4040FF", false);
+		ReplaceString(message, maxLen, "{pink}",        "\x08FFC0CBFF", false);
+		ReplaceString(message, maxLen, "{green}",       "\x083EFF3EFF", false);
+		ReplaceString(message, maxLen, "{lime}",        "\x0800FF00FF", false);
+		ReplaceString(message, maxLen, "{yellow}",      "\x08FFFF00FF", false);
+		ReplaceString(message, maxLen, "{lightgreen}",  "\x0899FF99FF", false);
+		ReplaceString(message, maxLen, "{lightred}",    "\x08FF4040FF", false);
+		ReplaceString(message, maxLen, "{red}",         "\x08FF4040FF", false);
+		ReplaceString(message, maxLen, "{gray}",        "\x08CCCCCCFF", false);
+		ReplaceString(message, maxLen, "{grey}",        "\x08CCCCCCFF", false);
+		ReplaceString(message, maxLen, "{olive}",       "\x089EC34FFF", false);
+		ReplaceString(message, maxLen, "{orange}",      "\x08FFA500FF", false);
+		ReplaceString(message, maxLen, "{silver}",      "\x08C0C0C0FF", false);
+		ReplaceString(message, maxLen, "{lightblue}",   "\x08ADD8E6FF", false);
+		ReplaceString(message, maxLen, "{blue}",        "\x0899CCFFFF", false);
+		ReplaceString(message, maxLen, "{purple}",      "\x08800080FF", false);
+		ReplaceString(message, maxLen, "{darkorange}",  "\x08FF8C00FF", false);
+	}
+	else
+	{
+		ReplaceString(message, maxLen, "{normal}",      "\x01", false);
+		ReplaceString(message, maxLen, "{default}",     "\x01", false);
+		ReplaceString(message, maxLen, "{white}",       "\x01", false);
+		ReplaceString(message, maxLen, "{darkred}",     "\x02", false);
+		ReplaceString(message, maxLen, "{pink}",        "\x03", false);
+		ReplaceString(message, maxLen, "{green}",       "\x04", false);
+		ReplaceString(message, maxLen, "{lime}",        "\x05", false);
+		ReplaceString(message, maxLen, "{yellow}",      "\x05", false);
+		ReplaceString(message, maxLen, "{lightgreen}",  "\x06", false);
+		ReplaceString(message, maxLen, "{lightred}",    "\x07", false);
+		ReplaceString(message, maxLen, "{red}",         "\x07", false);
+		ReplaceString(message, maxLen, "{gray}",        "\x08", false);
+		ReplaceString(message, maxLen, "{grey}",        "\x08", false);
+		ReplaceString(message, maxLen, "{olive}",       "\x09", false);
+		ReplaceString(message, maxLen, "{orange}",      "\x10", false);
+		ReplaceString(message, maxLen, "{silver}",      "\x0A", false);
+		ReplaceString(message, maxLen, "{lightblue}",   "\x0B", false);
+		ReplaceString(message, maxLen, "{blue}",        "\x0C", false);
+		ReplaceString(message, maxLen, "{purple}",      "\x0E", false);
+		ReplaceString(message, maxLen, "{darkorange}",  "\x0F", false);
+	}
 }

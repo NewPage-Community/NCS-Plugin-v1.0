@@ -93,6 +93,7 @@ native bool NP_Vip_AddVipPoint(int client, int point);
 native int NP_Vip_GetPoint(int client);
 
 native void NP_Users_SetTag(int client, char[] TagName);
+native bool NP_Users_GetTag(int client, char[] TagName, int size);
 
 native void NP_Users_GetName(int client, char[] name, int length);
 

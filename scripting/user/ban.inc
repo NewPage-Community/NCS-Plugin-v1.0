@@ -130,7 +130,7 @@ void BanCallback(const char[] data)
 		PrintToChat(admin, "\x04[提示] \x02已成功封禁 \x04%s", steamid);
 
 	char msg[512];
-	FormatEx(msg, 512, "玩家 %s (STEAMID) 已被 %s 封禁，原因：%s", steamid, BanAdminName, BanReason);
+	FormatEx(msg, 512, "{red}玩家 %s (STEAMID) 已被 %s 封禁，原因：%s", steamid, BanAdminName, BanReason);
 	NP_AllChat_Msg(Custom, "全服封禁", msg);
 }
 

@@ -77,6 +77,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	// Tag
 	CreateNative("NP_Users_SetTag", Native_SetTag);
+	CreateNative("NP_Users_GetTag", Native_GetTag);
 
 	// Name
 	CreateNative("NP_Users_GetName", Native_GetName);
