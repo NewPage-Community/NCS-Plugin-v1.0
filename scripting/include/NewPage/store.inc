@@ -1,3 +1,13 @@
+#if !defined REQUIRE_PLUGIN
+    #endinput
+#endif
+
+#if defined _NewPage_Store_Include_
+    #endinput
+#endif
+
+#define _NewPage_Store_Include_
+
 #define MAX_ITEMS 999
 #define MAX_TYPES 999
 

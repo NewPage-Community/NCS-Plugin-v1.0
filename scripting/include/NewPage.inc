@@ -1,23 +1,5 @@
-#if defined _NewPage_included
-#endinput
-#endif
-#define _NewPage_included
-
-#define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.2"
-#define P_URLS "https://new-page.xyz"
-#define P_PRE "NewPage Core System (NCS)"
-#define P_SQLPRE "np"
-#define P_APIURL "http://127.0.0.1"
-#define P_APIPORT 83
-
 #define AUTOLOAD_EXTENSIONS
 #define REQUIRE_EXTENSIONS
-
-#include <system2>
-#include <smjansson>
-#include <NewPage/allchat>
-#include <NewPage/user>
 
 #if !defined REQUIRE_PLUGIN
 	#endinput
@@ -28,6 +10,19 @@
 #endif
 
 #define _NewPage_Core_Include_
+
+#define P_AUTHOR "NewPage Dev-Team"
+#define P_VERSION "Alpha-v3.3"
+#define P_URLS "https://new-page.xyz"
+#define P_PRE "NewPage Core System (NCS)"
+#define P_SQLPRE "np"
+#define P_APIURL "http://127.0.0.1"
+#define P_APIPORT 83
+
+#include <system2>
+#include <smjansson>
+#include <NewPage/chat>
+#include <NewPage/user>
 
 forward void NP_Core_OnInitialized(int serverId, int modId);
 
@@ -258,8 +253,10 @@ public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
 
 stock void ProcessColorString(char[] message, int maxLen)
 {
-	EngineVersion engine = GetEngineVersion();
-	if (engine == Engine_Insurgency)
+	char game[32];
+	GetGameFolderName(game, 32);
+
+	if (!strcmp(game, "insurgency"))
 	{
 		ReplaceString(message, maxLen, "{normal}",      "\x01", false);
 		ReplaceString(message, maxLen, "{default}",     "\x01", false);

@@ -1,10 +1,14 @@
-#define NP_BANURL "https://new-page.cc/bans"
-
-#if defined _NewPage_User_Manager_Include_
+#if !defined REQUIRE_PLUGIN
     #endinput
 #endif
 
-#define _NewPage_User_Manager_Include_
+#if defined _NewPage_User_Include_
+    #endinput
+#endif
+
+#define _NewPage_User_Include_
+
+#define NP_BANURL "https://new-page.cc/bans"
 
 #define VIPMAXLEVEL 8
 #define TEAM_OB 1

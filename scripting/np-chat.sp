@@ -1,10 +1,15 @@
+// Function from chat-processor
 #pragma semicolon 1
 
 #include <NewPage>
-#include <chat-processor>
 
-#define P_NAME P_PRE ... " - All Servers Chat"
-#define P_DESC "All Servers Chat plugin"
+#define P_NAME P_PRE ... " - Chat processor"
+#define P_DESC "Chat processor plugin"
+
+bool g_Proto;
+bool g_NewMSG[MAXPLAYERS + 1];
+
+EngineVersion engine;
 
 public Plugin myinfo = 
 {
@@ -18,6 +23,9 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("NP_AllChat_Msg", Native_SendMsg);
+
+	engine = GetEngineVersion();
+
 	return APLRes_Success;
 }
 
@@ -49,6 +57,107 @@ public int Native_SendMsg(Handle plugin, int numParams)
 public void OnPluginStart()
 {
 	RegConsoleCmd("sm_achat", Command_AllChat);
+}
+
+public void OnConfigsExecuted()
+{
+	g_Proto = CanTestFeatures() && GetFeatureStatus(FeatureType_Native, "GetUserMessageType") == FeatureStatus_Available && GetUserMessageType() == UM_Protobuf;
+
+	UserMsg SayText2 = GetUserMessageId("SayText2");
+
+	if (SayText2 != INVALID_MESSAGE_ID)
+	{
+		HookUserMessage(SayText2, OnSayText2, true);
+		LogMessage("Successfully hooked a SayText2 chat hook.");
+	}
+	else
+		SetFailState("Error loading the plugin, SayText2 is unavailable.");
+}
+
+public Action OnSayText2(UserMsg msg_id, BfRead msg, const int[] players, int playersNum, bool reliable, bool init)
+{
+	char game[32];
+	GetGameFolderName(game, 32);
+
+	//Retrieve the client sending the message to other clients.
+	int iSender = g_Proto ? PbReadInt(msg, "ent_idx") : BfReadByte(msg);
+
+	if (iSender <= 0)
+		return Plugin_Continue;
+
+	//Stops double messages in-general.
+	if (g_NewMSG[iSender])
+		g_NewMSG[iSender] = false;
+	else if (reliable)	//Fix for other plugins that use SayText2 I guess?
+		return Plugin_Stop;
+
+	//Chat Type
+	bool bChat = g_Proto ? PbReadBool(msg, "chat") : view_as<bool>(BfReadByte(msg));
+
+	//Retrieve the name of template name to use when getting the format.
+	char sFlag[MAXLENGTH_FLAG];
+	switch (g_Proto)
+	{
+		case true: PbReadString(msg, "msg_name", sFlag, sizeof(sFlag));
+		case false: BfReadString(msg, sFlag, sizeof(sFlag));
+	}
+
+	//Get the name string of the client.
+	char sName[MAXLENGTH_NAME];
+	switch (g_Proto)
+	{
+		case true: PbReadString(msg, "params", sName, sizeof(sName), 0);
+		case false: if (BfGetNumBytesLeft(msg)) BfReadString(msg, sName, sizeof(sName));
+	}
+
+	//Get the message string that the client is wanting to send.
+	char sMessage[MAXLENGTH_MESSAGE];
+	switch (g_Proto)
+	{
+		case true: PbReadString(msg, "params", sMessage, sizeof(sMessage), 1);
+		case false: if (BfGetNumBytesLeft(msg)) BfReadString(msg, sMessage, sizeof(sMessage));
+	}
+
+	//Get tag name.
+	ProcessChatName(iSender, sName, MAXLENGTH_NAME);
+
+	//Process colors.
+	ProcessColorString(sName, MAXLENGTH_NAME);
+
+	char sBuffer[MAXLENGTH_BUFFER];
+	Format(sBuffer, MAXLENGTH_BUFFER, "\x05%s : \x01%s", sName, sMessage);
+
+	//CSGO quirk where the 1st color in the line won't work..
+	if (engine == Engine_CSGO)
+		Format(sBuffer, MAXLENGTH_BUFFER, " %s", sBuffer);
+
+	int team = GetClientTeam(iSender);
+
+	//Send the message to clients.
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (IsClientInGame(i))
+		{
+			if (StrContains(sFlag, "_All") == -1 && team != GetClientTeam(i))
+				continue;
+
+			if (!FindConVar("sv_deadtalk").BoolValue && IsPlayerAlive(i) && !IsPlayerAlive(iSender))
+				continue;
+
+			if (g_Proto)
+				CSayText2(i, sBuffer, iSender, bChat);
+			else
+				SendPlayerMessage(i, sBuffer, iSender);
+		}
+	}
+
+	return Plugin_Stop;
+}
+
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
+{
+	if (client > 0 && StrContains(command, "say") != -1)
+		g_NewMSG[client] = true;
 }
 
 public Action Command_AllChat(int client, int argc)
@@ -128,14 +237,6 @@ void AllChatProcess(const char[] data)
 		PrintToChatAll("\x04[%s] \x01%s", name, msg);
 
 	CloseHandle(json);
-}
-
-public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstring, char[] name, char[] message, bool& processcolors, bool& removecolors)
-{
-	ProcessChatName(author, name, MAXLENGTH_NAME);
-	ProcessColorString(name, MAXLENGTH_NAME);
-
-	return Plugin_Changed;
 }
 
 void ProcessChatName(int client, char[] name, int size)
