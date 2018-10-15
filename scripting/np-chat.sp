@@ -6,6 +6,8 @@
 #define P_NAME P_PRE ... " - Chat processor"
 #define P_DESC "Chat processor plugin"
 
+char g_cClientNameColor[MAXPLAYERS + 1][16];
+
 bool g_Proto;
 bool g_NewMSG[MAXPLAYERS + 1];
 
@@ -23,6 +25,7 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("NP_AllChat_Msg", Native_SendMsg);
+	CreateNative("NP_Chat_SetNameColor", Native_SetNameColor);
 
 	engine = GetEngineVersion();
 
@@ -54,6 +57,14 @@ public int Native_SendMsg(Handle plugin, int numParams)
 	return 1;
 }
 
+public int Native_SetNameColor(Handle plugin, int numParams)
+{
+	char color[16];
+	int client = GetNativeCell(1);
+	GetNativeString(2, color, 16);
+	strcopy(g_cClientNameColor[client], 16, color);
+}
+
 public void OnPluginStart()
 {
 	RegConsoleCmd("sm_achat", Command_AllChat);
@@ -72,6 +83,11 @@ public void OnConfigsExecuted()
 	}
 	else
 		SetFailState("Error loading the plugin, SayText2 is unavailable.");
+}
+
+public void OnClientConnected(int client)
+{
+	g_cClientNameColor[client][0] = '\0';
 }
 
 public Action OnSayText2(UserMsg msg_id, BfRead msg, const int[] players, int playersNum, bool reliable, bool init)
@@ -124,8 +140,40 @@ public Action OnSayText2(UserMsg msg_id, BfRead msg, const int[] players, int pl
 	//Process colors.
 	ProcessColorString(sName, MAXLENGTH_NAME);
 
+	DataPack hPack = new DataPack();
+	hPack.WriteCell(iSender);
+	hPack.WriteString(sName);
+	hPack.WriteString(sMessage);
+	hPack.WriteString(sFlag);
+	hPack.WriteCell(bChat);
+
+	RequestFrame(Frame_OnChatMessage_SayText2, hPack);
+
+	return Plugin_Stop;
+}
+
+public void Frame_OnChatMessage_SayText2(DataPack data)
+{
+	//Retrieve pack contents and what not, this part is obvious.
+	data.Reset();
+
+	int iSender = data.ReadCell();
+
+	char sName[MAXLENGTH_NAME];
+	data.ReadString(sName, sizeof(sName));
+
+	char sMessage[MAXLENGTH_MESSAGE];
+	data.ReadString(sMessage, sizeof(sMessage));
+
+	char sFlag[MAXLENGTH_FLAG];
+	data.ReadString(sFlag, sizeof(sFlag));
+
+	bool bChat = data.ReadCell();
+
+	delete data;
+
 	char sBuffer[MAXLENGTH_BUFFER];
-	Format(sBuffer, MAXLENGTH_BUFFER, "\x05%s : \x01%s", sName, sMessage);
+	Format(sBuffer, MAXLENGTH_BUFFER, "\x05%s\x01 : %s", sName, sMessage);
 
 	//CSGO quirk where the 1st color in the line won't work..
 	if (engine == Engine_CSGO)
@@ -134,7 +182,7 @@ public Action OnSayText2(UserMsg msg_id, BfRead msg, const int[] players, int pl
 	int team = GetClientTeam(iSender);
 
 	//Send the message to clients.
-	for (int i = 0; i < MAXPLAYERS; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (IsClientInGame(i))
 		{
@@ -150,8 +198,6 @@ public Action OnSayText2(UserMsg msg_id, BfRead msg, const int[] players, int pl
 				SendPlayerMessage(i, sBuffer, iSender);
 		}
 	}
-
-	return Plugin_Stop;
 }
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
@@ -232,7 +278,7 @@ void AllChatProcess(const char[] data)
 	ProcessColorString(msg, MAXLENGTH_MESSAGE);
 	
 	if (view_as<ChatType>(json_object_get_int(msgdata, "Type")) == PlayerChat)
-		PrintToChatAll("\x04[全服聊天] \x05%s :  \x01%s", name, msg);
+		PrintToChatAll("\x04[全服聊天] \x05%s\x01 : %s", name, msg);
 	else
 		PrintToChatAll("\x04[%s] \x01%s", name, msg);
 
@@ -242,39 +288,43 @@ void AllChatProcess(const char[] data)
 void ProcessChatName(int client, char[] name, int size)
 {
 	char tagName[32], grpName[32];
+
 	NP_Users_GetName(client, name, size);
+
+	if (g_cClientNameColor[client][0] != '\0')
+		Format(name, size, "%s%s", g_cClientNameColor[client], name);
 
 	if (NP_Users_GetTag(client, tagName, 32))
 	{
-		Format(name, size, "{lime}[%s]{default} %s", tagName, name);
+		Format(name, size, "{lime}[%s]\x05 %s", tagName, name);
 	}
 
 	if (NP_Group_GetGrpName(client, grpName, 32))
 	{
-		Format(name, size, "{purple}<%s>{default} %s", grpName, name);
+		Format(name, size, "{purple}<%s>\x05 %s", grpName, name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Own))
 	{
-		Format(name, size, "{red}<服主>{default} %s" , name);
+		Format(name, size, "{red}<服主>\x05 %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Adm))
 	{
-		Format(name, size, "{green}<ADMIN>{default} %s" , name);
+		Format(name, size, "{green}<ADMIN>\x05 %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Opt))
 	{
-		Format(name, size, "{green}<管理>{default} %s" , name);
+		Format(name, size, "{green}<管理>\x05 %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Ctb))
 	{
-		Format(name, size, "{green}<员工>{default} %s" , name);
+		Format(name, size, "{green}<员工>\x05 %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Vip))
 	{
-		Format(name, size, "{yellow}<会员>{default} %s" , name);
+		Format(name, size, "{yellow}<会员>\x05 %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Spt))
 	{
-		Format(name, size, "{pink}<捐助>{default} %s" , name);
+		Format(name, size, "{pink}<捐助>\x05 %s" , name);
 	}
 }

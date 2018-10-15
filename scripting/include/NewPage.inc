@@ -261,7 +261,7 @@ stock void ProcessColorString(char[] message, int maxLen)
 		ReplaceString(message, maxLen, "{normal}",      "\x01", false);
 		ReplaceString(message, maxLen, "{default}",     "\x01", false);
 		ReplaceString(message, maxLen, "{white}",       "\x01", false);
-		ReplaceString(message, maxLen, "{darkred}",     "\x08FF4040FF", false);
+		ReplaceString(message, maxLen, "{darkred}",     "\x088B0000FF", false);
 		ReplaceString(message, maxLen, "{pink}",        "\x08FFC0CBFF", false);
 		ReplaceString(message, maxLen, "{green}",       "\x083EFF3EFF", false);
 		ReplaceString(message, maxLen, "{lime}",        "\x0800FF00FF", false);

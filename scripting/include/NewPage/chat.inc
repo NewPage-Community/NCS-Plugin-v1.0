@@ -22,6 +22,8 @@ enum ChatType
 
 native bool NP_AllChat_Msg(ChatType type, const char[] name, const char[] msg);
 
+native void NP_Chat_SetNameColor(int client, const char[] colorname);
+
 public SharedPlugin __pl_chat =
 {
 	name = "np-chat",
