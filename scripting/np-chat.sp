@@ -1,4 +1,3 @@
-// Function from chat-processor
 #pragma semicolon 1
 
 #include <NewPage>
@@ -90,6 +89,7 @@ public void OnClientConnected(int client)
 	g_cClientNameColor[client][0] = '\0';
 }
 
+//This function is based on chat-processor by Keith Warren 
 public Action OnSayText2(UserMsg msg_id, BfRead msg, const int[] players, int playersNum, bool reliable, bool init)
 {
 	char game[32];
@@ -172,14 +172,17 @@ public void Frame_OnChatMessage_SayText2(DataPack data)
 
 	delete data;
 
+	int team = GetClientTeam(iSender);
+
 	char sBuffer[MAXLENGTH_BUFFER];
 	Format(sBuffer, MAXLENGTH_BUFFER, "\x05%s\x01 : %s", sName, sMessage);
+
+	if (team == 1)
+		Format(sBuffer, MAXLENGTH_BUFFER, "*观察* %s", sName);
 
 	//CSGO quirk where the 1st color in the line won't work..
 	if (engine == Engine_CSGO)
 		Format(sBuffer, MAXLENGTH_BUFFER, " %s", sBuffer);
-
-	int team = GetClientTeam(iSender);
 
 	//Send the message to clients.
 	for (int i = 1; i < MaxClients; i++)
