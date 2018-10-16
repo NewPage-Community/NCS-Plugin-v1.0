@@ -28,6 +28,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	engine = GetEngineVersion();
 
+	// lib
+	RegPluginLibrary("np-chat");
+
 	return APLRes_Success;
 }
 
@@ -301,35 +304,35 @@ void ProcessChatName(int client, char[] name, int size)
 
 	if (NP_Users_GetTag(client, tagName, 32))
 	{
-		Format(name, size, "{lime}[%s]\x05 %s", tagName, name);
+		Format(name, size, "{lime}[%s]{name} %s", tagName, name);
 	}
 
 	if (NP_Group_GetGrpName(client, grpName, 32))
 	{
-		Format(name, size, "{purple}<%s>\x05 %s", grpName, name);
+		Format(name, size, "{purple}<%s>{name} %s", grpName, name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Own))
 	{
-		Format(name, size, "{red}<服主>\x05 %s" , name);
+		Format(name, size, "{red}<服主>{name} %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Adm))
 	{
-		Format(name, size, "{green}<ADMIN>\x05 %s" , name);
+		Format(name, size, "{green}<ADMIN>{name} %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Opt))
 	{
-		Format(name, size, "{green}<管理>\x05 %s" , name);
+		Format(name, size, "{green}<管理>{name} %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Ctb))
 	{
-		Format(name, size, "{green}<员工>\x05 %s" , name);
+		Format(name, size, "{green}<员工>{name} %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Vip))
 	{
-		Format(name, size, "{yellow}<会员>\x05 %s" , name);
+		Format(name, size, "{yellow}<会员>{name} %s" , name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Spt))
 	{
-		Format(name, size, "{pink}<捐助>\x05 %s" , name);
+		Format(name, size, "{pink}<捐助>{name} %s" , name);
 	}
 }

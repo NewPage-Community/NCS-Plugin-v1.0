@@ -1,7 +1,3 @@
-#if !defined REQUIRE_PLUGIN
-    #endinput
-#endif
-
 #if defined _NewPage_Store_Include_
     #endinput
 #endif

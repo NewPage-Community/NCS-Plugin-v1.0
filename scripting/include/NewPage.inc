@@ -278,6 +278,7 @@ stock void ProcessColorString(char[] message, int maxLen)
 		ReplaceString(message, maxLen, "{blue}",        "\x0899CCFFFF", false);
 		ReplaceString(message, maxLen, "{purple}",      "\x08800080FF", false);
 		ReplaceString(message, maxLen, "{darkorange}",  "\x08FF8C00FF", false);
+		ReplaceString(message, maxLen, "{name}",		"\x05", false);
 	}
 	else
 	{

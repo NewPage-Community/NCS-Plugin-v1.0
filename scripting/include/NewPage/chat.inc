@@ -1,7 +1,3 @@
-#if !defined REQUIRE_PLUGIN
-    #endinput
-#endif
-
 #if defined _NewPage_Chat_Include_
     #endinput
 #endif
