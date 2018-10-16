@@ -41,12 +41,6 @@ public Action Command_VIPCmd(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (!NP_Vip_IsVIP(client))
-	{
-		PrintToChat(client, "\x04[提示]\x01 你不是会员，无法使用该功能！");
-		return Plugin_Handled;
-	}
-
 	char Time[128], playername[32];
 	bool IsVip = NP_Vip_IsVIP(client);
 	FormatTime(Time, 128, "%p", GetTime());
@@ -81,6 +75,12 @@ void DisplayVIPFunc(int client)
 {
 	if (!IsValidClient(client))
 		return;
+
+    if (!NP_Vip_IsVIP(client))
+	{
+		PrintToChat(client, "\x04[提示]\x01 你不是会员，无法使用该功能！");
+		return Plugin_Handled;
+	}
 
 	int viplevel = NP_Vip_VIPLevel(client);
 

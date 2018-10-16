@@ -83,13 +83,13 @@ public void OnConfigsExecuted()
 	if (SayText2 != INVALID_MESSAGE_ID)
 	{
 		HookUserMessage(SayText2, OnSayText2, true);
-		LogMessage("Successfully hooked a SayText2 chat hook.");
+		//LogMessage("Successfully hooked a SayText2 chat hook.");
 	}
 	else
 		SetFailState("Error loading the plugin, SayText2 is unavailable.");
 }
 
-public void NP_OnClientDataChecked(int client, int UserIdentity)
+public void OnClientConnected(int client)
 {
 	g_cClientNameColor[client][0] = '\0';
 }
@@ -178,12 +178,15 @@ public void Frame_OnChatMessage_SayText2(DataPack data)
 	delete data;
 
 	int team = GetClientTeam(iSender);
+	bool alive = IsPlayerAlive(iSender);
 
 	char sBuffer[MAXLENGTH_BUFFER];
 	Format(sBuffer, MAXLENGTH_BUFFER, "\x05%s\x01 : %s", sName, sMessage);
 
 	if (team == 1)
-		Format(sBuffer, MAXLENGTH_BUFFER, "*观察* %s", sName);
+		Format(sBuffer, MAXLENGTH_BUFFER, "\x05*观察*\x01 %s", sBuffer);
+	else if (!alive)
+		Format(sBuffer, MAXLENGTH_BUFFER, "\x05*死亡*\x01 %s", sBuffer);
 
 	//CSGO quirk where the 1st color in the line won't work..
 	if (engine == Engine_CSGO)
