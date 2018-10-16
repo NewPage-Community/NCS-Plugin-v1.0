@@ -55,6 +55,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	
 	// Identity
 	CreateNative("NP_Users_UserIdentity", Native_UserIdentity);
+	CreateNative("NP_Users_FindUserByID", Native_FindUserByID);
 
 	// Vip
 	CreateNative("NP_Vip_IsVIP", Native_IsVIP);
@@ -108,6 +109,18 @@ public int Native_IsAuthLoaded(Handle plugin, int numParams)
 public int Native_UserIdentity(Handle plugin, int numParams)
 {
 	return g_aClient[GetNativeCell(1)][UID];
+}
+
+public int Native_FindUserByID(Handle plugin, int numParams)
+{
+	int id = GetNativeCell(1);
+
+	for (int i = 1; i <= MaxClients; i++)
+		if (g_aClient[i][UID] == id)
+			if (IsClientInGame(i))
+				return i;
+
+	return 0;
 }
 
 // Name
@@ -300,6 +313,10 @@ void LoadClient(char[] data)
 	g_aClient[client][VIPPoint] = json_object_get_int(json, "VIPPoint");
 	g_aClient[client][VIPExpired] = json_object_get_int(json, "VIPExpired");
 	g_iVIPReward[client] = json_object_get_int(json, "VIPReward");
+
+	char color[16];
+	json_object_get_string(json, "NameColor", color, 16);
+	NP_Chat_SetNameColor(client, color);
 
 	GetClientName(client, g_aClient[client][Name], 32);
 

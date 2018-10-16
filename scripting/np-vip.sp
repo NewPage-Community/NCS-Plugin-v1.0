@@ -8,6 +8,8 @@
 
 //Func
 #include "vip/votekick"
+#include "vip/namecolor"
+#include "vip/exchangevip"
 
 public Plugin myinfo = 
 {
@@ -46,16 +48,48 @@ public Action Command_VIPCmd(int client, int args)
 	}
 
 	char Time[128], playername[32];
-	int level = NP_Vip_VIPLevel(client);
+	bool IsVip = NP_Vip_IsVIP(client);
 	FormatTime(Time, 128, "%p", GetTime());
 	NP_Users_GetName(client, playername, 32);
 
-	Menu infoMenu = new Menu(MenuHandler_VIPFunc);
-	infoMenu.SetTitle("尊贵的会员 %s，%s好！", playername, !strcmp(Time, "AM") ? "上午" : "下午");
-	infoMenu.AddItem("VOTEKICK", "投票踢人", level >= 5 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	Menu infoMenu = new Menu(MenuHandler_VIPMenu);
+	infoMenu.SetTitle("尊贵的 %s，%s好！", playername, !strcmp(Time, "AM") ? "上午" : "下午");
+	infoMenu.AddItem("FUNC", "会员功能", IsVip ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	infoMenu.AddItem("GETVIP", "会员兑换");
 	infoMenu.ExitButton = true;
 	infoMenu.Display(client, 0);
 	return Plugin_Handled;
+}
+
+public int MenuHandler_VIPMenu(Menu menu, MenuAction action, int client, int slot)
+{
+	if (action == MenuAction_End)
+		delete menu;
+	else if (action == MenuAction_Select)
+	{
+		switch (slot)
+		{
+			case 0: DisplayVIPFunc(client);
+			case 1: DisplayExchangeVIP(client);
+		}
+	}
+
+	return 0;
+}
+
+void DisplayVIPFunc(int client)
+{
+	if (!IsValidClient(client))
+		return;
+
+	int viplevel = NP_Vip_VIPLevel(client);
+
+	Menu infoMenu = new Menu(MenuHandler_VIPFunc);
+	infoMenu.SetTitle("会员功能");
+	infoMenu.AddItem("NAMECOLOR", "更改聊天名字颜色",  viplevel >= 4 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	infoMenu.AddItem("VOTEKICK", "投票踢人", viplevel >= 5 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	infoMenu.ExitButton = true;
+	infoMenu.Display(client, 0);
 }
 
 public int MenuHandler_VIPFunc(Menu menu, MenuAction action, int client, int slot)
@@ -66,7 +100,10 @@ public int MenuHandler_VIPFunc(Menu menu, MenuAction action, int client, int slo
 	{
 		switch (slot)
 		{
-			case 0: DisplayKickTargetMenu(client);
+			case 0: ChangeColorMenu(client);
+			case 1: DisplayKickTargetMenu(client);
 		}
 	}
+
+	return 0;
 }

@@ -55,6 +55,6 @@ BEGIN
 	END IF;
 
 	/* results */
-	SELECT a.uid AS UID, a.imm AS Imm, a.spt AS Spt, a.vip AS Vip, a.ctb AS Ctb, a.opt AS Opt, a.adm AS Adm, a.own AS Own, tviplevel AS Viplevel, a.grp AS Grp, b.onlineTotal AS OnlineTotal, b.onlineToday AS OnlineToday, b.onlineOB AS OnlineOB, b.onlinePlay AS OnlinePlay, b.connectTimes AS ConnectTimes, b.vitality AS Vitality, TrackingID, a.money AS Money, a.signtimes AS SignTimes, a.signdate AS SignDate, t_vippoint AS VIPPoint, t_vip AS VIPExpired, a.vipreward AS VIPReward FROM np_users a, np_stats b WHERE a.uid = puid AND b.uid = puid;
+	SELECT a.uid AS UID, a.imm AS Imm, a.spt AS Spt, a.vip AS Vip, a.ctb AS Ctb, a.opt AS Opt, a.adm AS Adm, a.own AS Own, tviplevel AS Viplevel, a.grp AS Grp, b.onlineTotal AS OnlineTotal, b.onlineToday AS OnlineToday, b.onlineOB AS OnlineOB, b.onlinePlay AS OnlinePlay, b.connectTimes AS ConnectTimes, b.vitality AS Vitality, TrackingID, a.money AS Money, a.signtimes AS SignTimes, a.signdate AS SignDate, t_vippoint AS VIPPoint, t_vip AS VIPExpired, a.vipreward AS VIPReward, a.namecolor AS NameColor FROM np_users a, np_stats b WHERE a.uid = puid AND b.uid = puid;
 	
 END

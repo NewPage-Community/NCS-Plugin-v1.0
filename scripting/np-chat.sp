@@ -58,10 +58,12 @@ public int Native_SendMsg(Handle plugin, int numParams)
 
 public int Native_SetNameColor(Handle plugin, int numParams)
 {
-	char color[16];
+	char color[16], m_szQuery[256];
 	int client = GetNativeCell(1);
 	GetNativeString(2, color, 16);
 	strcopy(g_cClientNameColor[client], 16, color);
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET namecolor = '%s' WHERE uid = %d", P_SQLPRE, color, NP_Users_UserIdentity(client));
+	NP_MySQL_SaveDatabase(m_szQuery);
 }
 
 public void OnPluginStart()
@@ -84,7 +86,7 @@ public void OnConfigsExecuted()
 		SetFailState("Error loading the plugin, SayText2 is unavailable.");
 }
 
-public void OnClientConnected(int client)
+public void NP_OnClientDataChecked(int client, int UserIdentity)
 {
 	g_cClientNameColor[client][0] = '\0';
 }
@@ -185,7 +187,7 @@ public void Frame_OnChatMessage_SayText2(DataPack data)
 		Format(sBuffer, MAXLENGTH_BUFFER, " %s", sBuffer);
 
 	//Send the message to clients.
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i))
 		{

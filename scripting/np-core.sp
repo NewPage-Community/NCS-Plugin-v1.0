@@ -413,7 +413,7 @@ public Action Timer_Restart(Handle timer, int time)
 		return Plugin_Stop;
 	}
 
-	for(int i = 1; i <= GetMaxClients(); i++)
+	for(int i = 1; i <= MaxClients; i++)
 		if (IsClientInGame(i))
 				ClientCommand(i, "retry");
 
