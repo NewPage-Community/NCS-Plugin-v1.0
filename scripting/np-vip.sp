@@ -76,10 +76,10 @@ void DisplayVIPFunc(int client)
 	if (!IsValidClient(client))
 		return;
 
-    if (!NP_Vip_IsVIP(client))
+	if (!NP_Vip_IsVIP(client))
 	{
 		PrintToChat(client, "\x04[提示]\x01 你不是会员，无法使用该功能！");
-		return Plugin_Handled;
+		return;
 	}
 
 	int viplevel = NP_Vip_VIPLevel(client);
