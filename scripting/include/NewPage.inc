@@ -256,7 +256,7 @@ stock void ProcessColorString(char[] message, int maxLen)
 	char game[32];
 	GetGameFolderName(game, 32);
 
-	if (!strcmp(game, "insurgency"))
+	if (!strcmp(game, "insurgency") || !strcmp(game, "doi"))
 	{
 		ReplaceString(message, maxLen, "{normal}",      "\x01", false);
 		ReplaceString(message, maxLen, "{default}",     "\x01", false);
