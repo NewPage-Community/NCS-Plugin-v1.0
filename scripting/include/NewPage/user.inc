@@ -92,6 +92,7 @@ native bool NP_Vip_GrantVip(int client, int duration);
 native bool NP_Vip_DeleteVip(int client);
 native bool NP_Vip_AddVipPoint(int client, int point);
 native int NP_Vip_GetPoint(int client);
+native bool NP_Vip_IsPermanentVIP(int client);
 
 native void NP_Users_SetTag(int client, char[] TagName);
 native bool NP_Users_GetTag(int client, char[] TagName, int size);

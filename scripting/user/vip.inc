@@ -6,7 +6,7 @@ bool GrantVip(int client, int duration)
 		return false;
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = %d WHERE uid = %d", P_SQLPRE, GetTime()+duration*86400, NP_Users_UserIdentity(client));
+	FormatEx(m_szQuery, 256, "CALL user_addvip(%d, %d)", NP_Users_UserIdentity(client), duration*86400);
 	return NP_MySQL_SaveDatabase(m_szQuery);
 }
 
@@ -17,7 +17,7 @@ bool DeleteVip(int client)
 		return false;
 
 	char m_szQuery[256];
-	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = %d WHERE uid = %d", P_SQLPRE, 0, NP_Users_UserIdentity(client));
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipexpired = 0 WHERE uid = %d", P_SQLPRE, NP_Users_UserIdentity(client));
 	return NP_MySQL_SaveDatabase(m_szQuery);
 }
 
@@ -85,6 +85,12 @@ public int Native_AddVipPoint(Handle plugin, int numParams)
 public int Native_VipGetPoint(Handle plugin, int numParams)
 {
 	return g_aClient[GetNativeCell(1)][VIPPoint];
+}
+
+public int Native_IsPermanentVIP(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	return (g_aClient[client][Auth][Vip] && g_aClient[client][VIPExpired] == 99999999999) ? 1 : 0;
 }
 
 void VIPConnected(int client)

@@ -64,6 +64,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("NP_Vip_DeleteVip", Native_DeleteVip);
 	CreateNative("NP_Vip_AddVipPoint", Native_AddVipPoint);
 	CreateNative("NP_Vip_GetPoint", Native_VipGetPoint);
+	CreateNative("NP_Vip_IsPermanentVIP", Native_IsPermanentVIP);
 
 	// Stats
 	CreateNative("NP_Stats_TodayOnlineTime",   Native_TodayOnlineTime);
