@@ -42,11 +42,11 @@ BEGIN
 
 	IF (t_vip > p_nowTime) THEN
 		SET b_vip = 1;
+		SELECT MAX(a.level) INTO tviplevel FROM np_viplevel a WHERE t_vippoint >= a.point;
 	ELSE
 		SET b_vip = 0;
+		SET tviplevel = 0;
 	END IF;
-
-	SELECT MAX(a.level) INTO tviplevel FROM np_viplevel a WHERE t_vippoint >= a.point;
 
 	UPDATE `np_users` SET vip = b_vip, viplevel = tviplevel WHERE uid = puid;
 
