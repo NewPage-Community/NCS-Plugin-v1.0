@@ -447,6 +447,9 @@ public Action Command_RconData(int args)
 
 void RconProtect(ConVar convar, const char[] oldValue, const char[] newValue)
 {
+	if (!strcmp(newValue, g_szRconPswd))
+		return;
+		
 	PrintToServer("RconProtect : %s -> %s", oldValue, newValue);
 	SetConVarString(convar, g_szRconPswd, false, false);
 }

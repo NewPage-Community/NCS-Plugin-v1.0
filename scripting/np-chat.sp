@@ -298,6 +298,9 @@ void AllChatProcess(const char[] data)
 
 void ProcessChatName(int client, char[] name, int size)
 {
+	if (!IsValidClient(client))
+		return;
+
 	char tagName[32], grpName[32];
 
 	NP_Users_GetName(client, name, size);
