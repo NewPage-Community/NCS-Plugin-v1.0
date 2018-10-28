@@ -105,7 +105,7 @@ void VIPConnected(int client)
 		NP_AllChat_Msg(Custom, "会员", msg);
 	}
 
-	PrintToChatAll("欢迎会员 \x02%s 加入服务器！", g_aClient[client][Name]);
+	CPrintToChatAll("{green}欢迎会员 {red}%s{green} 加入服务器！", g_aClient[client][Name]);
 }
 
 void VIPSigned(int client)

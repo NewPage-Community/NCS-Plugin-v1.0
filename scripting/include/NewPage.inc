@@ -12,7 +12,7 @@
 #define _NewPage_Core_Include_
 
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.3"
+#define P_VERSION "Alpha-v3.4"
 #define P_URLS "https://new-page.xyz"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"
@@ -302,5 +302,29 @@ stock void ProcessColorString(char[] message, int maxLen)
 		ReplaceString(message, maxLen, "{blue}",        "\x0C", false);
 		ReplaceString(message, maxLen, "{purple}",      "\x0E", false);
 		ReplaceString(message, maxLen, "{darkorange}",  "\x0F", false);
+	}
+}
+
+stock void CPrintToChat(int client, const char[] format, any...)
+{
+	char buffer[254];
+	VFormat(buffer, sizeof(buffer), format, 3);
+	ProcessColorString(buffer, sizeof(buffer));
+	PrintToChat(client, "%s", buffer);
+}
+
+stock void CPrintToChatAll(const char[] format, any...)
+{
+	char buffer[254];
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, sizeof(buffer), format, 2);
+			ProcessColorString(buffer, sizeof(buffer));
+			PrintToChat(i, "%s", buffer);
+		}
 	}
 }

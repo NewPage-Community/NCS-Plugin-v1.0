@@ -39,15 +39,22 @@ void MoneySigned(int client)
 {
 	int money = g_cSignMoney.IntValue;
 	int VIPmoney = g_cSignVIPMoney.IntValue;
+	int OPmoney = g_cSignOPMoney.IntValue;
 	if (NP_Vip_IsVIP(client) && VIPmoney > 0)
 	{
 		if (GiveClientMoney(client, VIPmoney))
 			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", VIPmoney);
 	}
-	else if(money > 0)
+	else if (money > 0)
 	{
 		if (GiveClientMoney(client, money))
 			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", money);
+	}
+
+	if (NP_Users_IsAuthorized(client, Ctb) || NP_Users_IsAuthorized(client, Opt) || NP_Users_IsAuthorized(client, Adm) || NP_Users_IsAuthorized(client, Own))
+	{
+		if (GiveClientMoney(client, OPmoney))
+			PrintToChat(client, "\x04[提示] \x01管理每日工资\x05%d\x01元！", OPmoney);
 	}
 }
 

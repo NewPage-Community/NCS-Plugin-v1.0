@@ -27,7 +27,8 @@ ConVar g_cSignTipsTimer,
 	g_cSignVIPMoney,
 	g_cSignVIPPoint,
 	g_cVIPOnlineReward,
-	g_cVIPOnlineMaxReward;
+	g_cVIPOnlineMaxReward,
+	g_cSignOPMoney;
 
 any g_aClient[MAXPLAYERS+1][client_Info];
 
@@ -165,6 +166,7 @@ public void OnPluginStart()
 	g_cSignVIPPoint = CreateConVar("np_user_sign_givevippoint", "10", "签到奖励会员经验", 0, true, 0.0);
 	g_cVIPOnlineReward = CreateConVar("np_user_vip_onlinereward", "1", "会员每小时增加的成长值", 0, true, 0.0);
 	g_cVIPOnlineMaxReward = CreateConVar("np_user_vip_onlinemaxreward", "12", "会员每天增加的成长值上限", 0, true, 0.0);
+	g_cSignOPMoney = CreateConVar("np_user_sign_opmoney", "100", "管理工资", 0, true, 0.0);
 }
 
 // get group name

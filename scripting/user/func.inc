@@ -172,7 +172,7 @@ public Action Timer_SignTips(Handle timer, int client)
 	{
 		if (GetDay() > g_aClient[client][SignDate] && IsClientInGame(client))
 		{
-			PrintToChat(client,"\x04[提示] \x04您今天还未签到!聊天输入 \x05!qd \x04每日可获得软妹币!");
+			CPrintToChat(client,"\x04[提示] 您今天还未签到!聊天输入 {olive}!qd{default} 每日可获得软妹币!");
 			PrintHintText(client, "您今天还未签到! 聊天输入 !qd 每日可获得软妹币!");
 		}
 	}
