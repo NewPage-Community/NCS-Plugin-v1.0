@@ -118,7 +118,7 @@ void LoadSkin()
 
 public void NP_OnClientDataChecked(int client, int UserIdentity)
 {
-	CreateRequest(GetSkinCacheCallback, "query.php", "\"SQL\":\"SELECT `uid`, skin_uid FROM np_skins_cache WHERE `uid` = %d\"", UserIdentity);
+	CreateRequest(GetSkinCacheCallback, "skin.php", "\"GetCache\":1, \"UID\":\"%d\"", UserIdentity);
 }
 
 void GetSkinCacheCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
@@ -230,17 +230,23 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int param1, int param
 		if(!IsValidClient(param1))
 			return;
 
-		char skin_uid[32], handle[32], buffer[256];
+		char skin_uid[32], handle[32];
 		menu.GetItem(param2, skin_uid, 32, _, handle, 32);
 
 		// Save model
 		strcopy(g_iClientSkinCache[param1], 32, skin_uid);
-		Format(buffer, 256, "UPDATE %s_skins_cache SET skin_uid = '%s' WHERE `uid` = %d", P_SQLPRE, skin_uid, NP_Users_UserIdentity(param1));
-		NP_MySQL_SaveDatabase(buffer);
+		CreateRequest(SetSkinCacheCallback, "skin.php", "\"SetCache\":\"%s\", \"UID\":\"%d\"",skin_uid , NP_Users_UserIdentity(param1));
 	
 		if(IsPlayerAlive(param1))
 			SetModel(param1);
 	}
+}
+
+void SetSkinCacheCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
+{
+	if(!CheckRequest(success, error, request, response, method, "Skin", "SetSkinCacheCallback"))
+		return;
+	delete request;
 }
 
 int GetSkinIndex(const char[] skin_uid)
