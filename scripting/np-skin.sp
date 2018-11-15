@@ -52,22 +52,25 @@ public void OnPluginStart()
 
 public void OnMapStart()
 {
-	LoadSkin();
-
 	PrecacheModel(D_MODEL, true);
 	PrecacheModel(D_ARM, true);
 }
 
+public void NP_Core_OnInitialized(int serverId, int modId)
+{
+	LoadSkin();
+}
+
 void LoadSkin()
 {
-	if (NP_MySQL_IsConnected())
+	if (!NP_MySQL_IsConnected())
 	{
 		NP_Core_LogError("Skin", "LoadSkin", "Database is not ready!");
 		CreateTimer(5.0, Timer_Restart);
 		g_bIsReady = false;
 		return;
-	}	
-
+	}
+	
 	Database mySQL = NP_MySQL_GetDatabase();
 
 	DBResultSet skin = SQL_Query(mySQL, "SELECT * FROM np_skins ORDER BY uid ASC;");
@@ -107,8 +110,8 @@ void LoadSkin()
 
 		// Precache Model
 		PrecacheModel(g_skins[iskins][model], true);
-		if (strlen(g_skins[iskins][arm]) > 3 && FileExists(g_skins[iskins][arm], true))
-			PrecacheModel(g_skins[iskins][arm], true);
+		//if (strlen(g_skins[iskins][arm]) > 3 && FileExists(g_skins[iskins][arm], true))
+			//PrecacheModel(g_skins[iskins][arm], true);
 
 		iskins++;
 	}
@@ -118,7 +121,7 @@ void LoadSkin()
 
 public void NP_OnClientDataChecked(int client, int UserIdentity)
 {
-	CreateRequest(GetSkinCacheCallback, "skin.php", "\"GetCache\":1, \"UID\":\"%d\"", UserIdentity);
+	CreateRequest(GetSkinCacheCallback, "skin.php", "\"GetCache\":1, \"UID\":%d", UserIdentity);
 }
 
 void GetSkinCacheCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
@@ -167,22 +170,15 @@ public Action Timer_SetModel(Handle timer, int client)
 {
 	if(!IsClientInGame(client) || !IsPlayerAlive(client))
 		return Plugin_Stop;
-	
-	//get cache skin uid	
-	int index = GetSkinIndex(g_iClientSkinCache[client]);
-	
-	if(!index)
+
+	if(!strcmp(g_iClientSkinCache[client], "default"))
 	{
 		SetEntityModel(client, D_MODEL);
-		SetEntPropString(client, Prop_Send, "m_hViewModel", D_ARM);
 	}
 	else
 	{
+		int index = GetSkinIndex(g_iClientSkinCache[client]);
 		SetEntityModel(client, g_skins[index][model]);
-		if(strlen(g_skins[index][arm]) > 3 && IsModelPrecached(g_skins[index][arm]))
-			SetEntPropString(client, Prop_Send, "m_hViewModel", g_skins[index][arm]);
-		else
-			SetEntPropString(client, Prop_Send, "m_hViewModel", D_ARM);
 	}
 	
 	return Plugin_Stop;
