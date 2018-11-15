@@ -329,7 +329,7 @@ stock void CPrintToChatAll(const char[] format, any...)
 	}
 }
 
-bool IsClientOP(int client)
+stock bool IsClientOP(int client)
 {
 	return NP_Users_IsAuthorized(client, Ctb) || NP_Users_IsAuthorized(client, Opt) || NP_Users_IsAuthorized(client, Adm) || NP_Users_IsAuthorized(client, Own);
 }
