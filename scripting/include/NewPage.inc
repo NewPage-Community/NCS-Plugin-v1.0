@@ -12,11 +12,11 @@
 #define _NewPage_Core_Include_
 
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.4"
+#define P_VERSION "Alpha-v3.5"
 #define P_URLS "https://new-page.xyz"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"
-#define P_APIURL "http://127.0.0.1"
+#define P_APIURL "http://127.0.0.1/ncs"
 #define P_APIPORT 83
 
 #include <system2>
@@ -327,4 +327,9 @@ stock void CPrintToChatAll(const char[] format, any...)
 			PrintToChat(i, "%s", buffer);
 		}
 	}
+}
+
+bool IsClientOP(int client)
+{
+	return NP_Users_IsAuthorized(client, Ctb) || NP_Users_IsAuthorized(client, Opt) || NP_Users_IsAuthorized(client, Adm) || NP_Users_IsAuthorized(client, Own);
 }
