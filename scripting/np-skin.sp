@@ -102,15 +102,17 @@ void LoadSkin()
 		skin.FetchString(4, g_skins[iskins][model], PLATFORM_MAX_PATH);
 		skin.FetchString(5, g_skins[iskins][arm], PLATFORM_MAX_PATH);
 		g_skins[iskins][personid] = skin.FetchInt(6);
-		
-		SetTrieValue(SkinIndex, g_skins[iskins][uid], iskins, true);
 
-		// Precache Model
-		if (!PrecacheModel(g_skins[iskins][model], true))
+		if (!FileExists(g_skins[iskins][model], true))
 		{
 			NP_Core_LogError("Skin", "LoadSkin", "Can't precache Model! -> %s", g_skins[iskins][model]);
 			continue;
 		}
+		
+		SetTrieValue(SkinIndex, g_skins[iskins][uid], iskins, true);
+
+		// Precache Model
+		PrecacheModel(g_skins[iskins][model], true);
 		//if (strlen(g_skins[iskins][arm]) > 3 && FileExists(g_skins[iskins][arm], true))
 			//PrecacheModel(g_skins[iskins][arm], true);
 
@@ -227,8 +229,8 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int param1, int param
 		if(!IsValidClient(param1))
 			return;
 
-		char skin_uid[32], handle[32];
-		menu.GetItem(param2, skin_uid, 32, _, handle, 32);
+		char skin_uid[32], skin_name[32];
+		menu.GetItem(param2, skin_uid, 32, _, skin_name, 32);
 
 		// Save model
 		strcopy(g_iClientSkinCache[param1], 32, skin_uid);
@@ -236,6 +238,8 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int param1, int param
 	
 		if(IsPlayerAlive(param1))
 			SetModel(param1);
+
+		CPrintToChat(param1, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！", skin_name);
 	}
 }
 
