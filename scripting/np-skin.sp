@@ -104,7 +104,10 @@ void LoadSkin()
 		g_skins[iskins][personid] = skin.FetchInt(6);
 
 		if (!FileExists(g_skins[iskins][model]))
+		{
+			NP_Core_LogError("Skin", "LoadSkin", "Model isn't exist! -> %s", g_skins[iskins][model]);
 			continue;
+		}	
 		
 		SetTrieValue(SkinIndex, g_skins[iskins][uid], iskins, true);
 
