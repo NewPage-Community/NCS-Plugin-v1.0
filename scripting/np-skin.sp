@@ -102,17 +102,15 @@ void LoadSkin()
 		skin.FetchString(4, g_skins[iskins][model], PLATFORM_MAX_PATH);
 		skin.FetchString(5, g_skins[iskins][arm], PLATFORM_MAX_PATH);
 		g_skins[iskins][personid] = skin.FetchInt(6);
-
-		if (!FileExists(g_skins[iskins][model]))
-		{
-			NP_Core_LogError("Skin", "LoadSkin", "Model isn't exist! -> %s", g_skins[iskins][model]);
-			continue;
-		}	
 		
 		SetTrieValue(SkinIndex, g_skins[iskins][uid], iskins, true);
 
 		// Precache Model
-		PrecacheModel(g_skins[iskins][model], true);
+		if (!PrecacheModel(g_skins[iskins][model], true))
+		{
+			NP_Core_LogError("Skin", "LoadSkin", "Can't precache Model! -> %s", g_skins[iskins][model]);
+			continue;
+		}
 		//if (strlen(g_skins[iskins][arm]) > 3 && FileExists(g_skins[iskins][arm], true))
 			//PrecacheModel(g_skins[iskins][arm], true);
 
