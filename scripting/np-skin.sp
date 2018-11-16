@@ -8,9 +8,6 @@
 #define COOKIE_ANY  2
 #define MAX_SKINS 64
 
-#define D_MODEL "models/characters/security_light.mdl"
-#define D_ARM "models/weapons/v_hands_sec_l.mdl"
-
 enum Skin
 {
 	String:uid[32],
@@ -27,6 +24,10 @@ int iskins = 0;
 bool g_bIsReady = false;
 StringMap SkinIndex;
 char g_iClientSkinCache[MAXPLAYERS+1][32];
+
+// Ins
+int g_iPlayerLastKnife[49+1] = {-1, ...};
+int g_iOffsetMyWeapons = -1;
 
 #define P_NAME P_PRE ... " - Skin"
 #define P_DESC "Skin function plugin"
@@ -47,18 +48,36 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_model", Command_SkinsMenu);
 	RegConsoleCmd("sm_models", Command_SkinsMenu);
 
-	HookEventEx("player_spawn", Event_PlayerSpawn, EventHookMode_Pre);	
+	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Pre);
+
+	g_iOffsetMyWeapons = FindSendPropInfo("CINSPlayer", "m_hMyWeapons");
+	if (g_iOffsetMyWeapons == -1)
+		LogError("Offset Error: Unable to find Offset for \"m_hMyWeapons\"");
 }
 
 public void OnMapStart()
 {
-	PrecacheModel(D_MODEL, true);
-	PrecacheModel(D_ARM, true);
+	LoadSkin();
+
+	CreateTimer(0.1, ThinkTimer, _, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
 }
 
-public void NP_Core_OnInitialized(int serverId, int modId)
+public Action Event_PlayerSpawn(Event event, const char[] name1, bool dontBroadcast)
 {
-	LoadSkin();
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (client < 1 || client > MaxClients || !IsClientInGame(client) || GetClientTeam(client) != 2)
+		return Plugin_Continue;
+
+	// #Resupply Check
+	int iKnife = GetPlayerWeaponByName(client, "weapon_knife");
+	if (iKnife <= MaxClients || !IsValidEdict(iKnife))
+		iKnife = GivePlayerItem(client, "weapon_knife");
+	if (iKnife > MaxClients && IsValidEdict(iKnife))
+		g_iPlayerLastKnife[client] = EntIndexToEntRef(iKnife);
+
+	INS_OnPlayerResupplyed(client);
+
+	return Plugin_Continue;
 }
 
 void LoadSkin()
@@ -91,6 +110,8 @@ void LoadSkin()
 	if (SkinIndex != INVALID_HANDLE)
 		SkinIndex.Clear();
 	SkinIndex = new StringMap();
+
+	iskins = 0;
 
 	// uid, name, team, vip, model, arm
 	while (skin.FetchRow())
@@ -152,18 +173,6 @@ void GetSkinCacheCallback(bool success, const char[] error, System2HTTPRequest r
 	delete request;
 }
 
-public Action Event_PlayerSpawn(Event event, const char[] ename, bool dontBroadcast)
-{
-	if (!g_bIsReady)
-		return Plugin_Continue;
-
-	int client = GetClientOfUserId(event.GetInt("userid"));
-
-	CreateTimer(0.2, Timer_SetModel, client);
-
-	return Plugin_Continue;
-}
-
 void SetModel(int client)
 {
 	CreateTimer(0.02, Timer_SetModel, client);
@@ -174,11 +183,7 @@ public Action Timer_SetModel(Handle timer, int client)
 	if(!IsClientInGame(client) || !IsPlayerAlive(client) || IsFakeClient(client))
 		return Plugin_Stop;
 
-	if(!strcmp(g_iClientSkinCache[client], "default") || g_iClientSkinCache[client][0] == '\0')
-	{
-		SetEntityModel(client, D_MODEL);
-	}
-	else
+	if(strcmp(g_iClientSkinCache[client], "default") != 0 && g_iClientSkinCache[client][0] != '\0')
 	{
 		int index = GetSkinIndex(g_iClientSkinCache[client]);
 		SetEntityModel(client, g_skins[index][model]);
@@ -202,19 +207,8 @@ public Action Command_SkinsMenu(int client, int args)
 
 	for (int i = 0; i < iskins; ++i)
 	{
-		if (g_skins[i][personid] != 0) // personal skin
-			if(NP_Users_UserIdentity(client) != g_skins[i][personid])
-				continue;
-
-		if (g_skins[i][vip]) // vip skin
-			if(!NP_Vip_IsVIP(client))
-				continue;
-
-		if (g_skins[i][op]) // op skin
-			if(!IsClientOP(client))
-				continue;
-		
-		menu.AddItem(g_skins[i][uid], g_skins[i][name]);
+		if (SkinAccess(client, i))
+			menu.AddItem(g_skins[i][uid], g_skins[i][name]);
 	}
 
 	menu.Display(client, 60);
@@ -240,7 +234,7 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int param1, int param
 		//if(IsPlayerAlive(param1))
 			//SetModel(param1);
 
-		CPrintToChat(param1, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！", skin_name);
+		CPrintToChat(param1, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！复活生效，可通过 {olive}!tp\x01 查看模型", skin_name);
 	}
 }
 
@@ -263,4 +257,86 @@ int GetSkinIndex(const char[] skin_uid)
 public Action Timer_Restart(Handle timer)
 {
 	LoadSkin();
+}
+
+bool SkinAccess(int client, int skinid)
+{
+	if (NP_Users_IsAuthorized(client, Own)) // All YES!!!!
+		return true;
+	
+	if (g_skins[skinid][personid] != 0) // personal skin
+		if (NP_Users_UserIdentity(client) != g_skins[skinid][personid])
+			return false;
+
+	if (g_skins[skinid][vip]) // vip skin
+		if(!NP_Vip_IsVIP(client) && !IsClientOP(client))
+			return false;
+			
+	if (g_skins[skinid][op]) // op skin
+		if(!IsClientOP(client))
+			return false;
+
+	return true;
+}
+
+public Action ThinkTimer(Handle timer)
+{
+	for (int i = 1;i < MaxClients;i++)
+	{	
+		if (!IsClientInGame(i))
+			continue;
+
+		if (!IsPlayerAlive(i))
+			continue;
+
+		int client = i;
+		if (g_iPlayerLastKnife[client] != -1)
+		{
+			// #Resupply Check
+			new iKnife = GetPlayerWeaponByName(client, "weapon_knife");
+			if (iKnife > MaxClients && IsValidEdict(iKnife))
+				iKnife = EntIndexToEntRef(iKnife);
+			else
+			{
+				iKnife = GivePlayerItem(client, "weapon_knife");
+				if (iKnife <= MaxClients || !IsValidEdict(iKnife))
+					iKnife = -1;
+				else iKnife = EntIndexToEntRef(iKnife);
+			}
+			if (iKnife != -1 && iKnife != g_iPlayerLastKnife[client])
+			{
+				g_iPlayerLastKnife[client] = iKnife;
+				INS_OnPlayerResupplyed(client);
+			}
+		}
+	}
+}
+
+int GetPlayerWeaponByName(int client, const char[] weaponname)
+{
+	if (!IsClientInGame(client) || !IsPlayerAlive(client) || g_iOffsetMyWeapons == -1)
+		return -1;
+
+	for (int i = 0;i < 48;i++)
+	{
+		int weapon = GetEntDataEnt2(client, g_iOffsetMyWeapons+(4*i));
+		if (weapon == -1) break;
+
+		if (!IsValidEntity(weapon) || weapon <= MaxClients)
+			continue;
+
+		char classname[64];
+		GetEntityClassname(weapon, classname, sizeof(classname));
+		if (StrEqual(classname, weaponname, false))
+			return weapon;
+	}
+	return -1;
+}
+
+void INS_OnPlayerResupplyed(int client)
+{
+	if (!g_bIsReady)
+		return;
+
+	CreateTimer(0.5, Timer_SetModel, client);
 }

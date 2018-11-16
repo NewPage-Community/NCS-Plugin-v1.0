@@ -113,12 +113,12 @@ void VIPReward(int client, int onlinetime)
 		if(g_iVIPReward[client] < g_cVIPOnlineMaxReward.IntValue)
 		{
 			char m_szQuery[256];
-			FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipreward = %d WHERE uid = %d", P_SQLPRE, g_iVIPReward[client] + point, NP_Users_UserIdentity(client));
+			FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipreward = %d WHERE uid = %d", P_SQLPRE, g_iVIPReward[client] + reward, NP_Users_UserIdentity(client));
 	
 			if (NP_MySQL_SaveDatabase(m_szQuery))
 			{
-				g_iVIPReward[client] += point;
-				AddVipPoint(client, point);
+				g_iVIPReward[client] += reward;
+				AddVipPoint(client, reward);
 			}
 		}
 	}
