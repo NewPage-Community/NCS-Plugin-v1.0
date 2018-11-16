@@ -89,7 +89,7 @@ void ShowVIPInfo(int client)
 	}
 	else
 	{
-		if (vipExpired == 99999999999)
+		if (NP_Vip_IsPermanentVIP(client))
 			Format(expireTime, 128, "永久");
 		else
 			FormatTime(expireTime, 128, "%Y-%m-%d", vipExpired);
