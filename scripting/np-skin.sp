@@ -171,10 +171,10 @@ void SetModel(int client)
 
 public Action Timer_SetModel(Handle timer, int client)
 {
-	if(!IsClientInGame(client) || !IsPlayerAlive(client))
+	if(!IsClientInGame(client) || !IsPlayerAlive(client) || IsFakeClient(client))
 		return Plugin_Stop;
 
-	if(!strcmp(g_iClientSkinCache[client], "default"))
+	if(!strcmp(g_iClientSkinCache[client], "default") || g_iClientSkinCache[client][0] == '\0')
 	{
 		SetEntityModel(client, D_MODEL);
 	}
@@ -203,7 +203,7 @@ public Action Command_SkinsMenu(int client, int args)
 	for (int i = 0; i < iskins; ++i)
 	{
 		if (g_skins[i][personid] != 0) // personal skin
-			if(NP_Users_UserIdentity(client) == g_skins[i][personid])
+			if(NP_Users_UserIdentity(client) != g_skins[i][personid])
 				continue;
 
 		if (g_skins[i][vip]) // vip skin
@@ -237,8 +237,8 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int param1, int param
 		strcopy(g_iClientSkinCache[param1], 32, skin_uid);
 		CreateRequest(SetSkinCacheCallback, "skin.php", "\"SetCache\":\"%s\", \"UID\":\"%d\"",skin_uid , NP_Users_UserIdentity(param1));
 	
-		if(IsPlayerAlive(param1))
-			SetModel(param1);
+		//if(IsPlayerAlive(param1))
+			//SetModel(param1);
 
 		CPrintToChat(param1, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！", skin_name);
 	}
