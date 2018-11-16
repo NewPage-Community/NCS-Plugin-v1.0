@@ -190,10 +190,10 @@ public Action Timer_SetModel(Handle timer, int client)
 public Action Command_SkinsMenu(int client, int args)
 {
 	if(!IsValidClient(client))
-		return;
+		return Plugin_Handled;
 
 	if (!g_bIsReady)
-		return;
+		return Plugin_Handled;
 
 	Menu menu = new Menu(Menu_SkinSelected);
 	menu.ExitButton = true;
@@ -218,6 +218,7 @@ public Action Command_SkinsMenu(int client, int args)
 	}
 
 	menu.Display(client, 60);
+	return Plugin_Handled;
 }
 
 public int Menu_SkinSelected(Menu menu, MenuAction action, int param1, int param2)
