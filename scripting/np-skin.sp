@@ -1,11 +1,10 @@
 #pragma semicolon 1
 
+#define _Insurgency_
+
 #include <NewPage>
 #include <sdktools_functions>
 
-#define COOKIE_TEs  0
-#define COOKIE_CTs  1
-#define COOKIE_ANY  2
 #define MAX_SKINS 64
 
 enum Skin
@@ -25,12 +24,8 @@ bool g_bIsReady = false;
 StringMap SkinIndex;
 char g_iClientSkinCache[MAXPLAYERS+1][32];
 
-// Ins
-int g_iPlayerLastKnife[49+1] = {-1, ...};
-int g_iOffsetMyWeapons = -1;
-
 #define P_NAME P_PRE ... " - Skin"
-#define P_DESC "Skin function plugin"
+#define P_DESC "Skin plugin - Ins ver"
 
 public Plugin myinfo = 
 {
@@ -47,37 +42,11 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_skins", Command_SkinsMenu);
 	RegConsoleCmd("sm_model", Command_SkinsMenu);
 	RegConsoleCmd("sm_models", Command_SkinsMenu);
-
-	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Pre);
-
-	g_iOffsetMyWeapons = FindSendPropInfo("CINSPlayer", "m_hMyWeapons");
-	if (g_iOffsetMyWeapons == -1)
-		LogError("Offset Error: Unable to find Offset for \"m_hMyWeapons\"");
 }
 
 public void OnMapStart()
 {
 	LoadSkin();
-
-	CreateTimer(0.1, ThinkTimer, _, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
-}
-
-public Action Event_PlayerSpawn(Event event, const char[] name1, bool dontBroadcast)
-{
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (client < 1 || client > MaxClients || !IsClientInGame(client) || GetClientTeam(client) != 2)
-		return Plugin_Continue;
-
-	// #Resupply Check
-	int iKnife = GetPlayerWeaponByName(client, "weapon_knife");
-	if (iKnife <= MaxClients || !IsValidEdict(iKnife))
-		iKnife = GivePlayerItem(client, "weapon_knife");
-	if (iKnife > MaxClients && IsValidEdict(iKnife))
-		g_iPlayerLastKnife[client] = EntIndexToEntRef(iKnife);
-
-	INS_OnPlayerResupplyed(client);
-
-	return Plugin_Continue;
 }
 
 void LoadSkin()
@@ -173,9 +142,9 @@ void GetSkinCacheCallback(bool success, const char[] error, System2HTTPRequest r
 	delete request;
 }
 
-void SetModel(int client)
+public void OnClientDisconnect(int client)
 {
-	CreateTimer(0.02, Timer_SetModel, client);
+	g_iClientSkinCache[client][0] = '\0';
 }
 
 public Action Timer_SetModel(Handle timer, int client)
@@ -279,64 +248,10 @@ bool SkinAccess(int client, int skinid)
 	return true;
 }
 
-public Action ThinkTimer(Handle timer)
-{
-	for (int i = 1;i < MaxClients;i++)
-	{	
-		if (!IsClientInGame(i))
-			continue;
-
-		if (!IsPlayerAlive(i))
-			continue;
-
-		int client = i;
-		if (g_iPlayerLastKnife[client] != -1)
-		{
-			// #Resupply Check
-			new iKnife = GetPlayerWeaponByName(client, "weapon_knife");
-			if (iKnife > MaxClients && IsValidEdict(iKnife))
-				iKnife = EntIndexToEntRef(iKnife);
-			else
-			{
-				iKnife = GivePlayerItem(client, "weapon_knife");
-				if (iKnife <= MaxClients || !IsValidEdict(iKnife))
-					iKnife = -1;
-				else iKnife = EntIndexToEntRef(iKnife);
-			}
-			if (iKnife != -1 && iKnife != g_iPlayerLastKnife[client])
-			{
-				g_iPlayerLastKnife[client] = iKnife;
-				INS_OnPlayerResupplyed(client);
-			}
-		}
-	}
-}
-
-int GetPlayerWeaponByName(int client, const char[] weaponname)
-{
-	if (!IsClientInGame(client) || !IsPlayerAlive(client) || g_iOffsetMyWeapons == -1)
-		return -1;
-
-	for (int i = 0;i < 48;i++)
-	{
-		int weapon = GetEntDataEnt2(client, g_iOffsetMyWeapons+(4*i));
-		if (weapon == -1) break;
-
-		if (!IsValidEntity(weapon) || weapon <= MaxClients)
-			continue;
-
-		char classname[64];
-		GetEntityClassname(weapon, classname, sizeof(classname));
-		if (StrEqual(classname, weaponname, false))
-			return weapon;
-	}
-	return -1;
-}
-
-void INS_OnPlayerResupplyed(int client)
+public void NP_Ins_OnPlayerResupplyed(int client)
 {
 	if (!g_bIsReady)
 		return;
 
-	CreateTimer(0.5, Timer_SetModel, client);
+	CreateTimer(0.2, Timer_SetModel, client);
 }

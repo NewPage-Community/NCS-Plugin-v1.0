@@ -24,6 +24,10 @@
 #include <NewPage/chat>
 #include <NewPage/user>
 
+#if defined _Insurgency_
+	#include <NewPage/ins>
+#endif
+
 forward void NP_Core_OnInitialized(int serverId, int modId);
 
 // core
