@@ -124,7 +124,7 @@ void GetSkinCacheCallback(bool success, const char[] error, System2HTTPRequest r
 
 	char[] content = new char[response.ContentLength + 1];
 	response.GetContent(content, response.ContentLength + 1);
-		
+
 	Handle json;
 	if ((json = json_load(content)) == INVALID_HANDLE)
 	{
@@ -203,7 +203,7 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int param1, int param
 		//if(IsPlayerAlive(param1))
 			//SetModel(param1);
 
-		CPrintToChat(param1, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！复活生效，可通过 {olive}!tp\x01 查看模型", skin_name);
+		CPrintToChat(param1, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！部署生效，可通过 {olive}!tp\x01 查看模型", skin_name);
 	}
 }
 

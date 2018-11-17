@@ -34,7 +34,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	g_hOnPlayerResupplyed = CreateGlobalForward("NP_Ins_OnPlayerResupplyed", ET_Ignore, Param_Cell);
+
 	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Pre);
+	HookEvent("round_freeze_end", Event_RoundFreezeEnd);
 
 	g_iOffsetMyWeapons = FindSendPropInfo("CINSPlayer", "m_hMyWeapons");
 	if (g_iOffsetMyWeapons == -1)
@@ -44,6 +46,34 @@ public void OnPluginStart()
 public void OnMapStart()
 {
 	CreateTimer(0.1, ThinkTimer, _, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
+
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		if (!IsClientInGame(client)) continue;
+
+		if (GetClientTeam(client) > 1)
+		{
+			if (IsPlayerAlive(client))
+			{
+				// #Resupply Check
+				new iKnife = GetPlayerWeaponByName(client, "weapon_knife");
+				if (iKnife > MaxClients && IsValidEdict(iKnife))
+					iKnife = EntIndexToEntRef(iKnife);
+				else
+				{
+					iKnife = GivePlayerItem(client, "weapon_knife");
+					if (iKnife <= MaxClients || !IsValidEdict(iKnife))
+						iKnife = -1;
+					else iKnife = EntIndexToEntRef(iKnife);
+				}
+				if (iKnife != -1)
+				{
+					g_iPlayerLastKnife[client] = iKnife;
+					INS_OnPlayerResupplyed(client);
+				}
+			}
+		}
+	}
 }
 
 public Action Event_PlayerSpawn(Event event, const char[] name1, bool dontBroadcast)
@@ -51,6 +81,8 @@ public Action Event_PlayerSpawn(Event event, const char[] name1, bool dontBroadc
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client < 1 || client > MaxClients || !IsClientInGame(client) || GetClientTeam(client) != 2)
 		return Plugin_Continue;
+
+	g_iPlayerLastKnife[client] = -1;
 
 	// #Resupply Check
 	int iKnife = GetPlayerWeaponByName(client, "weapon_knife");
@@ -92,6 +124,37 @@ public Action ThinkTimer(Handle timer)
 			{
 				g_iPlayerLastKnife[client] = iKnife;
 				INS_OnPlayerResupplyed(client);
+			}
+		}
+	}
+}
+
+public Action Event_RoundFreezeEnd(Handle event, const char[] name, bool dontBroadcast)
+{
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		if (!IsClientInGame(client)) continue;
+
+		if (GetClientTeam(client) > 1)
+		{
+			if (IsPlayerAlive(client))
+			{
+				// #Resupply Check
+				new iKnife = GetPlayerWeaponByName(client, "weapon_knife");
+				if (iKnife > MaxClients && IsValidEdict(iKnife))
+					iKnife = EntIndexToEntRef(iKnife);
+				else
+				{
+					iKnife = GivePlayerItem(client, "weapon_knife");
+					if (iKnife <= MaxClients || !IsValidEdict(iKnife))
+						iKnife = -1;
+					else iKnife = EntIndexToEntRef(iKnife);
+				}
+				if (iKnife != -1)
+				{
+					g_iPlayerLastKnife[client] = iKnife;
+					INS_OnPlayerResupplyed(client);
+				}
 			}
 		}
 	}

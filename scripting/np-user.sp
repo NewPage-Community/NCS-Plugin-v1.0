@@ -119,7 +119,7 @@ public int Native_FindUserByID(Handle plugin, int numParams)
 
 	for (int i = 1; i <= MaxClients; i++)
 		if (g_aClient[i][UID] == id)
-			if (IsClientInGame(i))
+			if (IsClientConnected(i))
 				return i;
 
 	return 0;
