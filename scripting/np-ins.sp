@@ -9,6 +9,8 @@
 int g_iPlayerLastKnife[49+1] = {-1, ...};
 int g_iOffsetMyWeapons = -1;
 
+char g_cTestWeapon[32];
+
 Handle g_hOnPlayerResupplyed;
 
 #define P_NAME P_PRE ... " - Ins lib"
@@ -41,6 +43,14 @@ public void OnPluginStart()
 	g_iOffsetMyWeapons = FindSendPropInfo("CINSPlayer", "m_hMyWeapons");
 	if (g_iOffsetMyWeapons == -1)
 		LogError("Offset Error: Unable to find Offset for \"m_hMyWeapons\"");
+
+	char game[32];
+	GetGameFolderName(game, 32);
+
+	if (!strcmp(game, "insurgency"))
+		strcopy(g_cTestWeapon, 32, "weapon_knife");
+	else if (!strcmp(game, "doi"))
+		strcopy(g_cTestWeapon, 32, "weapon_stiletto");
 }
 
 public void OnMapStart()
@@ -56,12 +66,12 @@ public void OnMapStart()
 			if (IsPlayerAlive(client))
 			{
 				// #Resupply Check
-				new iKnife = GetPlayerWeaponByName(client, "weapon_knife");
+				new iKnife = GetPlayerWeaponByName(client, g_cTestWeapon);
 				if (iKnife > MaxClients && IsValidEdict(iKnife))
 					iKnife = EntIndexToEntRef(iKnife);
 				else
 				{
-					iKnife = GivePlayerItem(client, "weapon_knife");
+					iKnife = GivePlayerItem(client, g_cTestWeapon);
 					if (iKnife <= MaxClients || !IsValidEdict(iKnife))
 						iKnife = -1;
 					else iKnife = EntIndexToEntRef(iKnife);
@@ -79,15 +89,15 @@ public void OnMapStart()
 public Action Event_PlayerSpawn(Event event, const char[] name1, bool dontBroadcast)
 {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (client < 1 || client > MaxClients || !IsClientInGame(client) || GetClientTeam(client) != 2)
+	if (client < 1 || client > MaxClients || !IsClientInGame(client) || GetClientTeam(client) < 2)
 		return Plugin_Continue;
 
 	g_iPlayerLastKnife[client] = -1;
 
 	// #Resupply Check
-	int iKnife = GetPlayerWeaponByName(client, "weapon_knife");
+	int iKnife = GetPlayerWeaponByName(client, g_cTestWeapon);
 	if (iKnife <= MaxClients || !IsValidEdict(iKnife))
-		iKnife = GivePlayerItem(client, "weapon_knife");
+		iKnife = GivePlayerItem(client, g_cTestWeapon);
 	if (iKnife > MaxClients && IsValidEdict(iKnife))
 		g_iPlayerLastKnife[client] = EntIndexToEntRef(iKnife);
 
@@ -110,12 +120,12 @@ public Action ThinkTimer(Handle timer)
 		if (g_iPlayerLastKnife[client] != -1)
 		{
 			// #Resupply Check
-			int iKnife = GetPlayerWeaponByName(client, "weapon_knife");
+			int iKnife = GetPlayerWeaponByName(client, g_cTestWeapon);
 			if (iKnife > MaxClients && IsValidEdict(iKnife))
 				iKnife = EntIndexToEntRef(iKnife);
 			else
 			{
-				iKnife = GivePlayerItem(client, "weapon_knife");
+				iKnife = GivePlayerItem(client, g_cTestWeapon);
 				if (iKnife <= MaxClients || !IsValidEdict(iKnife))
 					iKnife = -1;
 				else iKnife = EntIndexToEntRef(iKnife);
@@ -140,12 +150,12 @@ public Action Event_RoundFreezeEnd(Handle event, const char[] name, bool dontBro
 			if (IsPlayerAlive(client))
 			{
 				// #Resupply Check
-				new iKnife = GetPlayerWeaponByName(client, "weapon_knife");
+				new iKnife = GetPlayerWeaponByName(client, g_cTestWeapon);
 				if (iKnife > MaxClients && IsValidEdict(iKnife))
 					iKnife = EntIndexToEntRef(iKnife);
 				else
 				{
-					iKnife = GivePlayerItem(client, "weapon_knife");
+					iKnife = GivePlayerItem(client, g_cTestWeapon);
 					if (iKnife <= MaxClients || !IsValidEdict(iKnife))
 						iKnife = -1;
 					else iKnife = EntIndexToEntRef(iKnife);
