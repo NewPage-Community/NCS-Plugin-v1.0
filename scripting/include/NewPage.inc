@@ -190,6 +190,7 @@ stock void StringToJson(char[] string, int length)
 {
 	ReplaceString(string, length, "\\", "\\\\");
 	ReplaceString(string, length, "\"", "\\\"");
+	TerminateNameUTF8(string);
 }
 
 stock void DrawPanelTextEx(Handle panel, const char[] fmt, any ...)
@@ -336,4 +337,23 @@ stock void CPrintToChatAll(const char[] format, any...)
 stock bool IsClientOP(int client)
 {
 	return NP_Users_IsAuthorized(client, Ctb) || NP_Users_IsAuthorized(client, Opt) || NP_Users_IsAuthorized(client, Adm) || NP_Users_IsAuthorized(client, Own);
+}
+
+stock void TerminateNameUTF8(char[] name)
+{
+	int len = strlen(name);
+	for(int i = 0; i < len; i++)
+	{
+		int bytes = IsCharMB(name[i]);
+		if(bytes > 1)
+		{
+			if(len - i < bytes)
+			{
+				name[i] = '\0';
+				return;
+			}
+
+			i += bytes - 1;
+		}
+	}
 }
