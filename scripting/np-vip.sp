@@ -6,6 +6,8 @@
 #define P_NAME P_PRE ... " - VIP Function"
 #define P_DESC "VIP Function plugin"
 
+ConVar g_cVipExchange;
+
 //Func
 #include "vip/votekick"
 #include "vip/namecolor"
@@ -28,6 +30,8 @@ public void OnPluginStart()
 
 	RegConsoleCmd("sm_vip", Command_VIPCmd);
 	RegConsoleCmd("sm_vipvotekick", Command_Votekick);
+
+	g_cVipExchange = CreateConVar("np_vip_exchange", "0", "允许VIP兑换", 0, true, 0.0);
 }
 
 public Action Command_VIPCmd(int client, int args)
@@ -49,7 +53,7 @@ public Action Command_VIPCmd(int client, int args)
 	Menu infoMenu = new Menu(MenuHandler_VIPMenu);
 	infoMenu.SetTitle("尊贵的 %s，%s好！", playername, !strcmp(Time, "AM") ? "上午" : "下午");
 	infoMenu.AddItem("FUNC", "会员功能", IsVip ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-	infoMenu.AddItem("GETVIP", "会员兑换", !NP_Vip_IsPermanentVIP(client) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	infoMenu.AddItem("GETVIP", "会员兑换", (!NP_Vip_IsPermanentVIP(client) && g_cVipExchange.BoolValue) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	infoMenu.ExitButton = true;
 	infoMenu.Display(client, 0);
 	return Plugin_Handled;

@@ -1,7 +1,5 @@
 #pragma semicolon 1
 
-#define _Insurgency_
-
 #include <NewPage>
 #include <sdktools_functions>
 
@@ -42,6 +40,8 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_skins", Command_SkinsMenu);
 	RegConsoleCmd("sm_model", Command_SkinsMenu);
 	RegConsoleCmd("sm_models", Command_SkinsMenu);
+
+	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Pre);
 }
 
 public void OnMapStart()
@@ -147,10 +147,10 @@ public void OnClientDisconnect(int client)
 	g_iClientSkinCache[client][0] = '\0';
 }
 
-public Action Timer_SetModel(Handle timer, int client)
+void SetModel(int client)
 {
 	if(!IsClientInGame(client) || !IsPlayerAlive(client) || IsFakeClient(client))
-		return Plugin_Stop;
+		return;
 
 	if(strcmp(g_iClientSkinCache[client], "default") != 0 && g_iClientSkinCache[client][0] != '\0')
 	{
@@ -158,7 +158,7 @@ public Action Timer_SetModel(Handle timer, int client)
 		SetEntityModel(client, g_skins[index][model]);
 	}
 	
-	return Plugin_Stop;
+	return;
 }
 
 public Action Command_SkinsMenu(int client, int args)
@@ -200,10 +200,7 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int param1, int param
 		strcopy(g_iClientSkinCache[param1], 32, skin_uid);
 		CreateRequest(SetSkinCacheCallback, "skin.php", "\"SetCache\":\"%s\", \"UID\":\"%d\"",skin_uid , NP_Users_UserIdentity(param1));
 	
-		//if(IsPlayerAlive(param1))
-			//SetModel(param1);
-
-		CPrintToChat(param1, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！部署生效，可通过 {olive}!tp\x01 查看模型", skin_name);
+		CPrintToChat(param1, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！可通过 {olive}!tp\x01 查看模型", skin_name);
 	}
 }
 
@@ -248,10 +245,32 @@ bool SkinAccess(int client, int skinid)
 	return true;
 }
 
-public void NP_Ins_OnPlayerResupplyed(int client)
+public Action ModelCheck(Handle timer, int client)
 {
-	if (!g_bIsReady)
-		return;
+	if(!IsClientInGame(client) || !IsPlayerAlive(client) || IsFakeClient(client))
+		return Plugin_Stop;
 
-	CreateTimer(0.2, Timer_SetModel, client);
+	int index = GetSkinIndex(g_iClientSkinCache[client]);
+	char sModelPath[128];
+
+	GetEntPropString(client, Prop_Data, "m_ModelName", sModelPath, sizeof(sModelPath));
+
+	if (StrContains(sModelPath, g_skins[index][model], true) == -1)
+	{
+		RequestFrame(SetModel, client);
+	}
+
+	return Plugin_Continue;
+}
+
+public Action Event_PlayerSpawn(Event event, const char[] name1, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (client < 1 || client > MaxClients || !IsClientInGame(client) || GetClientTeam(client) < 2)
+		return Plugin_Continue;
+
+	RequestFrame(SetModel, client);
+	CreateTimer(0.1, ModelCheck, client, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
+
+	return Plugin_Continue;
 }
