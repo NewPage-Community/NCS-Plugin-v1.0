@@ -12,7 +12,7 @@
 #define _NewPage_Core_Include_
 
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.5"
+#define P_VERSION "Alpha-v3.6"
 #define P_URLS "https://new-page.xyz"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"
@@ -209,10 +209,10 @@ stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[]
 
 stock void CreateRequest(System2HTTPResponseCallback callback, const char[] url, const char[] data, any ...)
 {
-	char vf[256], rcon[24], md5[33];
+	char vf[1024], rcon[24], md5[33];
 	FindConVar("rcon_password").GetString(rcon, 24);
 	System2_GetStringMD5(rcon, md5, 33);
-	VFormat(vf, 256, data, 4);
+	VFormat(vf, 1024, data, 4);
 
 	System2HTTPRequest httpRequest = new System2HTTPRequest(callback, "%s/%s", P_APIURL, url);
 	httpRequest.Timeout = 30;
@@ -237,10 +237,10 @@ stock bool CheckRequest(bool success, const char[] error, System2HTTPRequest req
 	char[] content = new char[response.ContentLength + 1];
 	response.GetContent(content, response.ContentLength + 1);
 
-	char source[512];
-	request.GetData(source, 512);
+	char source[1024];
+	request.GetData(source, 1024);
 
-	if (StringToInt(content) == -1)
+	if (StrContains(content, "!###ERROR###!") != -1 || StrContains(content, "<b>Fatal error</b>") != -1 || StrContains(content, "<b>Warning</b>") != -1)
 	{
 		NP_Core_LogError(module, func, "ERROR: Couldn't sent data -> (%s) (%s)", source, content);
 		delete request;
