@@ -12,7 +12,7 @@
 #define _NewPage_Core_Include_
 
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.6"
+#define P_VERSION "Alpha-v3.7"
 #define P_URLS "https://new-page.xyz"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"
