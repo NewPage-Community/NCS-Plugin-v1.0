@@ -53,7 +53,7 @@ public Action Command_VIPCmd(int client, int args)
 	Menu infoMenu = new Menu(MenuHandler_VIPMenu);
 	infoMenu.SetTitle("尊贵的 %s，%s好！", playername, !strcmp(Time, "AM") ? "上午" : "下午");
 	infoMenu.AddItem("FUNC", "会员功能", IsVip ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-	infoMenu.AddItem("GETVIP", "会员兑换", (!NP_Vip_IsPermanentVIP(client) && g_cVipExchange.BoolValue) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	infoMenu.AddItem("GETVIP", "会员兑换", (g_cVipExchange.BoolValue && !IsVip) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	infoMenu.ExitButton = true;
 	infoMenu.Display(client, 0);
 	return Plugin_Handled;
