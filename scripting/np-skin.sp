@@ -65,7 +65,7 @@ public void OnPluginStart()
 
 public void OnMapStart()
 {
-	LoadSkin();
+	CreateTimer(5.0, Timer_Restart); // Delay for waiting map started
 }
 
 void LoadSkin()
