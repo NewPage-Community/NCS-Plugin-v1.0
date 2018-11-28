@@ -143,7 +143,7 @@ public Action OnSayText2(UserMsg msg_id, BfRead msg, const int[] players, int pl
 	ProcessChatName(iSender, sName, MAXLENGTH_NAME);
 
 	//Process colors.
-	ProcessColorString(sName, MAXLENGTH_NAME);
+	ProcessColorString(sName, MAXLENGTH_NAME, GetClientTeam(iSender));
 
 	DataPack hPack = new DataPack();
 	hPack.WriteCell(iSender);
@@ -324,26 +324,26 @@ void ProcessChatName(int client, char[] name, int size)
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Own))
 	{
-		Format(name, size, "{red}<服主>{name} %s" , name);
+		Format(name, size, "{red}<服主>{name} %s", name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Adm))
 	{
-		Format(name, size, "{green}<ADMIN>{name} %s" , name);
+		Format(name, size, "{green}<ADMIN>{name} %s", name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Opt))
 	{
-		Format(name, size, "{green}<管理>{name} %s" , name);
+		Format(name, size, "{green}<管理>{name} %s", name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Ctb))
 	{
-		Format(name, size, "{green}<员工>{name} %s" , name);
+		Format(name, size, "{green}<员工>{name} %s", name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Vip))
 	{
-		Format(name, size, "{yellow}<会员>{name} %s" , name);
+		Format(name, size, "{yellow}<会员>{name} %s", name);
 	}
 	else if (NP_Users_IsAuthorized(client, Authentication:Spt))
 	{
-		Format(name, size, "{pink}<捐助>{name} %s" , name);
+		Format(name, size, "{pink}<捐助>{name} %s", name);
 	}
 }

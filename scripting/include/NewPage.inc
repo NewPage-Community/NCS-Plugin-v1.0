@@ -256,7 +256,7 @@ public Action Timer_RetryRequest(Handle timer, System2HTTPRequest request)
 	return Plugin_Stop;
 }
 
-stock void ProcessColorString(char[] message, int maxLen)
+stock void ProcessColorString(char[] message, int maxLen, int team = 0)
 {
 	char game[32];
 	GetGameFolderName(game, 32);
@@ -283,7 +283,65 @@ stock void ProcessColorString(char[] message, int maxLen)
 		ReplaceString(message, maxLen, "{blue}",        "\x0899CCFFFF", false);
 		ReplaceString(message, maxLen, "{purple}",      "\x08800080FF", false);
 		ReplaceString(message, maxLen, "{darkorange}",  "\x08FF8C00FF", false);
-		ReplaceString(message, maxLen, "{name}",		"\x05", false);
+		switch(team)
+    	{
+      		case 3 : ReplaceString(message, maxLen, "{name}", "\x08AC4029FF", false);
+       		case 2 : ReplaceString(message, maxLen, "{name}", "\x0884961CFF", false);
+        	default: ReplaceString(message, maxLen, "{name}", "\x08F2EBD8FF", false);
+		}
+	}
+	else if (!strcmp(game, "csgo"))
+	{
+		ReplaceString(message, maxLen, "{normal}",      "\x01", false);
+		ReplaceString(message, maxLen, "{default}",     "\x01", false);
+		ReplaceString(message, maxLen, "{white}",       "\x01", false);
+		ReplaceString(message, maxLen, "{darkred}",     "\x02", false);
+		ReplaceString(message, maxLen, "{pink}",        "\x03", false);
+		ReplaceString(message, maxLen, "{green}",       "\x04", false);
+		ReplaceString(message, maxLen, "{lime}",        "\x05", false);
+		ReplaceString(message, maxLen, "{yellow}",      "\x05", false);
+		ReplaceString(message, maxLen, "{lightgreen}",  "\x06", false);
+		ReplaceString(message, maxLen, "{lightred}",    "\x07", false);
+		ReplaceString(message, maxLen, "{red}",         "\x07", false);
+		ReplaceString(message, maxLen, "{gray}",        "\x08", false);
+		ReplaceString(message, maxLen, "{grey}",        "\x08", false);
+		ReplaceString(message, maxLen, "{olive}",       "\x09", false);
+		ReplaceString(message, maxLen, "{orange}",      "\x10", false);
+		ReplaceString(message, maxLen, "{silver}",      "\x0A", false);
+		ReplaceString(message, maxLen, "{lightblue}",   "\x0B", false);
+		ReplaceString(message, maxLen, "{blue}",        "\x0C", false);
+		ReplaceString(message, maxLen, "{purple}",      "\x0E", false);
+		ReplaceString(message, maxLen, "{darkorange}",  "\x0F", false);
+		switch(team)
+    	{
+      		case 3 : ReplaceString(message, maxLen, "{name}", "\x0B", false);
+       		case 2 : ReplaceString(message, maxLen, "{name}", "\x05", false);
+        	default: ReplaceString(message, maxLen, "{name}", "\x01", false);
+		}
+	}
+	else if (!strcmp(game, "cstrike"))
+	{
+		ReplaceString(message, maxLen, "{normal}",      "\x01", false);
+		ReplaceString(message, maxLen, "{default}",     "\x01", false);
+		ReplaceString(message, maxLen, "{white}",       "\x07FFFFFF", false);
+		ReplaceString(message, maxLen, "{darkred}",     "\x078B0000", false);
+		ReplaceString(message, maxLen, "{pink}",        "\x07FF1493", false);
+		ReplaceString(message, maxLen, "{green}",       "\x073EFF3E", false);
+		ReplaceString(message, maxLen, "{lime}",        "\x0700FF00", false);
+		ReplaceString(message, maxLen, "{yellow}",      "\x07FFFF00", false);
+		ReplaceString(message, maxLen, "{lightgreen}",  "\x0799FF99", false);
+		//ReplaceString(message, maxLen, "{lightred}",    "\x07", false);
+		ReplaceString(message, maxLen, "{red}",         "\x07FF4040", false);
+		ReplaceString(message, maxLen, "{gray}",        "\x07CCCCCC", false);
+		ReplaceString(message, maxLen, "{grey}",        "\x07CCCCCC", false);
+		ReplaceString(message, maxLen, "{olive}",       "\x079EC34F", false);
+		ReplaceString(message, maxLen, "{orange}",      "\x07FFA500", false);
+		ReplaceString(message, maxLen, "{silver}",      "\x07C0C0C0", false);
+		ReplaceString(message, maxLen, "{lightblue}",   "\x07ADD8E6", false);
+		ReplaceString(message, maxLen, "{blue}",        "\x0799CCFF", false);
+		ReplaceString(message, maxLen, "{purple}",      "\x07800080", false);
+		ReplaceString(message, maxLen, "{darkorange}",  "\x07FF8C00", false);
+		ReplaceString(message, maxLen, "{name}", 		"\x03", false);
 	}
 	else
 	{
@@ -307,6 +365,7 @@ stock void ProcessColorString(char[] message, int maxLen)
 		ReplaceString(message, maxLen, "{blue}",        "\x0C", false);
 		ReplaceString(message, maxLen, "{purple}",      "\x0E", false);
 		ReplaceString(message, maxLen, "{darkorange}",  "\x0F", false);
+		ReplaceString(message, maxLen, "{name}", 		"\x01", false);
 	}
 }
 
