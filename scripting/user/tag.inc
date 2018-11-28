@@ -72,7 +72,7 @@ void ChangePlayerPreName(int client)
 
 public Action Timer_ChangeClan(Handle timer, int client)
 {
-	if(!NP_Users_IsAuthLoaded(client))
+	if(!NP_Users_IsAuthLoaded(client) || !IsClientConnected(client))
 		return Plugin_Stop;
 
 	char tag[64];
