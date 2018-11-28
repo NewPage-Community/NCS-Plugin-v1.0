@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <NewPage>
+#include <cstrike>
 #include <sdktools_functions>
 
 #define P_NAME P_PRE ... " - User Manager"

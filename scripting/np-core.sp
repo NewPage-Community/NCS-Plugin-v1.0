@@ -52,7 +52,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	RegPluginLibrary("np-core");
 
 	/* Init plugin */
-	SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
+	ConVar hibernate;
+	if ((hibernate = FindConVar("sv_hibernate_when_empty")) != INVALID_HANDLE)
+		hibernate.SetInt(0);
+	
 	g_Engine = GetEngineVersion();
 	int ip = GetConVarInt(FindConVar("hostip"));
 	FormatEx(g_szServerIp, 24, "%d.%d.%d.%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF);
@@ -334,7 +337,7 @@ void ChangeHostname(char[] hostname)
 void AddNewServer()
 {
 	char m_szQuery[128];
-	FormatEx(m_szQuery, 128, "INSERT INTO `%s_servers` VALUES (DEFAULT, DEFAULT, DEFAULT, '%s', '%d', DEFAULT);", P_SQLPRE, g_szServerIp, g_iServerPort);
+	FormatEx(m_szQuery, 128, "INSERT INTO `%s_servers` VALUES (DEFAULT, DEFAULT, DEFAULT, '%s', '%d', DEFAULT, DEFAULT);", P_SQLPRE, g_szServerIp, g_iServerPort);
 	if(!SQL_FastQuery(g_hSQL, m_szQuery, 128))
 	{
 		char error[256];
