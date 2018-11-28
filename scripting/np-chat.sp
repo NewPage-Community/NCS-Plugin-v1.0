@@ -192,6 +192,11 @@ public void Frame_OnChatMessage_SayText2(DataPack data)
 	if (engine == Engine_CSGO)
 		Format(sBuffer, MAXLENGTH_BUFFER, " %s", sBuffer);
 
+	bool Allowdeadtalk = false;
+	ConVar deadtalk;
+	if ((deadtalk = FindConVar("sv_deadtalk")) != INVALID_HANDLE)
+		Allowdeadtalk = deadtalk.BoolValue;
+
 	//Send the message to clients.
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -200,7 +205,7 @@ public void Frame_OnChatMessage_SayText2(DataPack data)
 			if (StrContains(sFlag, "_All") == -1 && team != GetClientTeam(i))
 				continue;
 
-			if (!FindConVar("sv_deadtalk").BoolValue && IsPlayerAlive(i) && !IsPlayerAlive(iSender))
+			if (!Allowdeadtalk && IsPlayerAlive(i) && !IsPlayerAlive(iSender))
 				continue;
 
 			if (g_Proto)

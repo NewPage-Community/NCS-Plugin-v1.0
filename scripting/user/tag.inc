@@ -30,41 +30,7 @@ void ChangePlayerPreName(int client)
 
 	if (!strcmp(game, "cstrike") || !strcmp(game, "csgo"))
 	{
-		char tag[64];
-
-		if(g_aClient[client][GID] != -1)
-		{
-			char groupName[32];
-			g_aGroupName.GetString(g_aClient[client][GID], groupName, 32);
-			
-			Format(tag, 64, "<%s>", groupName);
-		}
-		else if(g_aClient[client][Auth][Own])
-		{
-			Format(tag, 64, "<服主>");
-		}
-		else if(g_aClient[client][Auth][Adm])
-		{
-			Format(tag, 64, "<ADMIN>");
-		}
-		else if(g_aClient[client][Auth][Opt])
-		{
-			Format(tag, 64, "<管理>");
-		}
-		else if(g_aClient[client][Auth][Ctb])
-		{
-			Format(tag, 64, "<员工>");
-		}
-		else if(g_aClient[client][Auth][Vip])
-		{
-			Format(tag, 64, "<会员>");
-		}
-		else if(g_aClient[client][Auth][Spt])
-		{
-			Format(tag, 64, "<捐助>");
-		}
-
-		CS_SetClientClanTag(client, tag);
+		CreateTimer(5.0, Timer_ChangeClan, client);
 	}
 	else
 	{
@@ -102,4 +68,48 @@ void ChangePlayerPreName(int client)
 	
 	if (!StrEqual(oldName, newName))
 		SetClientName(client, newName);
+}
+
+public Action Timer_ChangeClan(Handle timer, int client)
+{
+	if(!NP_Users_IsAuthLoaded(client))
+		return Plugin_Stop;
+
+	char tag[64];
+
+	if(g_aClient[client][GID] != -1)
+	{
+		char groupName[32];
+		g_aGroupName.GetString(g_aClient[client][GID], groupName, 32);
+		
+		Format(tag, 64, "<%s>", groupName);
+	}
+	else if(g_aClient[client][Auth][Own])
+	{
+		Format(tag, 64, "<服主>");
+	}
+	else if(g_aClient[client][Auth][Adm])
+	{
+		Format(tag, 64, "<ADMIN>");
+	}
+	else if(g_aClient[client][Auth][Opt])
+	{
+		Format(tag, 64, "<管理>");
+	}
+	else if(g_aClient[client][Auth][Ctb])
+	{
+		Format(tag, 64, "<员工>");
+	}
+	else if(g_aClient[client][Auth][Vip])
+	{
+		Format(tag, 64, "<会员>");
+	}
+	else if(g_aClient[client][Auth][Spt])
+	{
+		Format(tag, 64, "<捐助>");
+	}
+
+	CS_SetClientClanTag(client, tag);
+
+	return Plugin_Stop;
 }

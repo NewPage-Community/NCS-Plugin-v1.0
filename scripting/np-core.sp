@@ -244,8 +244,10 @@ void CheckingServer()
 	// we used random rcon password.
 	GenerateRandomString(g_szRconPswd, 24);
 
-	SetConVarString(FindConVar("rcon_password"), g_szRconPswd, false, false);
-	HookConVarChange(FindConVar("rcon_password"), RconProtect);
+	ConVar rcon = FindConVar("rcon_password");
+
+	SetConVarString(rcon, g_szRconPswd, false, false);
+	HookConVarChange(rcon, RconProtect);
 
 	// sync to database
 	FormatEx(m_szQuery, 128, "UPDATE `%s_servers` SET `rcon`='%s' WHERE `sid`='%d';", P_SQLPRE, g_szRconPswd, g_iServerId);
