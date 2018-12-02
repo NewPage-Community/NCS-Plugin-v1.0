@@ -233,7 +233,10 @@ void SetModel(int client)
 	if (strcmp(g_iClientSkinCache[client], "default") != 0 && g_iClientSkinCache[client][0] != '\0')
 	{
 		int index = GetSkinIndex(g_iClientSkinCache[client]);
-		SetEntityModel(client, g_skins[index][model]);
+		if (SkinAccess(client, index))
+			SetEntityModel(client, g_skins[index][model]);
+		else
+			SetSkinCache(client, "default");
 	}
 	
 	return;
@@ -311,11 +314,16 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int client, int slot)
 		menu.GetItem(slot, skin_uid, 32, _, skin_name, 32);
 
 		// Save model
-		strcopy(g_iClientSkinCache[client], 32, skin_uid);
-		CreateRequest(SetSkinCacheCallback, "skin.php", "\"SetCache\":\"%s\", \"UID\":\"%d\"",skin_uid , NP_Users_UserIdentity(client));
+		SetSkinCache(client, skin_uid);
 	
 		CPrintToChat(client, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！可通过 {olive}!tp\x01 查看模型", skin_name);
 	}
+}
+
+void SetSkinCache(int client, const char[] skin_uid)
+{
+	strcopy(g_iClientSkinCache[client], 32, skin_uid);
+	CreateRequest(SetSkinCacheCallback, "skin.php", "\"SetCache\":\"%s\", \"UID\":\"%d\"",skin_uid , NP_Users_UserIdentity(client));
 }
 
 void SetSkinCacheCallback(bool success, const char[] error, System2HTTPRequest request, System2HTTPResponse response, HTTPRequestMethod method)
