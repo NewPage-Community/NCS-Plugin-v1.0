@@ -3,7 +3,7 @@
 #include <NewPage>
 #include <sdktools_functions>
 
-#define MAX_SKINS 64
+#define MAX_SKINS 512
 
 enum BuyPlan
 {
