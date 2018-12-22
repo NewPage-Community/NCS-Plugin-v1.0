@@ -22,17 +22,17 @@ public int MenuHandler_ExchangeVIP(Menu menu, MenuAction action, int client, int
 			if (slot == 0)
 			{
 				if (NP_Vip_GrantVip(client, 7))
-					PrintToChat(client, "\x04[提示]\x01 恭喜你成功兑换 \x047天\x01 会员！");
+					CPrintToChat(client, "\x04[提示]{blue} 恭喜你成功兑换 \x047天{blue} 会员！");
 			}
 			else if (slot == 1)
 			{
 				if (NP_Vip_GrantVip(client, 30))
-					PrintToChat(client, "\x04[提示]\x01 恭喜你成功兑换 \x0430天\x01 会员！");
+					CPrintToChat(client, "\x04[提示]{blue} 恭喜你成功兑换 \x0430天{blue} 会员！");
 			}
 		}
 		else
 		{
-			PrintToChat(client, "\x04[提示]\x01 你没钱钱买东西啦！");
+			CPrintToChat(client, "\x04[提示]{blue} 你没钱钱买东西啦！");
 		}
 	}
 

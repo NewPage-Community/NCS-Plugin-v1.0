@@ -7,7 +7,7 @@ public Action Command_UserInfo(int client, int args)
 
 	if (!NP_Users_IsAuthLoaded(client))
 	{
-		PrintToChat(client, "\x04[提示]\x01 你的账号信息仍未被加载！");
+		CPrintToChat(client, "\x04[系统提示]{blue} 你的账号信息仍未被加载！");
 		return Plugin_Handled;
 	}
 
@@ -55,9 +55,10 @@ void ShowUserInfo(int client)
 
 	panel.SetTitle("个人信息");
 	DrawPanelTextEx(panel, " ");
-	DrawPanelTextEx(panel, "社区个人唯一ID (UID): %d", NP_Users_UserIdentity(client));
+	DrawPanelTextEx(panel, "社区个人唯一身份 (UID): %d", NP_Users_UserIdentity(client));
 	DrawPanelTextEx(panel, "STEAMID 64: %s", steamid);
 	DrawPanelTextEx(panel, "用户组: %s", groupName);
+	DrawPanelTextEx(panel, "今日在线时间: %d 小时", NP_Stats_TodayOnlineTime(client)/3600);
 	DrawPanelTextEx(panel, "在线时间: %d 小时", NP_Stats_TotalOnlineTime(client)/3600);
 	DrawPanelTextEx(panel, "软妹币: %d 元", g_aClient[client][Money]);
 	DrawPanelTextEx(panel, "签到次数: %d", g_aClient[client][SignTimes]);
@@ -129,7 +130,7 @@ public Action Command_Sign(int client, int args)
 
 	if (!NP_Users_IsAuthLoaded(client))
 	{
-		PrintToChat(client, "\x04[提示]\x01 你的账号信息仍未被加载！");
+		CPrintToChat(client, "\x04[系统提示]{blue} 你的账号信息仍未被加载！");
 		return Plugin_Handled;
 	}
 
@@ -137,7 +138,7 @@ public Action Command_Sign(int client, int args)
 
 	if(g_aClient[client][SignDate] >= today)
 	{
-		PrintToChat(client, "\x04[提示]\x01 你已经签到过了！");
+		CPrintToChat(client, "\x04[系统提示]{blue} 你已经签到过了！");
 		return Plugin_Handled;
 	}
 
@@ -146,14 +147,14 @@ public Action Command_Sign(int client, int args)
 	
 	if (!NP_MySQL_SaveDatabase(m_szQuery))
 	{
-		PrintToChat(client, "\x04[提示]\x01 签到失败，请重试！");
+		CPrintToChat(client, "\x04[系统提示]{blue} 签到失败，请重试！");
 		return Plugin_Handled;
 	}
 
 	g_aClient[client][SignTimes]++;
 	g_aClient[client][SignDate] = today;
 
-	PrintToChat(client, "\x04[提示]\x01 签到成功！");
+	CPrintToChat(client, "\x04[系统提示]{blue} 签到成功！");
 
 	MoneySigned(client);
 	VIPSigned(client);
@@ -172,8 +173,8 @@ public Action Timer_SignTips(Handle timer, int client)
 	{
 		if (GetDay() > g_aClient[client][SignDate] && IsClientInGame(client))
 		{
-			CPrintToChat(client,"\x04[提示] 您今天还未签到!聊天输入 {olive}!qd{default} 每日可获得软妹币!");
-			PrintHintText(client, "您今天还未签到! 聊天输入 !qd 每日可获得软妹币!");
+			CPrintToChat(client,"\x04[系统提示]{blue} 您今天还未签到!聊天输入 {olive}!qd{blue} 每日可获得软妹币!");
+			PrintHintText(client, "您今天还未签到! \n聊天输入 !qd 每日可获得软妹币!");
 		}
 	}
 	else

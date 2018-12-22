@@ -41,7 +41,7 @@ public Action Command_VIPCmd(int client, int args)
 
 	if (!NP_Users_IsAuthLoaded(client))
 	{
-		PrintToChat(client, "\x04[提示]\x01 你的账号信息仍未被加载！");
+		CPrintToChat(client, "\x04[系统提示]{blue} 你的账号信息仍未被加载！");
 		return Plugin_Handled;
 	}
 
@@ -82,7 +82,7 @@ void DisplayVIPFunc(int client)
 
 	if (!NP_Vip_IsVIP(client))
 	{
-		PrintToChat(client, "\x04[提示]\x01 你不是会员，无法使用该功能！");
+		CPrintToChat(client, "\x04[系统提示]{blue} 你不是会员，无法使用该功能！");
 		return;
 	}
 

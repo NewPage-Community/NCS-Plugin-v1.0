@@ -127,7 +127,7 @@ void BanCallback(const char[] data)
 	BanClient(target, 10, BANFLAG_AUTHID, kickReason, kickReason);
 	
 	if (IsValidClient(admin))
-		PrintToChat(admin, "\x04[提示] \x02已成功封禁 \x04%s", steamid);
+		PrintToChat(admin, "\x04[系统提示] \x02已成功封禁 \x04%s", steamid);
 
 	char msg[512];
 	FormatEx(msg, 512, "{red}玩家 %s (STEAMID) 已被 %s 封禁，原因：%s", steamid, BanAdminName, BanReason);
@@ -167,7 +167,7 @@ public Action Command_Ban(int client, int args)
 	int target = FindTarget(client, buffer, true);
 	if(target == -1)
 	{
-		PrintToChat(client, "\x04[提示]\x01 目标无效");
+		PrintToChat(client, "\x04[系统提示]\x01 目标无效");
 		return Plugin_Handled;
 	}
 
@@ -175,7 +175,7 @@ public Action Command_Ban(int client, int args)
 	int length = StringToInt(buffer);
 	if(length == 0 && client && !(CheckCommandAccess(client, "sm_unban", ADMFLAG_UNBAN|ADMFLAG_ROOT)))
 	{
-		PrintToChat(client, "\x04[提示]\x01 你没有永久封禁的权限");
+		PrintToChat(client, "\x04[系统提示]\x01 你没有永久封禁的权限");
 		return Plugin_Handled;
 	}
 

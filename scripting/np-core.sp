@@ -403,7 +403,7 @@ void SaveSQLCallback(bool success, const char[] error, System2HTTPRequest reques
 
 public Action Command_Restart(int args)
 {
-	PrintToChatAll("\x04[提示] \x01服务器将进行重启更新!");
+	PrintToChatAll("\x04[服务器提示] \x01服务器将进行重启更新!");
 	PrintCenterTextAll("服务器将进行重启更新!");
 	CreateTimer(1.0, Timer_Restart, 0);
 }
@@ -412,7 +412,7 @@ public Action Timer_Restart(Handle timer, int time)
 {
 	if(time < 10)
 	{
-		PrintToChatAll("\x04[提示] \x01服务器将在 \x04%ds\x01 后重启!", 10 - time);
+		PrintToChatAll("\x04[服务器提示] \x01服务器将在 \x04%ds\x01 后重启!", 10 - time);
 		PrintCenterTextAll("服务器将在 %ds 后重启!", 10 - time);
 		CreateTimer(1.0, Timer_Restart, time + 1);
 		return Plugin_Stop;

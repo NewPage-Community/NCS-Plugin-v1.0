@@ -13,7 +13,7 @@ bool GrantVip(int client, int duration)
 bool DeleteVip(int client)
 {
 	//if player isn's vip
-	if(!g_aClient[client][Auth][Vip])
+	if(!NP_Vip_IsVIP(client))
 		return false;
 
 	char m_szQuery[256];
@@ -24,7 +24,7 @@ bool DeleteVip(int client)
 bool AddVipPoint(int client, int point)
 {
 	//if player isn's vip
-	if(!g_aClient[client][Auth][Vip])
+	if(!NP_Vip_IsVIP(client))
 		return false;
 
 	char m_szQuery[256];
@@ -80,14 +80,14 @@ void VIPConnected(int client)
 	if (!NP_Vip_IsVIP(client))
 		return;
 
-	if (g_aClient[client][StatsTotal][iTodayOnlineTime] == 0)
+	if (NP_Stats_TodayOnlineTime(client) == 0)
 	{
 		char msg[512];
 		FormatEx(msg, 512, "{red}%s{default} ： 叛乱，启动！", g_aClient[client][Name]);
 		NP_AllChat_Msg(Custom, "会员", msg);
 	}
 
-	CPrintToChatAll("{green}欢迎会员 {red}%s{green} 加入服务器！", g_aClient[client][Name]);
+	CPrintToChatAll("{green}欢迎 {yellow}LEVEL %i{green} %s会员 {red}%s{green} 加入服务器！", NP_Vip_VIPLevel(client), NP_Vip_IsPermanentVIP(client) ? "永久" : "", g_aClient[client][Name]);
 }
 
 void VIPSigned(int client)
@@ -98,7 +98,7 @@ void VIPSigned(int client)
 		return;
 
 	if (AddVipPoint(client, point) && point > 0)
-		PrintToChat(client, "\x04[VIP] \x01签到获得\x05%d\x01点经验！", point);
+		CPrintToChat(client, "\x04[系统提示]{blue} 签到获得 \x05%d\x01 点经验！", point);
 }
 
 void VIPReward(int client, int onlinetime)
@@ -106,10 +106,10 @@ void VIPReward(int client, int onlinetime)
 	if (!NP_Vip_IsVIP(client))
 		return;
 
-	int reward = g_cVIPOnlineReward.IntValue;
-	
 	if (!(onlinetime%3600))
 	{
+		int reward = g_cVIPOnlineReward.IntValue;
+
 		if(g_iVIPReward[client] < g_cVIPOnlineMaxReward.IntValue)
 		{
 			char m_szQuery[256];
@@ -119,6 +119,7 @@ void VIPReward(int client, int onlinetime)
 			{
 				g_iVIPReward[client] += reward;
 				AddVipPoint(client, reward);
+				CPrintToChat(client, "\x04[系统提示]{blue} 今日累计在线1小时获得 \x05%d{blue} 点经验！", reward);
 			}
 		}
 	}

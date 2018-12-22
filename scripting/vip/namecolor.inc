@@ -23,7 +23,7 @@ public int MenuHandler_ChangeColor(Menu menu, MenuAction action, int client, int
 		char color[16];
 		menu.GetItem(slot, color, 16);
 		NP_Chat_SetNameColor(client, color);
-		PrintToChat(client, "\x04[提示]\x01 名字颜色更换成功！");
+		CPrintToChat(client, "\x04[提示]{blue} 名字颜色更换成功！");
 	}
 
 	return 0;

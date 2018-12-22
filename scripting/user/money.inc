@@ -43,18 +43,18 @@ void MoneySigned(int client)
 	if (NP_Vip_IsVIP(client) && VIPmoney > 0)
 	{
 		if (GiveClientMoney(client, VIPmoney))
-			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", VIPmoney);
+			CPrintToChat(client, "\x04[系统提示]{blue} 签到获得\x05%d{blue}元！", VIPmoney);
 	}
 	else if (money > 0)
 	{
 		if (GiveClientMoney(client, money))
-			PrintToChat(client, "\x04[提示] \x01签到获得\x05%d\x01元！", money);
+			CPrintToChat(client, "\x04[系统提示]{blue} 签到获得\x05%d{blue}元！", money);
 	}
 
 	if (NP_Users_IsAuthorized(client, Ctb) || NP_Users_IsAuthorized(client, Opt) || NP_Users_IsAuthorized(client, Adm) || NP_Users_IsAuthorized(client, Own))
 	{
 		if (GiveClientMoney(client, OPmoney))
-			PrintToChat(client, "\x04[提示] \x01管理每日工资\x05%d\x01元！", OPmoney);
+			CPrintToChat(client, "\x04[系统提示]{blue} 管理每日工资\x05%d{blue}元！", OPmoney);
 	}
 }
 

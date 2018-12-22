@@ -30,7 +30,7 @@ void EndStats(int client)
 	strcopy(playerName, 32, g_aClient[client][Name]);
 	StringToJson(playerName, 32);
 
-	FormatEx(m_szQuery, 256, "CALL user_stats(%d, %d, %d, %d, %d, %d, '%s')", NP_Users_UserIdentity(client), g_aClient[client][StatsTrackingId], g_aClient[client][StatsSession][iTodayOnlineTime], g_aClient[client][StatsSession][iTotalOnlineTime], g_aClient[client][StatsSession][iObserveOnlineTime], g_aClient[client][StatsSession][iPlayOnlineTime], playerName);
+	FormatEx(m_szQuery, 256, "CALL user_stats(%d, %d, %d, %d, %d, %d, '%s')", NP_Users_UserIdentity(client), g_aClient[client][StatsTrackingId], g_aClient[client][StatsTotal][iTodayOnlineTime] + g_aClient[client][StatsSession][iTodayOnlineTime], g_aClient[client][StatsSession][iTotalOnlineTime], g_aClient[client][StatsSession][iObserveOnlineTime], g_aClient[client][StatsSession][iPlayOnlineTime], playerName);
 	NP_MySQL_SaveDatabase(m_szQuery);
 }
 
@@ -48,7 +48,7 @@ public Action Timer_Client(Handle timer, int client)
 	g_aClient[client][StatsSession][iTodayOnlineTime]++;
 	g_aClient[client][StatsSession][iTotalOnlineTime]++;
 
-	VIPReward(client, g_aClient[client][StatsSession][iTodayOnlineTime]);
+	VIPReward(client, NP_Stats_TodayOnlineTime(client));
  
 	return Plugin_Continue;
 }

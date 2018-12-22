@@ -3,7 +3,8 @@
 #include <NewPage>
 #include <sdktools_functions>
 
-#define MAX_SKINS 64
+#define MAX_SKINS 512
+#define MAX_OWNERS 64
 
 enum BuyPlan
 {
@@ -19,7 +20,7 @@ enum Skin
 	String:arm[PLATFORM_MAX_PATH],
 	vip,
 	op,
-	personid,
+	personid[MAX_OWNERS],
 	bool:buyable,
 	plan[BuyPlan]
 }
@@ -104,7 +105,8 @@ void LoadSkin()
 	// uid, name, team, vip, model, arm
 	while (skin.FetchRow())
 	{
-		char temp_plan[128];
+		char temp_plan[512];
+		char temp_owners[512];
 
 		skin.FetchString(0, g_skins[iskins][uid], 32);
 		skin.FetchString(1, g_skins[iskins][name], 32);
@@ -112,7 +114,7 @@ void LoadSkin()
 		g_skins[iskins][vip] = skin.FetchInt(3);
 		skin.FetchString(4, g_skins[iskins][model], PLATFORM_MAX_PATH);
 		skin.FetchString(5, g_skins[iskins][arm], PLATFORM_MAX_PATH);
-		g_skins[iskins][personid] = skin.FetchInt(6);
+		skin.FetchString(6, temp_owners, 128);
 		skin.FetchString(7, temp_plan, 128);
 
 		if (!FileExists(g_skins[iskins][model], true))
@@ -128,6 +130,26 @@ void LoadSkin()
 		//if (strlen(g_skins[iskins][arm]) > 3 && FileExists(g_skins[iskins][arm], true))
 			//PrecacheModel(g_skins[iskins][arm], true);
 
+		// Load owners
+		if (temp_owners[0] != '\0')
+		{
+			Handle ownersJson;
+			if ((ownersJson = json_load(temp_owners)) == INVALID_HANDLE)
+			{
+				g_skins[iskins][personid][0] = -1; // No one own this
+			}
+			else
+			{
+				int ownersNum = json_array_size(ownersJson);
+
+				for (int i = 0, a = 0;i < ownersNum && i < MAX_OWNERS; i++)
+					if ((g_skins[iskins][personid][a] = json_array_get_int(ownersJson, i)) != 0)
+						a++;
+
+				delete ownersJson;
+			}
+		}
+
 		// Load plan
 		if (temp_plan[0] != '\0')
 		{
@@ -139,7 +161,7 @@ void LoadSkin()
 			else
 			{
 				int planNum = json_array_size(planJson);
-				for (int i = 0, a = 0;i < planNum; i++)
+				for (int i = 0, a = 0;i < planNum && i < MAX_SKINS; i++)
 				{
 					Handle planInfo;
 					if ((planInfo = json_array_get(planJson, i)) != INVALID_HANDLE)
@@ -316,7 +338,7 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int client, int slot)
 		// Save model
 		SetSkinCache(client, skin_uid);
 	
-		CPrintToChat(client, "\x04[提示]\x01 已成功更换为 {lime}%s\x01！可通过 {olive}!tp\x01 查看模型", skin_name);
+		CPrintToChat(client, "\x04[系统提示]\x01 已成功更换为 {lime}%s\x01！可通过 {olive}!tp\x01 查看模型", skin_name);
 	}
 }
 
@@ -349,22 +371,34 @@ public Action Timer_Restart(Handle timer)
 
 bool SkinAccess(int client, int skinid)
 {
-	if (NP_Users_IsAuthorized(client, Own)) // All YES!!!!
+	// Server owner All YES!!!!
+	if (NP_Users_IsAuthorized(client, Own))
 		return true;
 
+	// Store skin
 	for (int i = 0; i < MAX_SKINS; i++)
 		if (!strcmp(g_iClientSkin[client][i][PS_uid], g_skins[skinid][uid]))
 			return true;
 	
-	if (g_skins[skinid][personid] != 0) // personal skin
-		if (NP_Users_UserIdentity(client) != g_skins[skinid][personid])
-			return false;
+	// personal skin
+	if (g_skins[iskins][personid][0] != -1)
+	{
+		int clientuid = NP_Users_UserIdentity(client);
 
-	if (g_skins[skinid][vip]) // vip skin
+		for (int i = 0; i < MAX_OWNERS; i++)
+			if (clientuid == g_skins[skinid][personid][i])
+				return true;
+
+		return false;
+	}
+
+	// vip skin
+	if (g_skins[skinid][vip]) 
 		if(!NP_Vip_IsVIP(client) && !IsClientOP(client))
 			return false;
-			
-	if (g_skins[skinid][op]) // op skin
+	
+	// op skin
+	if (g_skins[skinid][op]) 
 		if(!IsClientOP(client))
 			return false;
 
@@ -497,7 +531,7 @@ public int Menu_PaySkin(Menu menu, MenuAction action, int client, int slot)
 		if (NP_Users_PayMoney(client, g_skins[g_iBuySkin[client]][plan][BP_price][iplan]))
 		{
 			CreateRequest(BuySkinCallback, "skin.php", "\"AddSkin\":\"%s\", \"UID\":\"%d\", \"Time\":%d", g_skins[g_iBuySkin[client]][uid], NP_Users_UserIdentity(client), g_skins[g_iBuySkin[client]][plan][BP_time][iplan]);
-			CPrintToChat(client, "\x04[提示]\x01 成功购买皮肤 {lime}%s\x01！", g_skins[g_iBuySkin[client]][name]);
+			CPrintToChat(client, "\x04[系统提示]\x01 成功购买皮肤 {lime}%s\x01！", g_skins[g_iBuySkin[client]][name]);
 		}
 	}
 }
