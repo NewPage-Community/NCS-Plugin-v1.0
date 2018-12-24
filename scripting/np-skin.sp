@@ -81,7 +81,7 @@ void LoadSkin()
 	
 	Database mySQL = NP_MySQL_GetDatabase();
 
-	DBResultSet skin = SQL_Query(mySQL, "SELECT * FROM np_skins ORDER BY uid ASC;");
+	DBResultSet skin = SQL_Query(mySQL, "SELECT `uid`, `name`, `op`, `vip`, `model`, `arm`, `owners`, `plan` FROM np_skins ORDER BY uid ASC;");
 	if (skin == null)
 	{
 		char error[256];
@@ -384,25 +384,20 @@ bool SkinAccess(int client, int skinid)
 	if (g_skins[iskins][personid][0] != -1)
 	{
 		int clientuid = NP_Users_UserIdentity(client);
-
 		for (int i = 0; i < MAX_OWNERS; i++)
 			if (clientuid == g_skins[skinid][personid][i])
 				return true;
-
-		return false;
 	}
 
 	// vip skin
-	if (g_skins[skinid][vip]) 
-		if(!NP_Vip_IsVIP(client) && !IsClientOP(client))
-			return false;
+	if (g_skins[skinid][vip] && NP_Vip_IsVIP(client)) 
+		return true;
 	
 	// op skin
-	if (g_skins[skinid][op]) 
-		if(!IsClientOP(client))
-			return false;
+	if (g_skins[skinid][op] && IsClientOP(client)) 
+		return true;
 
-	return true;
+	return false;
 }
 
 public Action ModelCheck(Handle timer, int client)

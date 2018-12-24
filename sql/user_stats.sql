@@ -15,7 +15,7 @@ BEGIN
     /* UPDATE dxg_users */
     UPDATE `np_users` SET lastseen = UNIX_TIMESTAMP(), username = userName WHERE uid = userId;
 
-    UPDATE `np_stats` SET connectTimes = connectTimes + 1, onlineToday  = todayOnline, onlineTotal = onlineTotal + totalOnline, onlineOB = onlineOB + specOnline, onlinePlay = onlinePlay + playOnline WHERE uid = userId;
+    UPDATE `np_stats` SET connectTimes = connectTimes + 1, onlineToday = todayOnline, onlineTotal = onlineTotal + totalOnline, onlineOB = onlineOB + specOnline, onlinePlay = onlinePlay + playOnline WHERE uid = userId;
         
     UPDATE `np_analytics` SET duration = totalOnline WHERE uid = userId AND id = sessionId;
 
