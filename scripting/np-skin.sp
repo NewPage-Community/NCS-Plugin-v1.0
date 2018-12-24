@@ -338,7 +338,7 @@ public int Menu_SkinSelected(Menu menu, MenuAction action, int client, int slot)
 		// Save model
 		SetSkinCache(client, skin_uid);
 	
-		CPrintToChat(client, "\x04[系统提示]\x01 已成功更换为 {lime}%s\x01！可通过 {olive}!tp\x01 查看模型", skin_name);
+		CPrintToChat(client, "\x04[系统提示]{blue} 已成功更换为 {lime}%s{blue}！可通过 {olive}!tp{blue} 查看模型", skin_name);
 	}
 }
 
@@ -390,7 +390,7 @@ bool SkinAccess(int client, int skinid)
 	}
 
 	// vip skin
-	if (g_skins[skinid][vip] && NP_Vip_IsVIP(client)) 
+	if (g_skins[skinid][vip] && (NP_Vip_IsVIP(client) || IsClientOP(client))) 
 		return true;
 	
 	// op skin
@@ -526,7 +526,7 @@ public int Menu_PaySkin(Menu menu, MenuAction action, int client, int slot)
 		if (NP_Users_PayMoney(client, g_skins[g_iBuySkin[client]][plan][BP_price][iplan]))
 		{
 			CreateRequest(BuySkinCallback, "skin.php", "\"AddSkin\":\"%s\", \"UID\":\"%d\", \"Time\":%d", g_skins[g_iBuySkin[client]][uid], NP_Users_UserIdentity(client), g_skins[g_iBuySkin[client]][plan][BP_time][iplan]);
-			CPrintToChat(client, "\x04[系统提示]\x01 成功购买皮肤 {lime}%s\x01！", g_skins[g_iBuySkin[client]][name]);
+			CPrintToChat(client, "\x04[系统提示]{blue} 成功购买皮肤 {lime}%s{blue}！", g_skins[g_iBuySkin[client]][name]);
 		}
 	}
 }
