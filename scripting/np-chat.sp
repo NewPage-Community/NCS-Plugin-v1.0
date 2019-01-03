@@ -1,6 +1,8 @@
 #pragma semicolon 1
 
 #include <NewPage>
+#include <NewPage/chat>
+#include <NewPage/user>
 
 #define P_NAME P_PRE ... " - Chat processor"
 #define P_DESC "Chat processor plugin"
@@ -306,44 +308,13 @@ void ProcessChatName(int client, char[] name, int size)
 	if (!IsValidClient(client))
 		return;
 
-	char tagName[32], grpName[32];
+	char prefix[32];
 
 	NP_Users_GetName(client, name, size);
 
 	if (g_cClientNameColor[client][0] != '\0')
 		Format(name, size, "%s%s", g_cClientNameColor[client], name);
 
-	if (NP_Users_GetTag(client, tagName, 32))
-	{
-		Format(name, size, "{lime}[%s]{name} %s", tagName, name);
-	}
-
-	if (NP_Group_GetGrpName(client, grpName, 32))
-	{
-		Format(name, size, "{purple}<%s>{name} %s", grpName, name);
-	}
-	else if (NP_Users_IsAuthorized(client, Authentication:Own))
-	{
-		Format(name, size, "{red}<服主>{name} %s", name);
-	}
-	else if (NP_Users_IsAuthorized(client, Authentication:Adm))
-	{
-		Format(name, size, "{green}<ADMIN>{name} %s", name);
-	}
-	else if (NP_Users_IsAuthorized(client, Authentication:Opt))
-	{
-		Format(name, size, "{green}<管理>{name} %s", name);
-	}
-	else if (NP_Users_IsAuthorized(client, Authentication:Ctb))
-	{
-		Format(name, size, "{green}<员工>{name} %s", name);
-	}
-	else if (NP_Users_IsAuthorized(client, Authentication:Vip))
-	{
-		Format(name, size, "{yellow}<会员>{name} %s", name);
-	}
-	else if (NP_Users_IsAuthorized(client, Authentication:Spt))
-	{
-		Format(name, size, "{pink}<捐助>{name} %s", name);
-	}
+	NP_Users_GetPrefix(client, prefix, 32, true);
+	Format(name, size, "%s{name} %s", prefix, name);
 }

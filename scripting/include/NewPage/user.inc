@@ -54,6 +54,8 @@ enum client_Info
     GID,
     String:Name[32],
     String:Tag[16],
+    String:CustomPrefix[16],
+    PrefixPrefer,
     bool:Auth[Authentication],
     bool:AuthLoaded,
     StatsSession[Stats],
@@ -69,6 +71,13 @@ enum client_Info
     VIPExpired,
     Handle:StatsTimer
 }
+
+/*PrefixPrefer Type
+    Authenticate = 0,
+    Group,
+    Custom,
+    Empty
+*/
 
 forward void NP_OnClientDataChecked(int client, int UserIdentity);
 native int NP_Users_UserIdentity(int client);
@@ -94,8 +103,10 @@ native bool NP_Vip_AddVipPoint(int client, int point);
 native int NP_Vip_GetPoint(int client);
 native bool NP_Vip_IsPermanentVIP(int client);
 
-native void NP_Users_SetTag(int client, char[] TagName);
+native void NP_Users_SetTag(int client, const char[] TagName);
 native bool NP_Users_GetTag(int client, char[] TagName, int size);
+native void NP_Users_SetCustomPrefix(int client, const char[] prefix);
+native bool NP_Users_GetPrefix(int client, char[] prefix, int size, bool color = false);
 
 native void NP_Users_GetName(int client, char[] name, int length);
 
@@ -107,6 +118,11 @@ forward void NP_OnClientSigned(int client, int signtimes);
 native bool NP_Users_PayMoney(int client, int money);
 native bool NP_Users_GiveMoney(int client, int money);
 native int NP_Users_GetMoney(int client);
+
+stock bool IsClientOP(int client)
+{
+	return NP_Users_IsAuthorized(client, Ctb) || NP_Users_IsAuthorized(client, Opt) || NP_Users_IsAuthorized(client, Adm) || NP_Users_IsAuthorized(client, Own);
+}
 
 public SharedPlugin __pl_user =
 {

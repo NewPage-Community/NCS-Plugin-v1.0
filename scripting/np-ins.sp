@@ -1,8 +1,7 @@
 #pragma semicolon 1
 
-#define _Insurgency_
-
 #include <NewPage>
+#include <NewPage/ins>
 #include <sdktools_functions>
 
 // Ins
@@ -32,7 +31,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	return APLRes_Success;
 }
- 
+
 public void OnPluginStart()
 {
 	g_hOnPlayerResupplyed = CreateGlobalForward("NP_Ins_OnPlayerResupplyed", ET_Ignore, Param_Cell);

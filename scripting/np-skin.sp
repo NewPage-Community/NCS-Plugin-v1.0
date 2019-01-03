@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <NewPage>
+#include <NewPage/user>
 #include <sdktools_functions>
 
 #define MAX_SKINS 512
@@ -66,7 +67,7 @@ public void OnPluginStart()
 
 public void OnMapStart()
 {
-	CreateTimer(5.0, Timer_Restart); // Delay for waiting map started
+	CreateTimer(5.0, Timer_Restart, TIMER_FLAG_NO_MAPCHANGE); // Delay for waiting map started
 }
 
 void LoadSkin()

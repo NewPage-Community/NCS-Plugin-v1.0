@@ -41,12 +41,28 @@ void ChangePlayerPreName(int client)
 	if(g_aClient[client][Tag][0] != '\0')
 		Format(newName, 64, "[%s] %s", g_aClient[client][Tag], newName);
 
-	char prefix[32];
-	GetClientPrefix(client, prefix, 32);
-	Format(newName, 64, "%s %s", prefix, newName);
+	CreateTimer(5.0, Timer_ChangeClan, client);
 	
 	if (!StrEqual(oldName, newName))
 		SetClientName(client, newName);
+}
+
+public Action Timer_ChangeClan(Handle timer, int client)
+{
+	if (!NP_Users_IsAuthLoaded(client) || !IsClientConnected(client))
+		return Plugin_Stop;
+
+	if (!IsClientInGame(client))
+	{
+		CreateTimer(5.0, Timer_ChangeClan, client);
+		return Plugin_Stop;
+	}
+
+	char prefix[32];
+	GetClientPrefix(client, prefix, 32);
+	CS_SetClientClanTag(client, prefix);
+
+	return Plugin_Stop;
 }
 
 bool SetClientPrefixPrefer(int client, int type)

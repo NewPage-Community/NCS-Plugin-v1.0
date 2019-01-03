@@ -58,6 +58,6 @@ void CheckGroup()
 
 public Action Timer_CheckGroupName(Handle timer)
 {
-	NP_Core_OnInitialized(0, 0);
+	CheckGroup();
 	return Plugin_Stop;
 }

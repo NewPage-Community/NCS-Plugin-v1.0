@@ -43,8 +43,11 @@ void DisplayKickTargetMenu(int client)
 	Format(title, sizeof(title), "%T:", "Kick vote", client);
 	menu.SetTitle(title);
 	menu.ExitBackButton = true;
-	
-	AddTargetsToMenu(menu, client, true, false);
+
+	for (int i = 1; i < MaxClients; i++)
+		if (IsClientInGame(i))
+			if (!IsFakeClient(i))
+				AddMenuItemEx(menu, 0, "2", "%N(%d)", i, GetClientUserId(i));
 	
 	menu.Display(client, MENU_TIME_FOREVER);
 }

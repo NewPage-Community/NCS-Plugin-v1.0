@@ -40,12 +40,15 @@ void MoneySigned(int client)
 	int money = g_cSignMoney.IntValue;
 	int VIPmoney = g_cSignVIPMoney.IntValue;
 	int OPmoney = g_cSignOPMoney.IntValue;
-	if (NP_Vip_IsVIP(client) && VIPmoney > 0)
-	{
-		if (GiveClientMoney(client, VIPmoney))
-			CPrintToChat(client, "\x04[系统提示]{blue} 签到获得\x05%d{blue}元！", VIPmoney);
-	}
-	else if (money > 0)
+	int steamGroup = g_cSignSteamGroup.IntValue;
+
+	if (SteamWorks_GetUserGroupStatus(client, P_STEAMGROUP))
+		money += steamGroup;
+
+	if (NP_Vip_IsVIP(client))
+		money += VIPmoney;
+	
+	if (money > 0)
 	{
 		if (GiveClientMoney(client, money))
 			CPrintToChat(client, "\x04[系统提示]{blue} 签到获得\x05%d{blue}元！", money);

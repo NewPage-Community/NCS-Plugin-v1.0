@@ -4,6 +4,7 @@
 #include <NewPage/chat>
 #include <NewPage/user>
 #include <NewPage/ins>
+#include <cstrike>
 #include <SteamWorks>
 
 #define P_NAME P_PRE ... " - User Manager"
@@ -41,7 +42,7 @@ any g_aClient[MAXPLAYERS+1][client_Info];
 #include "user/stats"
 #include "user/admin"
 #include "user/ban"
-#include "user/tag"
+#include "user/tag-cs"
 #include "user/group"
 #include "user/func"
 #include "user/money"
@@ -169,11 +170,11 @@ public void OnPluginStart()
 
 	g_cSignTipsTimer = CreateConVar("np_user_sign_tipstimer", "120.0", "签到提示时间", 0, true, 0.0);
 	g_cSignMoney = CreateConVar("np_user_sign_givemoney", "100", "签到奖励软妹币", 0, true, 0.0);
-	g_cSignVIPMoney = CreateConVar("np_user_sign_VIPgivemoney", "20", "会员签到奖励软妹币", 0, true, 0.0);
+	g_cSignVIPMoney = CreateConVar("np_user_sign_VIPgivemoney", "120", "会员签到奖励软妹币", 0, true, 0.0);
 	g_cSignVIPPoint = CreateConVar("np_user_sign_givevippoint", "10", "签到奖励会员经验", 0, true, 0.0);
 	g_cVIPOnlineReward = CreateConVar("np_user_vip_onlinereward", "1", "会员每小时增加的成长值", 0, true, 0.0);
 	g_cVIPOnlineMaxReward = CreateConVar("np_user_vip_onlinemaxreward", "12", "会员每天增加的成长值上限", 0, true, 0.0);
-	g_cSignOPMoney = CreateConVar("np_user_sign_opmoney", "50", "签到管理工资", 0, true, 0.0);
+	g_cSignOPMoney = CreateConVar("np_user_sign_opmoney", "50", "管理工资", 0, true, 0.0);
 	g_cSignSteamGroup = CreateConVar("np_user_sign_steamgroup", "10", "签到steam组奖励", 0, true, 0.0);
 }
 

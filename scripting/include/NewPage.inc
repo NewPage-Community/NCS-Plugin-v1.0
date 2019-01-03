@@ -12,21 +12,17 @@
 #define _NewPage_Core_Include_
 
 #define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.8"
+#define P_VERSION "Alpha-v3.9"
 #define P_URLS "https://new-page.xyz"
 #define P_PRE "NewPage Core System (NCS)"
 #define P_SQLPRE "np"
-#define P_APIURL "http://127.0.0.1/ncs"
+#define P_APIURL "http://api.new-page.xyz/ncs"
 #define P_APIPORT 83
+#define P_STEAMGROUP 32483342
 
+#include <sourcemod>
 #include <system2>
 #include <smjansson>
-#include <NewPage/chat>
-#include <NewPage/user>
-
-#if defined _Insurgency_
-	#include <NewPage/ins>
-#endif
 
 forward void NP_Core_OnInitialized(int serverId, int modId);
 
@@ -391,11 +387,6 @@ stock void CPrintToChatAll(const char[] format, any...)
 			PrintToChat(i, "%s", buffer);
 		}
 	}
-}
-
-stock bool IsClientOP(int client)
-{
-	return NP_Users_IsAuthorized(client, Ctb) || NP_Users_IsAuthorized(client, Opt) || NP_Users_IsAuthorized(client, Adm) || NP_Users_IsAuthorized(client, Own);
 }
 
 stock void TerminateNameUTF8(char[] name)

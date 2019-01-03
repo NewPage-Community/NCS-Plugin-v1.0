@@ -134,6 +134,7 @@ public void OnPluginStart()
 {
 	RegServerCmd("np_restart", Command_Restart);
 	RegServerCmd("np_rcondata", Command_RconData);
+	RegServerCmd("np_reloadmap", Command_ReloadMap);
 
 	// forwards
 	g_hOnInitialized = CreateGlobalForward("NP_Core_OnInitialized",  ET_Ignore, Param_Cell, Param_Cell);
@@ -403,9 +404,16 @@ void SaveSQLCallback(bool success, const char[] error, System2HTTPRequest reques
 
 public Action Command_Restart(int args)
 {
-	PrintToChatAll("\x04[服务器提示] \x01服务器将进行重启更新!");
+	CPrintToChatAll("\x04[服务器提示] {blue}服务器将进行重启更新!");
 	PrintCenterTextAll("服务器将进行重启更新!");
 	CreateTimer(1.0, Timer_Restart, 0);
+}
+
+public Action Command_ReloadMap(int args)
+{
+	CPrintToChatAll("\x04[服务器提示] {blue}服务器将在3秒后进行热更新，执行地图重载!");
+	PrintCenterTextAll("服务器将在3秒后进行热更新，执行地图重载!");
+	CreateTimer(3.0, Timer_ReloadMap, 0);
 }
 
 public Action Timer_Restart(Handle timer, int time)
@@ -424,6 +432,14 @@ public Action Timer_Restart(Handle timer, int time)
 
 	ServerCommand("quit");
 
+	return Plugin_Stop;
+}
+
+public Action Timer_ReloadMap(Handle timer, int time)
+{
+	char map[PLATFORM_MAX_PATH];
+	GetCurrentMap(map, PLATFORM_MAX_PATH);
+	ServerCommand("changelevel %s", map);
 	return Plugin_Stop;
 }
 

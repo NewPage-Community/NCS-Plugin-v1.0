@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <NewPage>
+#include <NewPage/user>
 
 #define P_NAME P_PRE ... " - Test"
 #define P_DESC "Test server plugin"
