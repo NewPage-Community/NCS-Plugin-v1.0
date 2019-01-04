@@ -42,7 +42,6 @@ void DisplayKickTargetMenu(int client)
 	char title[100];
 	Format(title, sizeof(title), "%T:", "Kick vote", client);
 	menu.SetTitle(title);
-	menu.ExitBackButton = true;
 
 	for (int i = 1; i < MaxClients; i++)
 		if (IsClientInGame(i))

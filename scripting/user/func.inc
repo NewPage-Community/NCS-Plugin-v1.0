@@ -178,10 +178,11 @@ public Action Timer_SignTips(Handle timer, int client)
 				NP_Ins_DisplayInstructorHint(client, 10.0, 0.0, 3.0, true, true, "icon_tip", "icon_tip", "", true, {255, 255, 255}, "您今天还未签到! 聊天输入 !qd 每日可获得软妹币!");
 			else
 				PrintHintText(client, "您今天还未签到! \n聊天输入 !qd 每日可获得软妹币!");
+
+			return Plugin_Continue;
 		}
 	}
-	else
-		KillTimer(timer);
 
-	return Plugin_Continue;
+	KillTimer(timer);
+	return Plugin_Stop;
 }
