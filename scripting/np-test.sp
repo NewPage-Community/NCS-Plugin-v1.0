@@ -21,7 +21,7 @@ public void NP_OnClientDataChecked(int client, int UserIdentity)
 		return;
 
 	if (NP_Users_IsAuthorized(client, Vip))
-		if (NP_Vip_VIPLevel(client) >= 3)
+		if (NP_Vip_VIPLevel(client) >= 3 || NP_Vip_IsPermanentVIP(client))
 			return;
 
 	KickClient(client, "你没有权限进入内测服");

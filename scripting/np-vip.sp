@@ -79,7 +79,7 @@ public Action Command_VipPrefix(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (NP_Vip_VIPLevel(client) < 8)
+	if (NP_Vip_VIPLevel(client) < 8 && !NP_Vip_IsPermanentVIP(client))
 	{
 		CPrintToChat(client, "\x04[系统提示]{blue} 你的会员等级不够，无法使用该功能！");
 		return Plugin_Handled;
@@ -120,6 +120,9 @@ void DisplayVIPFunc(int client)
 	}
 
 	int viplevel = NP_Vip_VIPLevel(client);
+
+	if (NP_Vip_IsPermanentVIP(client))
+		viplevel = 10;
 
 	Menu infoMenu = new Menu(MenuHandler_VIPFunc);
 	infoMenu.SetTitle("会员功能");
