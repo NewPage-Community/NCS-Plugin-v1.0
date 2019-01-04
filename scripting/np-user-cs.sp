@@ -35,6 +35,8 @@ ConVar g_cSignTipsTimer,
 	g_cSignOPMoney,
 	g_cSignSteamGroup;
 
+char g_cCacheFile[128];
+
 any g_aClient[MAXPLAYERS+1][client_Info];
 
 // Modules
@@ -176,6 +178,10 @@ public void OnPluginStart()
 	g_cVIPOnlineMaxReward = CreateConVar("np_user_vip_onlinemaxreward", "12", "会员每天增加的成长值上限", 0, true, 0.0);
 	g_cSignOPMoney = CreateConVar("np_user_sign_opmoney", "50", "管理工资", 0, true, 0.0);
 	g_cSignSteamGroup = CreateConVar("np_user_sign_steamgroup", "10", "签到steam组奖励", 0, true, 0.0);
+
+	// Stats cache
+	BuildPath(Path_SM, g_cCacheFile, 128, "data/NewPage.PlayerStats.cache");
+	CreateTimer(5.0, Timer_StatsCheckCache);
 }
 
 // ------------ native forward ------------
@@ -206,6 +212,8 @@ public void OnClientDisconnect(int client)
 {
 	// Stats
 	EndStats(client);
+	g_aClient[client][AuthLoaded] = false;
+	g_aClient[client][StatsTrackingId] = -1;
 }
 
 public void OnRebuildAdminCache(AdminCachePart part)

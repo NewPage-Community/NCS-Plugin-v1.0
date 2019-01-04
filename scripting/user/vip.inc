@@ -119,11 +119,16 @@ void VIPReward(int client, int onlinetime)
 			{
 				g_iVIPReward[client] += reward;
 				AddVipPoint(client, reward);
-				CPrintToChat(client, "\x04[系统提示]{blue} 今日累计在线1小时获得 \x05%d{blue} 点经验！", reward);
-				if (GetEngineVersion() == Engine_Insurgency)
-					NP_Ins_DisplayInstructorHint(client, 10.0, 0.0, 3.0, true, true, "icon_tip", "icon_tip", "", true, {255, 255, 255}, "你已经在线时间很长啦，注意休息哦~");
-				else
-					PrintHintText(client, "你已经在线时间很长啦，注意休息哦~");
+				
+				// Client does not have to be in game
+				if (IsClientInGame(client))
+				{
+					CPrintToChat(client, "\x04[系统提示]{blue} 今日累计在线1小时获得 \x05%d{blue} 点经验！", reward);
+					if (GetEngineVersion() == Engine_Insurgency)
+						NP_Ins_DisplayInstructorHint(client, 10.0, 0.0, 3.0, true, true, "icon_tip", "icon_tip", "", true, {255, 255, 255}, "你已经在线时间很长啦，注意休息哦~");
+					else
+						PrintHintText(client, "你已经在线时间很长啦，注意休息哦~");
+				}
 			}
 		}
 	}
