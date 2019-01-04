@@ -8,7 +8,7 @@
 #define P_NAME P_PRE ... " - Cheer"
 #define P_DESC "cheer plugin"
 
-#define MAXCHEERS 20
+#define MAXCHEERS 32
 #define MAXLENGTH_NAME 128
 
 enum CheerType
@@ -87,6 +87,9 @@ public void EventRoundStart(Handle event, const char[] name, bool dontBroadcast)
 
 void LoadSounds()
 {
+	g_iCheerListNum[Cheer] = 0;
+	g_iCheerListNum[Jeer] = 0;
+
 	KeyValues kv = new KeyValues("CheerSoundsList");
 	char filename[PLATFORM_MAX_PATH], buffer[30], downloadFile[PLATFORM_MAX_PATH];
 
