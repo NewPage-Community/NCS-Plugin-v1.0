@@ -50,13 +50,9 @@ public void OnPluginStart()
 	// Execute the config file
 	AutoExecConfig(true, "cheer");
 	
-	LoadSounds();
-	
 	HookEvent("round_start", EventRoundStart, EventHookMode_PostNoCopy);
 	RegConsoleCmd("cheer", CommandCheer);
 	RegAdminCmd("sm_cheertest", CommandCheerTest, ADMFLAG_ROOT);
-
-	SetRandomSeed(GetTime());
 
 	g_cCheerString[0] = "捧腹大笑";
 	g_cCheerString[1] = "笑而不语";
@@ -67,23 +63,8 @@ public void OnPluginStart()
 
 public void OnMapStart()
 {
-	for (int i=0; i < MAXCHEERS; i++)
-	{
-		char downloadFile[PLATFORM_MAX_PATH];
-
-		if (g_cCheerList[Cheer][i][0] != '\0')
-		{
-			PrecacheSound(g_cCheerList[Cheer][i], true);
-			Format(downloadFile, PLATFORM_MAX_PATH, "sound/%s", g_cCheerList[Cheer][i]);
-			AddFileToDownloadsTable(downloadFile);
-		}
-		if (g_cCheerList[Jeer][i][0] != '\0')
-		{
-			PrecacheSound(g_cCheerList[Jeer][i], true);
-			Format(downloadFile, PLATFORM_MAX_PATH, "sound/%s", g_cCheerList[Jeer][i]);
-			AddFileToDownloadsTable(downloadFile);
-		}
-	}
+	SetRandomSeed(GetTime());
+	LoadSounds();
 }
 
 public void OnClientPutInServer(int client)
@@ -107,7 +88,7 @@ public void EventRoundStart(Handle event, const char[] name, bool dontBroadcast)
 void LoadSounds()
 {
 	KeyValues kv = new KeyValues("CheerSoundsList");
-	char filename[PLATFORM_MAX_PATH], buffer[30];
+	char filename[PLATFORM_MAX_PATH], buffer[30], downloadFile[PLATFORM_MAX_PATH];
 
 	BuildPath(Path_SM, filename, PLATFORM_MAX_PATH, "configs/cheersoundlist.cfg");
 	kv.ImportFromFile(filename);
@@ -124,7 +105,15 @@ void LoadSounds()
 		Format(buffer, sizeof(buffer), "%i", i + 1);
 		kv.GetString(buffer, g_cCheerList[Cheer][i], PLATFORM_MAX_PATH);
 		if (g_cCheerList[Cheer][i][0] != '\0')
-			g_iCheerListNum[Cheer]++;
+		{
+			Format(downloadFile, PLATFORM_MAX_PATH, "sound/%s", g_cCheerList[Cheer][i]);
+			if (FileExists(downloadFile, true))
+			{
+				PrecacheSound(g_cCheerList[Cheer][i], true);
+				AddFileToDownloadsTable(downloadFile);
+				g_iCheerListNum[Cheer]++;
+			}
+		}	
 	}
 	
 	kv.Rewind();
@@ -141,7 +130,15 @@ void LoadSounds()
 		Format(buffer, sizeof(buffer), "%i", i + 1);
 		kv.GetString(buffer, g_cCheerList[Jeer][i], PLATFORM_MAX_PATH);
 		if (g_cCheerList[Jeer][i][0] != '\0')
-			g_iCheerListNum[Jeer]++;
+		{
+			Format(downloadFile, PLATFORM_MAX_PATH, "sound/%s", g_cCheerList[Jeer][i]);
+			if (FileExists(downloadFile, true))
+			{
+				PrecacheSound(g_cCheerList[Jeer][i], true);
+				AddFileToDownloadsTable(downloadFile);
+				g_iCheerListNum[Jeer]++;
+			}
+		}
 	}
 	
 	delete kv;
@@ -188,6 +185,8 @@ public Action CommandCheer(int client, int args)
 
 	if(IsPlayerAlive(client))
 	{
+		if (!g_iCheerListNum[Cheer]) return Plugin_Handled;
+
 		if(g_iCheerCount[client][Cheer] >= cheerCount)
 		{
 			CPrintToChat(client, "\x04[系统提示]{blue} 每局只能欢呼 {red}%d{blue} 次！", cheerCount);
@@ -203,6 +202,8 @@ public Action CommandCheer(int client, int args)
 	}
 	else
 	{
+		if (!g_iCheerListNum[Jeer]) return Plugin_Handled;
+
 		if(g_iCheerCount[client][Jeer] >= jeerCount)
 		{
 			CPrintToChat(client, "\x04[系统提示]{blue} 每局死亡后只能嘲笑 {red}%d{blue} 次！", jeerCount);
