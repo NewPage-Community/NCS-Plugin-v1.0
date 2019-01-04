@@ -27,6 +27,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	CreateNative("NP_AllChat_Msg", Native_SendMsg);
 	CreateNative("NP_Chat_SetNameColor", Native_SetNameColor);
+	CreateNative("NP_Chat_GetColorName", Native_GetColorName);
 
 	engine = GetEngineVersion();
 
@@ -69,6 +70,16 @@ public int Native_SetNameColor(Handle plugin, int numParams)
 	strcopy(g_cClientNameColor[client], 16, color);
 	FormatEx(m_szQuery, 256, "UPDATE %s_users SET namecolor = '%s' WHERE uid = %d", P_SQLPRE, color, NP_Users_UserIdentity(client));
 	NP_MySQL_SaveDatabase(m_szQuery);
+}
+
+public int Native_GetColorName(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int size = GetNativeCell(3);
+	char[] name = new char[size];
+	
+	ProcessChatName(client, name, size);
+	SetNativeString(2, name, size, true);
 }
 
 public void OnPluginStart()

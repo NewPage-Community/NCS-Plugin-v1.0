@@ -291,6 +291,14 @@ void LoadClient(char[] data)
 	if(strcmp(data_steamid, steamid) != 0)
 		return;
 
+	bool reload = false;
+	if (g_aClient[client][AuthLoaded])
+	{
+		reload = true;
+		EndStats(client);
+		NP_Core_LogMessage("User", "LoadClient", "Client reload data -> \"%L\"", client);
+	}
+
 	//init data
 	StartStats(client);
 
@@ -334,18 +342,24 @@ void LoadClient(char[] data)
 
 	g_aClient[client][AuthLoaded] = true;
 
+	LoadAdmin(client, steamid);
+	ChangePlayerPreName(client);
+	NP_Chat_SetNameColor(client, color);
+
+	// Reload player's data just end in here
+	if (reload)
+	{
+		CloseHandle(json);
+		return;
+	}
+
 	if(!CheckBan(client, json))
 		return;
 
 	CloseHandle(json);
 
-	LoadAdmin(client, steamid);
-	ChangePlayerPreName(client);
-	VIPConnected(client);
-	NP_Chat_SetNameColor(client, color);
-
-	// Sign
-	CreateTimer(g_cSignTipsTimer.FloatValue, Timer_SignTips, client, TIMER_REPEAT);
+	VIPConnected(client); //VIP Welcome
+	CreateTimer(g_cSignTipsTimer.FloatValue, Timer_SignTips, client, TIMER_REPEAT); // Sign Tips
 
 	CallDataForward(client);
 }
