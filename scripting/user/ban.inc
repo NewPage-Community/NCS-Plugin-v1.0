@@ -158,7 +158,7 @@ public Action Command_Ban(int client, int args)
 	
 	if(args < 3)
 	{
-		PrintToChat(client, "\x04用法\x01: sm_ban <#userid或者名字> <时间(分钟)|0为永久> [原因]");
+		PrintToChat(client, "\x04用法\x01: sm_ban \"#userid或者名字\" <时间(分钟)|0为永久> [原因]");
 		return Plugin_Handled;
 	}
 
@@ -241,4 +241,54 @@ public int MenuHandler_BanType(Menu menu, MenuAction action, int admin, int slot
 			case ban_Identity: Util_BanIdentity(g_eBan[admin][szAuthId], admin, g_eBan[admin][iLength], g_eBan[admin][iBanType], g_eBan[admin][szReason]);
 		}
 	}
+}
+
+public Action Command_AddBan(int client, int args)
+{
+	if(!client)
+		return Plugin_Handled;
+
+	int admin = client;
+	
+	if(args < 3)
+	{
+		PrintToChat(client, "\x04用法\x01: sm_ban \"steamid\" <时间(分钟)|0为永久> [原因]");
+		return Plugin_Handled;
+	}
+
+	char authid[64], buffer[64];
+	GetCmdArg(1, authid, 64);
+	GetCmdArg(2, buffer, 64);
+	int length = StringToInt(buffer);
+	if(length == 0 && client && !(CheckCommandAccess(client, "sm_unban", ADMFLAG_UNBAN|ADMFLAG_ROOT)))
+	{
+		PrintToChat(client, "\x04[系统提示]\x01 你没有永久封禁的权限");
+		return Plugin_Handled;
+	}
+
+	char reason[256];
+
+	if (args >= 3)
+	{
+		GetCmdArg(3, reason, sizeof(reason));
+		for (int i = 4; i <= args; i++)
+		{
+			GetCmdArg(i, buffer, sizeof(buffer));
+			Format(reason, sizeof(reason), "%s %s", reason, buffer);
+		}
+	}
+	else
+	{
+		reason[0] = '\0';
+	}
+
+	strcopy(g_eBan[admin][szAuthId], 32, authid);
+	g_eBan[admin][iLength] = length;
+	g_eBan[admin][banProc] = ban_Identity;
+	
+	strcopy(g_eBan[admin][szReason], 256, reason);
+
+	Util_ShowBanType(admin);
+
+	return Plugin_Handled;
 }

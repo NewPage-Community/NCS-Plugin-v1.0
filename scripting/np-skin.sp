@@ -250,7 +250,7 @@ void LoadClient(const char[] content)
 
 void SetModel(int client)
 {
-	if (!IsClientInGame(client) || !IsPlayerAlive(client) || IsFakeClient(client))
+	if (!IsClientInGame(client) || !IsPlayerAlive(client) || IsFakeClient(client) || GetClientTeam(client) != 2) // For Insurgency PVE
 		return;
 
 	if (strcmp(g_iClientSkinCache[client], "default") != 0 && g_iClientSkinCache[client][0] != '\0')

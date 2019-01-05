@@ -1,5 +1,5 @@
 #if defined _NewPage_Ins_Include_
-    #endinput
+	#endinput
 #endif
 
 #define _NewPage_Ins_Include_
@@ -27,7 +27,7 @@ public SharedPlugin __pl_ins =
 {
 	name = "np-ins",
 	file = "np-ins.smx",
-    required = 0
+	required = 0
 };
 
 /* Available icons
@@ -111,10 +111,25 @@ stock void NP_Ins_DisplayInstructorHint(int iTargetEntity, float fTime, float fH
 		SetVariantString(sBuffer);
 		AcceptEntityInput(iEntity, "AddOutput");
 		AcceptEntityInput(iEntity, "FireUser1");
+		CreateTimer(fTime, RemoveEntityTimer, iEntity, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 	DispatchSpawn(iEntity);
 	AcceptEntityInput(iEntity, "ShowHint");
+}
+
+public Action RemoveEntityTimer(Handle timer, int entity)
+{
+	if (IsValidEntity(entity))
+	{
+		char edictname[32];
+		GetEdictClassname(entity, edictname, 32);
+
+		if (!StrEqual(edictname, "player"))
+			AcceptEntityInput(entity, "kill");
+	}
+	
+	return Plugin_Stop;
 }
 
 stock void SetGameState(INS_GameState state)
