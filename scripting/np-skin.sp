@@ -2,7 +2,8 @@
 
 #include <NewPage>
 #include <NewPage/user>
-#include <sdktools_functions>
+#include <sdktools>
+#include <sdkhooks>
 
 #define MAX_SKINS 512
 #define MAX_OWNERS 64
@@ -36,6 +37,9 @@ int g_skins[MAX_SKINS][Skin];
 int iskins = 0;
 int g_iBuySkin[MAXPLAYERS+1];
 int g_iClientSkin[MAXPLAYERS+1][MAX_SKINS][PlayerSkin];
+int g_iPreviewEnt[2048];
+int g_iPreMdlRef[MAXPLAYERS+1] = {INVALID_ENT_REFERENCE, ...};
+Handle g_tPreMdl[MAXPLAYERS+1];
 bool g_bIsReady = false;
 StringMap SkinIndex;
 char g_iClientSkinCache[MAXPLAYERS+1][32];
@@ -188,6 +192,8 @@ void LoadSkin()
 
 public void NP_OnClientDataChecked(int client, int UserIdentity)
 {
+	g_iPreMdlRef[client] = INVALID_ENT_REFERENCE;
+
 	CreateRequest(GetSkinCacheCallback, "skin.php", "\"GetCache\":1, \"UID\":%d", UserIdentity);
 }
 
@@ -428,6 +434,10 @@ public Action Event_PlayerSpawn(Event event, const char[] name1, bool dontBroadc
 	RequestFrame(SetModel, client);
 	CreateTimer(0.1, ModelCheck, client, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
 
+	if(g_tPreMdl[client] != INVALID_HANDLE)
+		KillTimer(g_tPreMdl[client]);
+	g_tPreMdl[client] = INVALID_HANDLE;
+
 	return Plugin_Continue;
 }
 
@@ -485,6 +495,8 @@ public int Menu_BuySkin(Menu menu, MenuAction action, int client, int slot)
 			}
 		}
 
+		menu1.AddItem("Preview", "预览皮肤");
+
 		for (int i = 0; i < 5; ++i)
 		{
 			if (g_skins[skin_id][plan][BP_price][i] > 0)
@@ -521,6 +533,12 @@ public int Menu_PaySkin(Menu menu, MenuAction action, int client, int slot)
 
 		char tplan[32];
 		menu.GetItem(slot, tplan, 32);
+
+		if (slot == 0)
+		{
+			PreviewSkin(client, g_iBuySkin[client]);
+			return;
+		}
 
 		int iplan = StringToInt(tplan);
 
@@ -583,4 +601,98 @@ public int Menu_BoughtSkin(Menu menu, MenuAction action, int client, int slot)
 	{
 		g_mSkin.Display(client, 60);
 	}
+}
+
+void PreviewSkin(int client, int skinid)
+{
+	if(skinid == -1)
+		return;
+	
+	if(g_tPreMdl[client] != INVALID_HANDLE)
+		KillTimer(g_tPreMdl[client]);
+
+	Timer_ClearPreMdl(INVALID_HANDLE, client);
+	
+	int m_iViewModel = CreateEntityByName("prop_dynamic_override");
+	
+	char m_szTargetName[32];
+	FormatEx(m_szTargetName, 32, "Skin_Preview_%d", m_iViewModel);
+	DispatchKeyValue(m_iViewModel, "targetname", m_szTargetName);
+
+	DispatchKeyValue(m_iViewModel, "spawnflags", "64");
+	DispatchKeyValue(m_iViewModel, "model", g_skins[skinid][model]);
+	DispatchKeyValue(m_iViewModel, "rendermode", "0");
+	DispatchKeyValue(m_iViewModel, "renderfx", "0");
+	DispatchKeyValue(m_iViewModel, "rendercolor", "255 255 255");
+	DispatchKeyValue(m_iViewModel, "renderamt", "255");
+	DispatchKeyValue(m_iViewModel, "solid", "0");
+	
+	DispatchSpawn(m_iViewModel);
+	
+	SetEntProp(m_iViewModel, Prop_Send, "m_CollisionGroup", 11);
+	
+	AcceptEntityInput(m_iViewModel, "Enable");
+	
+	int offset = GetEntSendPropOffs(m_iViewModel, "m_clrGlow");
+	SetEntProp(m_iViewModel, Prop_Send, "m_bShouldGlow", true, true);
+	SetEntProp(m_iViewModel, Prop_Send, "m_nGlowStyle", 0);
+	SetEntPropFloat(m_iViewModel, Prop_Send, "m_flGlowMaxDist", 2000.0);
+
+	//Miku Green
+	SetEntData(m_iViewModel, offset    ,  57, _, true);
+	SetEntData(m_iViewModel, offset + 1, 197, _, true);
+	SetEntData(m_iViewModel, offset + 2, 187, _, true);
+	SetEntData(m_iViewModel, offset + 3, 255, _, true);
+
+	float m_fOrigin[3], m_fAngles[3], m_fRadians[2], m_fPosition[3];
+
+	GetClientAbsOrigin(client, m_fOrigin);
+	GetClientAbsAngles(client, m_fAngles);
+
+	m_fRadians[0] = DegToRad(m_fAngles[0]);
+	m_fRadians[1] = DegToRad(m_fAngles[1]);
+
+	m_fPosition[0] = m_fOrigin[0] + 64 * Cosine(m_fRadians[0]) * Cosine(m_fRadians[1]);
+	m_fPosition[1] = m_fOrigin[1] + 64 * Cosine(m_fRadians[0]) * Sine(m_fRadians[1]);
+	m_fPosition[2] = m_fOrigin[2] + 4 * Sine(m_fRadians[0]);
+	
+	m_fAngles[0] *= -1.0;
+	m_fAngles[1] *= -1.0;
+
+	TeleportEntity(m_iViewModel, m_fPosition, m_fAngles, NULL_VECTOR);
+
+	g_iPreMdlRef[client] = EntIndexToEntRef(m_iViewModel);
+
+	SDKHook(m_iViewModel, SDKHook_SetTransmit, Hook_SetTransmit_Preview);
+	g_iPreviewEnt[m_iViewModel] = client;
+	
+	g_tPreMdl[client] = CreateTimer(30.0, Timer_ClearPreMdl, client);
+
+	CPrintToChat(client, "\x04[系统提示]{blue} 预览皮肤 {lime}%s{blue}！", g_skins[skinid][name]);
+}
+
+public Action Timer_ClearPreMdl(Handle timer, int client)
+{
+	g_tPreMdl[client] = INVALID_HANDLE;
+	
+	if(g_iPreMdlRef[client] != INVALID_ENT_REFERENCE)
+	{
+		int entity = EntRefToEntIndex(g_iPreMdlRef[client]);
+
+		if(IsValidEdict(entity))
+		{
+			g_iPreviewEnt[entity] = 0;
+			SDKUnhook(entity, SDKHook_SetTransmit, Hook_SetTransmit_Preview);
+			AcceptEntityInput(entity, "Kill");
+		}
+		
+		g_iPreMdlRef[client] = INVALID_ENT_REFERENCE;
+	}
+
+	return Plugin_Stop;
+}
+
+public Action Hook_SetTransmit_Preview(int ent, int client)
+{
+	return (g_iPreviewEnt[ent] == client) ? Plugin_Continue : Plugin_Handled;
 }

@@ -430,7 +430,7 @@ public Action Timer_Restart(Handle timer, int time)
 		if (IsClientInGame(i))
 				ClientCommand(i, "retry");
 
-	ServerCommand("quit");
+	ServerCommand("exit");
 
 	return Plugin_Stop;
 }

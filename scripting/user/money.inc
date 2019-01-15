@@ -44,6 +44,8 @@ void MoneySigned(int client)
 
 	if (SteamWorks_GetUserGroupStatus(client, P_STEAMGROUP))
 		money += steamGroup;
+	else
+		CPrintToChat(client, "\x04[系统提示]{red} 腻还没加入我们Steam组!加入可以获得更多软妹币哦~", money);
 
 	if (NP_Vip_IsVIP(client))
 		money += VIPmoney;

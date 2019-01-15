@@ -173,11 +173,11 @@ public Action Timer_SignTips(Handle timer, int client)
 	{
 		if (GetDay() > g_aClient[client][SignDate] && IsClientInGame(client))
 		{
-			CPrintToChat(client,"\x04[系统提示]{blue} 您今天还未签到!聊天输入 {olive}!qd{blue} 每日可获得软妹币!");
+			CPrintToChat(client,"\x04[系统提示]{blue} 您今天还未签到!聊天输入 {olive}!qd{blue} 每日可获得软妹币! {red}加入我们社区Steam组可获得更多软妹币!");
 			if (GetEngineVersion() == Engine_Insurgency)
-				NP_Ins_DisplayInstructorHint(client, 10.0, 0.0, 3.0, true, true, "icon_tip", "icon_tip", "", true, {255, 255, 255}, "您今天还未签到! 聊天输入 !qd 每日可获得软妹币!");
+				NP_Ins_DisplayInstructorHint(client, 10.0, 0.0, 3.0, true, true, "icon_tip", "icon_tip", "", true, {255, 255, 255}, "您今天还未签到! 聊天输入 !qd 每日可获得软妹币! 加入我们社区Steam组可获得更多软妹币!");
 			else
-				PrintHintText(client, "您今天还未签到! \n聊天输入 !qd 每日可获得软妹币!");
+				PrintHintText(client, "您今天还未签到! \n聊天输入 !qd 每日可获得软妹币! 加入我们社区Steam组可获得更多软妹币!");
 
 			return Plugin_Continue;
 		}

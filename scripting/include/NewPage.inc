@@ -1,6 +1,3 @@
-#define AUTOLOAD_EXTENSIONS
-#define REQUIRE_EXTENSIONS
-
 #if !defined REQUIRE_PLUGIN
 	#endinput
 #endif
@@ -11,18 +8,19 @@
 
 #define _NewPage_Core_Include_
 
-#define P_AUTHOR "NewPage Dev-Team"
-#define P_VERSION "Alpha-v3.9"
-#define P_URLS "https://new-page.xyz"
-#define P_PRE "NewPage Core System (NCS)"
-#define P_SQLPRE "np"
-#define P_APIURL "http://api.new-page.xyz/ncs"
-#define P_APIPORT 83
-#define P_STEAMGROUP 32483342
-
-#include <sourcemod>
+#define AUTOLOAD_EXTENSIONS
+#define REQUIRE_EXTENSIONS
 #include <system2>
 #include <smjansson>
+
+#define P_AUTHOR 		"NewPage Dev-Team"
+#define P_VERSION 		"Alpha-v3.9"
+#define P_URLS	 		"https://new-page.xyz"
+#define P_PRE 			"NewPage Core System (NCS)"
+#define P_SQLPRE 		"np"
+#define P_APIURL 		"http://api.new-page.xyz/ncs"
+#define P_APIPORT 		83
+#define P_STEAMGROUP 	32483342
 
 forward void NP_Core_OnInitialized(int serverId, int modId);
 
