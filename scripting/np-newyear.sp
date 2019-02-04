@@ -53,15 +53,17 @@ public Action NewYearCheck(Handle timer)
 
 public void NP_OnClientSigned(int client, int signtimes)
 {
-	if (GetTime() > NEWYEAR && GetTime() < (NEWYEAR + 86400))
+	int time = GetTime();
+
+	if (time >= NEWYEAR && time < (NEWYEAR + 86400))
 	{
-		if (GetTime() < (NEWYEAR + 300))
+		if (time < (NEWYEAR + 300))
 		{
 			CPrintToChat(client, "{green}[系统提示] {blue}感谢您本社区服务器跨年！奖励你 \x051000{blue} 软妹币!");
 			NP_Users_GiveMoney(client, 1000);
 		}
 
-		SetRandomSeed(GetTime());
+		SetRandomSeed(time);
 		int ranrmb = GetRandomInt(2500, 10000);
 		CPrintToChat(client, "{green}[系统提示] {blue}新年快乐! 奖励你 \x05%i {blue}软妹币!", ranrmb);
 		NP_Users_GiveMoney(client, ranrmb);
@@ -94,8 +96,11 @@ public Action HappyNewYear(Handle timer, int times)
 
 	CPrintToChatAll("{green}[系统提示] {blue}%s", newyearmessage[times]);
 	if (GetEngineVersion() == Engine_Insurgency)
+	{
 		for (int i = 1; i <= MaxClients; i++)
-			NP_Ins_DisplayInstructorHint(i, 5.0, 0.0, 3.0, true, true, "icon_tip", "icon_tip", "", true, {255, 255, 255}, newyearmessage[times]);
+			if (IsClientInGame(i))
+				NP_Ins_DisplayInstructorHint(i, 5.0, 0.0, 3.0, true, true, "icon_tip", "icon_tip", "", true, {255, 255, 255}, newyearmessage[times]);
+	}
 	else
 		PrintHintTextToAll("%s", newyearmessage[times]);
 

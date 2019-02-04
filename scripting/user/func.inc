@@ -156,13 +156,13 @@ public Action Command_Sign(int client, int args)
 
 	CPrintToChat(client, "\x04[系统提示]{blue} 签到成功！");
 
-	MoneySigned(client);
-	VIPSigned(client);
-
 	Call_StartForward(g_hOnClientSigned);
 	Call_PushCell(client);
 	Call_PushCell(g_aClient[client][SignTimes]);
 	Call_Finish();
+
+	MoneySigned(client);
+	VIPSigned(client);
 	
 	return Plugin_Handled;
 }

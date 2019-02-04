@@ -483,5 +483,6 @@ void RconProtect(ConVar convar, const char[] oldValue, const char[] newValue)
 public Action Command_ReloadCvar(int args)
 {
 	CheckCvar();
+	PrintToServer("Reload cvar from database success!");
 	return Plugin_Handled;
 }
