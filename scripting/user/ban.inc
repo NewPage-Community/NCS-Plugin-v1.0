@@ -96,7 +96,7 @@ void BanCallback(const char[] data)
 
 	if((baninfo = json_object_get(json, "BanCallback")) == INVALID_HANDLE)
 	{
-		NP_Core_LogError("User", "BanCallback", "Can't find AllServersChat object -> %s", data);
+		NP_Core_LogError("User", "BanCallback", "Can't find BanCallback object -> %s", data);
 		CloseHandle(json);
 		return;
 	}
@@ -208,16 +208,22 @@ public Action Command_Ban(int client, int args)
 
 void Util_ShowBanType(int admin)
 {
-	char time[16];
+	char time[16], t_target[32];
 
 	if (g_eBan[admin][iLength] == 0)
 		Format(time, 16, "永久");
 	else
 		Format(time, 16, "%d分钟", g_eBan[admin][iLength]);
 
+	switch (g_eBan[admin][banProc])
+	{
+		case ban_Client: 	NP_Users_GetName(g_eBan[admin][iTarget], t_target, 32);
+		case ban_Identity: 	strcopy(t_target, 32, g_eBan[admin][szAuthId]);
+	}
+
 	Menu menu = new Menu(MenuHandler_BanType);
 	
-	menu.SetTitle("对象: %N\n时长: %s\n原因: %s\n \n请选择封禁类型: \n ", g_eBan[admin][iTarget], time, g_eBan[admin][szReason]);
+	menu.SetTitle("对象: %s\n时长: %s\n原因: %s\n \n请选择封禁类型: \n ", t_target, time, g_eBan[admin][szReason]);
 
 	menu.AddItem("", "全服封禁", CheckCommandAccess(admin, "sm_unban", ADMFLAG_UNBAN|ADMFLAG_ROOT) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 

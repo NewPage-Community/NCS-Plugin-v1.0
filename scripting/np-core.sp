@@ -135,6 +135,7 @@ public void OnPluginStart()
 	RegServerCmd("np_restart", Command_Restart);
 	RegServerCmd("np_rcondata", Command_RconData);
 	RegServerCmd("np_reloadmap", Command_ReloadMap);
+	RegServerCmd("np_reloadcvar", Command_ReloadCvar);
 
 	// forwards
 	g_hOnInitialized = CreateGlobalForward("NP_Core_OnInitialized",  ET_Ignore, Param_Cell, Param_Cell);
@@ -414,6 +415,8 @@ public Action Command_ReloadMap(int args)
 	CPrintToChatAll("\x04[服务器提示] {blue}服务器将在3秒后进行热更新，执行地图重载!");
 	PrintCenterTextAll("服务器将在3秒后进行热更新，执行地图重载!");
 	CreateTimer(3.0, Timer_ReloadMap, 0);
+
+	return Plugin_Handled;
 }
 
 public Action Timer_Restart(Handle timer, int time)
@@ -453,7 +456,7 @@ public Action Command_RconData(int args)
 	if(json == INVALID_HANDLE)
 	{
 		NP_Core_LogError("Core", "RconData", "Error: Json -> %s", data);
-		return;
+		return Plugin_Handled;
 	}
 
 	char event[16];
@@ -464,6 +467,8 @@ public Action Command_RconData(int args)
 	Call_PushString(data);
 	Call_PushString(event);
 	Call_Finish();
+
+	return Plugin_Handled;
 }
 
 void RconProtect(ConVar convar, const char[] oldValue, const char[] newValue)
@@ -473,4 +478,10 @@ void RconProtect(ConVar convar, const char[] oldValue, const char[] newValue)
 		
 	PrintToServer("RconProtect : %s -> %s", oldValue, newValue);
 	SetConVarString(convar, g_szRconPswd, false, false);
+}
+
+public Action Command_ReloadCvar(int args)
+{
+	CheckCvar();
+	return Plugin_Handled;
 }

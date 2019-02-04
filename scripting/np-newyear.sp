@@ -8,9 +8,10 @@
 #define P_NAME P_PRE ... " - NewYear"
 #define P_DESC "Happy new year"
 
-int newyear = 1546272000; //New Year time
+#define NEWYEARMESSAGES 4
+#define NEWYEAR 1549296000
 
-char newyearmessage[6][128];
+char newyearmessage[NEWYEARMESSAGES][128];
 
 public Plugin myinfo = 
 {
@@ -25,25 +26,23 @@ public void OnPluginStart()
 {
 	CreateTimer(0.1, NewYearCheck, 0, TIMER_REPEAT);
 
-	newyearmessage[0] = "NewPage社区在这里祝各位新年快乐！Happy New Year~";
-	newyearmessage[1] = "很高兴各位能在本社区服务器跨年！";
-	newyearmessage[2] = "为大家献上一首《Pianophonic》！";
-	newyearmessage[3] = "希望大家能在新的一年里心想事成、学业进步、工作顺利！";
-	newyearmessage[4] = "NewPage社区很高兴继续为大家提供优质的游戏环境！";
-	newyearmessage[5] = "NewPage社区管理团队致敬~";
+	newyearmessage[0] = "NewPage社区在这里祝各位新年快乐！Happy Chinese New Year~";
+	newyearmessage[1] = "希望大家能在新的一年里心想事成、学业进步、工作顺利、发大财！";
+	newyearmessage[2] = "NewPage社区在这里给大家发个大红包！感谢大家的支持！";
+	newyearmessage[3] = "NewPage社区管理团队致敬~";
 }
 
 public void OnMapStart()
 {
-	PrecacheSound("newpage/pianophonic.ogg");
-	AddFileToDownloadsTable("sound/newpage/pianophonic.ogg");
+	PrecacheSound("newpage/song1.ogg");
+	AddFileToDownloadsTable("sound/newpage/song1.ogg");
 }
 
 public Action NewYearCheck(Handle timer)
 {
 	int time = GetTime();
 
-	if (time >= newyear - 11 && time <= newyear)
+	if (time >= NEWYEAR - 11 && time <= NEWYEAR)
 	{
 		CreateTimer(1.0, NewYearCount, 0, TIMER_REPEAT);
 		return Plugin_Stop;
@@ -54,16 +53,16 @@ public Action NewYearCheck(Handle timer)
 
 public void NP_OnClientSigned(int client, int signtimes)
 {
-	if (GetTime() > newyear && GetTime() < (newyear + 86400))
+	if (GetTime() > NEWYEAR && GetTime() < (NEWYEAR + 86400))
 	{
-		if (GetTime() < (newyear + 300))
+		if (GetTime() < (NEWYEAR + 300))
 		{
-			CPrintToChat(client, "{green}[系统提示] {blue}感谢您本社区服务器跨年！奖励你 \x05500{blue} 软妹币!");
-			NP_Users_GiveMoney(client, 500);
+			CPrintToChat(client, "{green}[系统提示] {blue}感谢您本社区服务器跨年！奖励你 \x051000{blue} 软妹币!");
+			NP_Users_GiveMoney(client, 1000);
 		}
 
 		SetRandomSeed(GetTime());
-		int ranrmb = GetRandomInt(500, 3000);
+		int ranrmb = GetRandomInt(2500, 10000);
 		CPrintToChat(client, "{green}[系统提示] {blue}新年快乐! 奖励你 \x05%i {blue}软妹币!", ranrmb);
 		NP_Users_GiveMoney(client, ranrmb);
 	}
@@ -73,16 +72,16 @@ public Action NewYearCount(Handle timer)
 {
 	int time = GetTime();
 
-	if(time >= newyear)
+	if(time >= NEWYEAR)
 	{
 		CreateTimer(4.0, HappyNewYear, 0);
 		CPrintToChatAll("{green}[系统提示] {blue}现在聊天输入指令 {red}!qd{blue} 进行签到，可获得丰厚奖励哦~");
-		PlayGameSoundToAll("newpage/pianophonic.ogg");
+		PlayGameSoundToAll("newpage/song1.ogg");
 		return Plugin_Stop;
 	}
 	else
 	{
-		CPrintToChatAll("{green}[系统提示] {blue}新年倒数：{red}%i", newyear - time);
+		CPrintToChatAll("{green}[系统提示] {blue}新年倒数：{red}%i", NEWYEAR - time);
 	}
 
 	return Plugin_Continue;
@@ -90,7 +89,7 @@ public Action NewYearCount(Handle timer)
 
 public Action HappyNewYear(Handle timer, int times)
 {
-	if (times > 5)
+	if (times > 3)
 		return Plugin_Stop;
 
 	CPrintToChatAll("{green}[系统提示] {blue}%s", newyearmessage[times]);
