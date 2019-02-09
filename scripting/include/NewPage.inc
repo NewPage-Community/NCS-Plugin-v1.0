@@ -405,3 +405,23 @@ stock void TerminateNameUTF8(char[] name)
 		}
 	}
 }
+
+stock void ChineseTime(char[] ctime, int size)
+{
+	char time[2];
+	FormatTime(time, 2, "%H", GetTime());
+	if (StringToInt(time) <= 4)
+		Format(ctime, size, "凌晨");
+	else if (StringToInt(time) <= 6)
+		Format(ctime, size, "清晨");
+	else if (StringToInt(time) <= 8)
+		Format(ctime, size, "早上");
+	else if (StringToInt(time) <= 11)
+		Format(ctime, size, "中午");
+	else if (StringToInt(time) <= 17)
+		Format(ctime, size, "下午");
+	else if (StringToInt(time) <= 19)
+		Format(ctime, size, "傍晚");
+	else
+		Format(ctime, size, "晚上");
+}

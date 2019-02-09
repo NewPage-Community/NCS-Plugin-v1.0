@@ -48,13 +48,13 @@ public Action Command_VIPCmd(int client, int args)
 		return Plugin_Handled;
 	}
 
-	char Time[128], playername[32];
+	char Time[4], playername[32];
 	bool IsVip = NP_Vip_IsVIP(client);
-	FormatTime(Time, 128, "%p", GetTime());
+	ChineseTime(Time, 4);
 	NP_Users_GetName(client, playername, 32);
 
 	Menu infoMenu = new Menu(MenuHandler_VIPMenu);
-	infoMenu.SetTitle("尊贵的 %s，%s好！", playername, !strcmp(Time, "AM") ? "上午" : "下午");
+	infoMenu.SetTitle("尊贵的 %s，%s好！", playername, Time);
 	infoMenu.AddItem("FUNC", "会员功能", IsVip ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	infoMenu.AddItem("GETVIP", "会员兑换", (g_cVipExchange.BoolValue && !IsVip) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	infoMenu.ExitButton = true;
