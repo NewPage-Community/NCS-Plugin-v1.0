@@ -124,14 +124,18 @@ void BanCallback(const char[] data)
 		FormatEx(timeExpired, 64, "永久封禁");
 
 	FormatEx(kickReason, 256, "您已被服务器封锁,禁止进入游戏! 请联系管理员\n封禁类型: %s 封禁原因: %s\n操作人员: %s 到期时间: %s", g_banType[BanType], BanReason, BanAdminName, timeExpired);
-	BanClient(target, 10, BANFLAG_AUTHID, kickReason, kickReason);
 	
-	if (IsValidClient(admin))
-		PrintToChat(admin, "\x04[系统提示] \x02已成功封禁 \x04%s", steamid);
+	if (IsValidClient(target))
+		BanClient(target, 10, BANFLAG_AUTHID, kickReason, kickReason);
 
 	char msg[512];
 	FormatEx(msg, 512, "{red}玩家 %s (STEAMID) 已被 %s 封禁，原因：%s", steamid, BanAdminName, BanReason);
-	NP_AllChat_Msg(Custom, "全服封禁", msg);
+
+	if (IsValidClient(admin))
+	{
+		PrintToChat(admin, "\x04[系统提示] \x02已成功封禁 \x04%s", steamid);
+		NP_AllChat_Msg(Custom, "全服封禁", msg);
+	}
 }
 
 public int Native_BanClient(Handle plugin, int numParams)
