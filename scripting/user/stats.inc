@@ -109,7 +109,10 @@ public Action Timer_Global(Handle timer)
 		{
 			g_aClient[client][StatsSession][iTodayOnlineTime] = 0;
 			g_aClient[client][StatsTotal][iTodayOnlineTime]   = 0;
+
+			// 重置VIP在线经验上限
 			g_iVIPReward[client] = 0;
+			VIPRewardReset(client);
 		}
 	}
 	

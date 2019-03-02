@@ -137,3 +137,17 @@ void VIPReward(int client, int onlinetime)
 		}
 	}
 }
+
+bool VIPRewardReset(int client)
+{
+	if (!NP_Vip_IsVIP(client))
+		return false;
+
+	char m_szQuery[256];
+	FormatEx(m_szQuery, 256, "UPDATE %s_users SET vipreward = 0 WHERE uid = %d", P_SQLPRE, NP_Users_UserIdentity(client));
+	
+	if (NP_MySQL_SaveDatabase(m_szQuery))
+		return true;
+	
+	return false;
+}

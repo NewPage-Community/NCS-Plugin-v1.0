@@ -154,6 +154,8 @@ void LoadSkin()
 				delete ownersJson;
 			}
 		}
+		else
+			g_skins[iskins][personid][0] = -1;
 
 		// Load plan
 		if (temp_plan[0] != '\0')
@@ -182,7 +184,8 @@ void LoadSkin()
 				delete planJson;
 			}
 		}
-		
+		else
+			g_skins[iskins][buyable] = false;
 
 		iskins++;
 	}
