@@ -255,7 +255,15 @@ void LoadClient(char[] data)
 	g_aClient[client][AuthLoaded] = true;
 
 	LoadAdmin(client, steamid);
-	ChangePlayerPreName(client);
+
+	// Fight with battleye!
+	char game[32];
+	GetGameFolderName(game, 32);
+	if (!strcmp(game, "insurgency") || !strcmp(game, "doi"))
+		CreateTimer(1.0, Timer_ChangeName, client);
+	else
+		ChangePlayerPreName(client);
+
 	NP_Chat_SetNameColor(client, color);
 
 	// Reload player's data just end in here
@@ -317,6 +325,14 @@ public Action Timer_ReAuthorize(Handle timer, int client)
 
 	CheckClient(client, steamid);
 	
+	return Plugin_Stop;
+}
+
+public Action Timer_ChangeName(Handle timer, int client)
+{
+	if (!NP_Users_IsAuthLoaded(client) || !IsClientConnected(client))
+		return Plugin_Stop;
+	ChangePlayerPreName(client);
 	return Plugin_Stop;
 }
 
