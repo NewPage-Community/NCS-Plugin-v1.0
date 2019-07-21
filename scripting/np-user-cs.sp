@@ -66,20 +66,21 @@ public void OnPluginStart()
 	// stats init
 	g_iToday = GetDay();
 	
-	// group init
+	// global timer
 	CreateTimer(1.0, Timer_Global, _, TIMER_REPEAT);
 
+	// group init
 	g_aGroupName = CreateArray(32, 50);
 
 	LoadTranslations("common.phrases.txt");
 
 	g_cSignTipsTimer = CreateConVar("np_user_sign_tipstimer", "120.0", "签到提示时间", 0, true, 0.0);
 	g_cSignMoney = CreateConVar("np_user_sign_givemoney", "100", "签到奖励软妹币", 0, true, 0.0);
-	g_cSignVIPMoney = CreateConVar("np_user_sign_VIPgivemoney", "120", "会员签到奖励软妹币", 0, true, 0.0);
+	g_cSignVIPMoney = CreateConVar("np_user_sign_VIPgivemoney", "20", "会员签到奖励软妹币", 0, true, 0.0);
 	g_cSignVIPPoint = CreateConVar("np_user_sign_givevippoint", "10", "签到奖励会员经验", 0, true, 0.0);
 	g_cVIPOnlineReward = CreateConVar("np_user_vip_onlinereward", "1", "会员每小时增加的成长值", 0, true, 0.0);
 	g_cVIPOnlineMaxReward = CreateConVar("np_user_vip_onlinemaxreward", "12", "会员每天增加的成长值上限", 0, true, 0.0);
-	g_cSignOPMoney = CreateConVar("np_user_sign_opmoney", "50", "管理工资", 0, true, 0.0);
+	g_cSignOPMoney = CreateConVar("np_user_sign_opmoney", "50", "签到管理工资", 0, true, 0.0);
 	g_cSignSteamGroup = CreateConVar("np_user_sign_steamgroup", "10", "签到steam组奖励", 0, true, 0.0);
 
 	// Stats cache
@@ -203,6 +204,14 @@ void LoadClient(char[] data)
 	if(strcmp(data_steamid, steamid) != 0)
 		return;
 
+	bool reload = false;
+	if (g_aClient[client][AuthLoaded])
+	{
+		reload = true;
+		EndStats(client);
+		NP_Core_LogMessage("User", "LoadClient", "Client reload data -> \"%L\"", client);
+	}
+
 	//init data
 	StartStats(client);
 
@@ -246,18 +255,32 @@ void LoadClient(char[] data)
 
 	g_aClient[client][AuthLoaded] = true;
 
+	LoadAdmin(client, steamid);
+
+	// Fight with battleye!
+	char game[32];
+	GetGameFolderName(game, 32);
+	if (!strcmp(game, "insurgency") || !strcmp(game, "doi"))
+		CreateTimer(1.0, Timer_ChangeName, client);
+	else
+		ChangePlayerPreName(client);
+
+	NP_Chat_SetNameColor(client, color);
+
+	// Reload player's data just end in here
+	if (reload)
+	{
+		CloseHandle(json);
+		return;
+	}
+
 	if(!CheckBan(client, json))
 		return;
 
 	CloseHandle(json);
 
-	LoadAdmin(client, steamid);
-	ChangePlayerPreName(client);
-	VIPConnected(client);
-	NP_Chat_SetNameColor(client, color);
-
-	// Sign
-	CreateTimer(g_cSignTipsTimer.FloatValue, Timer_SignTips, client, TIMER_REPEAT);
+	VIPConnected(client); //VIP Welcome
+	CreateTimer(g_cSignTipsTimer.FloatValue, Timer_SignTips, client, TIMER_REPEAT); // Sign Tips
 
 	CallDataForward(client);
 }
@@ -303,6 +326,14 @@ public Action Timer_ReAuthorize(Handle timer, int client)
 
 	CheckClient(client, steamid);
 	
+	return Plugin_Stop;
+}
+
+public Action Timer_ChangeName(Handle timer, int client)
+{
+	if (!NP_Users_IsAuthLoaded(client) || !IsClientConnected(client))
+		return Plugin_Stop;
+	ChangePlayerPreName(client);
 	return Plugin_Stop;
 }
 
