@@ -318,8 +318,8 @@ void SaveInfoToKV()
 public void OnMapStart()
 {
 	// fake offical server
-	if(g_Engine == Engine_CSGO)
-		GameRules_SetProp("m_bIsValveDS", 1, 0, 0, true);
+	//if(g_Engine == Engine_CSGO)
+	//	GameRules_SetProp("m_bIsValveDS", 1, 0, 0, true);
 
 	ChangeHostname(g_szHostName);
 	CreateTimer(3.0, Timer_CheckCvar);
