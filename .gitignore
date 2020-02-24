@@ -74,6 +74,8 @@ scripting/include/usermessages.inc
 scripting/include/vector.inc
 scripting/include/version.inc
 scripting/include/version_auto.inc
+scripting/include/helpers.inc
+scripting/include/sdktools_variant_t.inc
 
 # OSX
 # =========================
