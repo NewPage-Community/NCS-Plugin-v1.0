@@ -44,6 +44,7 @@ public Action RoundEnd_Event(Event event, const char[] name, bool dontBroadcast)
         EventStop();
         CPrintToChatAll("\x04[系统提示]{blue} 通关目标已达成，活动结束！");
     }
+    return Plugin_Continue;
 }
 
 public Action StartEvent_Callback(int client, int args)
@@ -53,6 +54,12 @@ public Action StartEvent_Callback(int client, int args)
 		ReplyToCommand(client, "[提示] 用法: sm_startevent VIP奖励(天) 软妹币奖励");
 		return Plugin_Handled;
 	}
+
+    if (b_IsInEvent)
+    {
+        ReplyToCommand(client, "[提示] 活动已开始，无需重复开启");
+        return Plugin_Handled;
+    }
 
     char vip[65];
 	char rmb[65];
@@ -64,6 +71,7 @@ public Action StartEvent_Callback(int client, int args)
 
     EventStart(vip_reward, rmb_reward);
     CPrintToChatAll("\x04[系统提示]{blue} 活动正式开始！本次活动通关将奖励 {red}%d天VIP %d软妹币", vip_reward, rmb_reward);
+    return Plugin_Handled;
 }
 
 void EventStart(int vip_reward, int rmb_reward)
@@ -92,7 +100,7 @@ void Reward()
             bool success = true;
             success = NP_Users_GiveMoney(client, i_RMBReward);
             success = NP_Vip_GrantVip(client, i_VIPReward);
-            
+
             if (success)
             {
                 CPrintToChat(client, "\x04[系统提示]{blue} 活动奖励已发送到你的账户！奖励：{red}%d天VIP %d软妹币", vip_reward, rmb_reward);
