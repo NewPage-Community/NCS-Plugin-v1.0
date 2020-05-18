@@ -47,7 +47,7 @@ public Action RoundStart_Event(Event event, const char[] name, bool dontBroadcas
 public Action RoundEnd_Event(Event event, const char[] name, bool dontBroadcast)
 {
 	int winner = GetEventInt(event, "winner");
-	if (winner == 2)
+	if (winner == 2 && b_IsInEvent)
 	{
 		Reward();
 		EventStop();
@@ -106,9 +106,14 @@ void Reward()
 		if (IsValidClient(client))
 		{
 			bool success = true;
-			success = NP_Users_GiveMoney(client, i_RMBReward);
-			success = NP_Vip_GrantVip(client, i_VIPReward);
-
+			if (i_RMBReward > 0)
+			{
+				success = NP_Users_GiveMoney(client, i_RMBReward);
+			}
+			if (i_VIPReward > 0)
+			{
+				success = NP_Vip_GrantVip(client, i_VIPReward);
+			}
 			if (success)
 			{
 				CPrintToChat(client, "\x04[系统提示]{blue} 活动奖励已发送到你的账户！奖励：{red}%d天VIP  %d软妹币", i_VIPReward, i_RMBReward);
