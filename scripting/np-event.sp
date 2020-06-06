@@ -9,6 +9,7 @@
 bool b_IsInEvent = false;
 int i_RMBReward = 0;
 int i_VIPReward = 0;
+int i_Retry = 0;
 
 public Plugin myinfo = 
 {
@@ -40,7 +41,7 @@ public Action RoundStart_Event(Event event, const char[] name, bool dontBroadcas
 {
 	if (b_IsInEvent)
 	{
-		FindConVar("mp_maxrounds").SetInt(99);
+		FindConVar("mp_maxrounds").SetInt(i_Retry);
 	}
 }
 
@@ -60,7 +61,7 @@ public Action StartEvent_Callback(int client, int args)
 {
 	if (args < 2)
 	{
-		ReplyToCommand(client, "[提示] 用法: sm_startevent VIP奖励(天) 软妹币奖励");
+		ReplyToCommand(client, "[提示] 用法: sm_startevent <尝试局数> <VIP奖励(天)> <软妹币奖励>");
 		return Plugin_Handled;
 	}
 
@@ -70,22 +71,26 @@ public Action StartEvent_Callback(int client, int args)
 		return Plugin_Handled;
 	}
 
+	char retry[65];
 	char vip[65];
 	char rmb[65];
-	GetCmdArg(1, vip, sizeof(vip));
-	GetCmdArg(2, rmb, sizeof(rmb));
+	GetCmdArg(1, retry, sizeof(retry));
+	GetCmdArg(2, vip, sizeof(vip));
+	GetCmdArg(3, rmb, sizeof(rmb));
 
+	int t_retry = StringToInt(retry, 10);
 	int vip_reward = StringToInt(vip, 10);
 	int rmb_reward = StringToInt(rmb, 10);
 
-	EventStart(vip_reward, rmb_reward);
+	EventStart(t_retry, vip_reward, rmb_reward);
 	CPrintToChatAll("\x04[系统提示]{blue} 活动正式开始！本次活动通关将奖励：{red}%d天VIP  %d软妹币", vip_reward, rmb_reward);
 	return Plugin_Handled;
 }
 
-void EventStart(int vip_reward, int rmb_reward)
+void EventStart(int retry, int vip_reward, int rmb_reward)
 {
 	b_IsInEvent = true;
+	i_Retry = retry;
 	i_VIPReward = vip_reward;
 	i_RMBReward = rmb_reward;
 	FindConVar("mp_restartgame").SetInt(1);
