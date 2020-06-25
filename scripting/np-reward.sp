@@ -44,7 +44,7 @@ void Reward()
 	{
 		return;
 	}
-	for (int client = 1; client < MaxClients; client++)
+	for (int client = 1; client < MAXPLAYERS; client++)
 	{
 		if (IsValidClient(client))
 		{
