@@ -106,7 +106,7 @@ void EventStop()
 
 void Reward()
 {
-	for (int client = 1; client < MaxClients; client++)
+	for (int client = 1; client < MAXPLAYERS; client++)
 	{
 		if (IsValidClient(client))
 		{
