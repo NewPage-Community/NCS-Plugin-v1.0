@@ -408,8 +408,8 @@ stock void TerminateNameUTF8(char[] name)
 
 stock void ChineseTime(char[] ctime, int size)
 {
-	char time[2];
-	FormatTime(time, 2, "%H", GetTime());
+	char time[8];
+	FormatTime(time, sizeof(time), "%H", GetTime());
 	if (StringToInt(time) <= 4)
 		Format(ctime, size, "凌晨");
 	else if (StringToInt(time) <= 6)
