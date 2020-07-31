@@ -47,9 +47,9 @@ public Action Command_VIPCmd(int client, int args)
 		return Plugin_Handled;
 	}
 
-	char Time[4], playername[32];
+	char Time[16], playername[32];
 	bool IsVip = NP_Vip_IsVIP(client);
-	ChineseTime(Time, 4);
+	ChineseTime(Time, sizeof(Time));
 	NP_Users_GetName(client, playername, 32);
 
 	Menu infoMenu = new Menu(MenuHandler_VIPMenu);
