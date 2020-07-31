@@ -31,7 +31,6 @@ public void OnPluginStart()
 	LoadTranslations("plugin.basecommands");
 
 	RegConsoleCmd("sm_vip", Command_VIPCmd);
-	RegConsoleCmd("sm_vipvotekick", Command_Votekick);
 	RegConsoleCmd("sm_vipprefix", Command_VipPrefix);
 
 	g_cVipExchange = CreateConVar("np_vip_exchange", "0", "允许VIP兑换", 0, true, 0.0);
